@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rental Car Quotation | Olcorp Vehicle Rentals</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <style>
+    /* Flatpickr theme overrides */
+    .flatpickr-calendar { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif !important; border-radius: 16px !important; border: 1.5px solid #e5e5ea !important; box-shadow: 0 12px 40px rgba(0,0,0,.12) !important; }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #1d1d1f !important; border-color: #1d1d1f !important; }
+    .flatpickr-day:hover { background: #f5f5f7 !important; }
+    .flatpickr-months .flatpickr-month { background: #fff !important; color: #1d1d1f !important; }
+    .flatpickr-weekday { color: #6e6e73 !important; }
+    .flatpickr-current-month { color: #1d1d1f !important; }
+    .flatpickr-current-month .flatpickr-monthDropdown-months { color: #1d1d1f !important; }
+    .numInputWrapper span.arrowUp:after { border-bottom-color: #1d1d1f !important; }
+    .numInputWrapper span.arrowDown:after { border-top-color: #1d1d1f !important; }
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7; color: #1d1d1f;
+      padding: 94px 20px 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── MODAL MODE ── */
+    html.is-modal body { padding-top: 32px !important; }
+    html.is-modal nav { display: none !important; }
+    @media (max-width: 680px) { html.is-modal body { padding-top: 0 !important; } }
+
+    /* ── STICKY NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(245,245,247,0.9);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid #e5e5ea;
+      padding: 0 48px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo img { height: 34px; width: auto; display: block; }
+    .nav-cta { font-size: 13px; font-weight: 600; color: #fff; background: #1d1d1f; padding: 9px 20px; border-radius: 980px; text-decoration: none; transition: background .2s; }
+    .nav-cta:hover { background: #3a3a3c; }
+
+    @media (max-width: 680px) {
+      nav { padding: 0 16px; }
+      .nav-dropdown { padding: 12px 16px 20px; }
+    }
+
+    /* ── ESTIMATOR WRAPPER ── */
+    .estimator { max-width: 960px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; }
+
+    /* ── HEADER ── */
+    .est-header {
+      background: #fff;
+      padding: 16px 48px 16px; text-align: center; border-bottom: 1px solid #e5e5ea;
+    }
+    .est-header img.logo {
+      height: 280px; width: auto; max-width: 100%; margin: 0 auto 8px; display: block;
+    }
+    .est-header h1 {
+      font-size: 22px; font-weight: 400; letter-spacing: -0.3px; line-height: 1.1; color: #1d1d1f;
+    }
+    .est-header .rcic { font-size: 12px; color: #86868b; margin-top: 4px; }
+    .est-header .hero-pills { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 500; color: #48484a;
+      background: #f5f5f7; border: 1px solid #e5e5ea;
+      border-radius: 980px; padding: 6px 13px;
+    }
+
+    /* ── BODY ── */
+    .est-body { display: grid; grid-template-columns: 1fr 1fr; }
+
+    /* ── FORM PANEL ── */
+    .form-panel { padding: 32px 32px 40px; border-right: 1px solid #e5e5ea; overflow-y: auto; }
+
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .field-group { display: none; margin-bottom: 28px; scroll-margin-top: 20px; }
+    .field-group.active { display: block; animation: stepIn 0.32s ease forwards; }
+
+    .step-q { font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 12px; letter-spacing: -0.1px; }
+    .step-sub { font-size: 11px; color: #86868b; margin-bottom: 10px; line-height: 1.5; }
+
+    /* ── VEHICLE CARDS ── */
+    .vehicle-cards { display: flex; flex-direction: column; gap: 10px; }
+    button.vehicle-card {
+      width: 100%; background: #fff; border: 1.5px solid #e5e5ea; border-radius: 14px;
+      cursor: pointer; font-family: inherit; transition: border-color 0.15s, background 0.12s;
+      overflow: hidden; text-align: left;
+    }
+    button.vehicle-card:hover { border-color: #aeaeb2; background: #f5f5f7; }
+    button.vehicle-card.selected { border-color: #1d1d1f; background: #f5f5f7; }
+    button.vehicle-card.dimmed { opacity: 0.35; filter: grayscale(0.4); }
+    button.opt-card.dimmed { opacity: 0.35; filter: grayscale(0.4); }
+    .vc-img { width: 100%; height: 260px; object-fit: contain; object-position: center; display: block; background: #f5f5f7; padding: 12px 0; }
+    .vc-img-placeholder { width: 100%; height: 340px; background: linear-gradient(135deg,#e5e5ea,#d1d1d6); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .vc-body { padding: 14px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .vc-info { flex: 1; }
+    .vc-name { font-size: 14px; font-weight: 600; color: #1d1d1f; margin-bottom: 3px; }
+    .vc-meta { font-size: 11.5px; color: #6e6e73; line-height: 1.4; margin-bottom: 6px; }
+    .vc-rate { font-size: 15px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.3px; }
+    .vc-rate span { font-size: 11px; font-weight: 400; color: #86868b; }
+    .vc-badge { font-size: 10px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase; color: #34c759; background: rgba(52,199,89,0.1); border-radius: 6px; padding: 2px 7px; display: inline-block; margin-top: 5px; }
+    .vc-check { width: 22px; height: 22px; border: 1.5px solid #d2d2d7; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent; transition: all 0.15s; }
+    button.vehicle-card.selected .vc-check { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
+
+    /* ── DATE PICKER CARDS ── */
+    .date-picker-wrap { display: grid; grid-template-columns: 1fr auto 1fr; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .date-card {
+      background: #fff; border: 1.5px solid #e5e5ea; border-radius: 14px;
+      padding: 14px 16px; cursor: pointer; transition: border-color .15s;
+      position: relative;
+    }
+    .date-card:hover { border-color: #aeaeb2; }
+    .date-card.filled { border-color: #1d1d1f; }
+    .dc-label { font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: #aeaeb2; margin-bottom: 5px; }
+    .dc-date { font-size: 14px; font-weight: 600; color: #1d1d1f; line-height: 1.2; }
+    .dc-time { font-size: 12px; color: #6e6e73; margin-top: 2px; }
+    .dc-placeholder { font-size: 13px; color: #aeaeb2; }
+    .dc-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+    .date-arrow { font-size: 18px; color: #aeaeb2; text-align: center; padding: 0 2px; }
+    .fp-hidden { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; top: 0; left: 0; }
+    .days-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 600; color: #1d1d1f;
+      background: #e5e5ea; border-radius: 8px; padding: 6px 12px; margin-top: 8px;
+    }
+
+    /* ── OPTION CARDS (toggle style) ── */
+    .opt-stack { display: flex; flex-direction: column; gap: 7px; }
+    button.opt-card {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; padding: 13px 14px;
+      background: #fff; border: 1.5px solid #e5e5ea; border-radius: 12px;
+      text-align: left; cursor: pointer; font-family: inherit;
+      transition: border-color 0.15s, background 0.12s; color: #1d1d1f;
+    }
+    button.opt-card:hover { border-color: #aeaeb2; background: #f5f5f7; }
+    button.opt-card.selected { border-color: #1d1d1f; background: #f5f5f7; }
+    .oc-left { flex: 1; }
+    .oc-title { font-size: 13px; font-weight: 500; color: #1d1d1f; }
+    .oc-desc  { font-size: 11px; color: #86868b; margin-top: 2px; line-height: 1.35; }
+    .oc-price { font-size: 13px; font-weight: 600; color: #1d1d1f; white-space: nowrap; margin-left: 10px; }
+    .oc-price.free { color: #34c759; }
+    .oc-check { width: 20px; height: 20px; border: 1.5px solid #d2d2d7; border-radius: 50%; flex-shrink: 0; margin-left: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: transparent; transition: all 0.15s; }
+    button.opt-card.selected .oc-check { background: #1d1d1f; border-color: #1d1d1f; color: #fff; }
+
+    .field-note { font-size: 11px; color: #86868b; margin-top: 8px; line-height: 1.5; }
+
+    /* ── RESULT PANEL ── */
+    .result-panel { padding: 32px 32px 40px; background: #f5f5f7; display: flex; flex-direction: column; }
+
+    .placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 260px; gap: 14px; text-align: center; }
+    .placeholder-icon { font-size: 40px; opacity: .35; }
+    .placeholder p { font-size: 14px; color: #aeaeb2; line-height: 1.6; }
+
+    .result-content { display: none; flex-direction: column; }
+    .result-content.visible { display: flex; }
+
+    /* Price hero */
+    .price-hero { margin: 0 0 18px; padding: 22px 20px; background: #e5e5ea; border-radius: 14px; text-align: center; }
+    .price-hero-label { font-size: 11px; font-weight: 500; letter-spacing: 0.8px; text-transform: uppercase; color: #6e6e73; margin-bottom: 6px; }
+    .price-hero-amount { font-size: 44px; font-weight: 800; color: #1d1d1f; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .price-hero-cad { font-size: 12px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6e6e73; margin-top: 4px; }
+    .price-hero-note { font-size: 11px; color: #86868b; margin-top: 6px; }
+
+    /* Vehicle chip */
+    .selected-vehicle-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: #fff; border: 1.5px solid #e5e5ea; border-radius: 12px; margin-bottom: 16px; }
+    .svc-chip-img { width: 44px; height: 34px; border-radius: 6px; object-fit: cover; background: #e5e5ea; flex-shrink: 0; }
+    .svc-chip-img-placeholder { width: 44px; height: 34px; border-radius: 6px; background: #e5e5ea; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .svc-chip-name { font-size: 13px; font-weight: 600; color: #1d1d1f; }
+    .svc-chip-rate { font-size: 11px; color: #6e6e73; }
+
+    /* Fee lines */
+    .fee-section { margin-bottom: 16px; }
+    .section-label { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #aeaeb2; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: #e5e5ea; }
+    .fee-line { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid #e5e5ea; }
+    .fee-line:last-of-type { border-bottom: none; }
+    .fee-line .fn { font-size: 12.5px; color: #48484a; padding-right: 10px; line-height: 1.4; }
+    .fee-line .fa { font-size: 12.5px; font-weight: 500; color: #1d1d1f; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .fee-line.green .fa { color: #34c759; }
+    .fee-line.pending .fa { color: #aeaeb2; font-style: italic; }
+    .fee-line.subtotal { border-top: 1px solid #d2d2d7; border-bottom: none; margin-top: 4px; padding-top: 12px; }
+    .fee-line.subtotal .fn { font-size: 18px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; }
+    .fee-line.subtotal .fa { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+
+    /* CTA */
+    .result-cta { display: block; width: 100%; padding: 15px; background: #1d1d1f; color: #fff; text-align: center; font-family: inherit; font-size: 15px; font-weight: 600; border-radius: 980px; text-decoration: none; border: none; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,.15); transition: background .2s; margin-top: 16px; }
+    .result-cta:hover { background: #3a3a3c; }
+    .result-cta:disabled { background: #aeaeb2; cursor: not-allowed; box-shadow: none; }
+    .result-cta-note { font-size: 11px; color: #aeaeb2; text-align: center; margin-top: 10px; line-height: 1.5; }
+
+    /* ── CTA ── */
+    .cta-wrap { margin-top: 16px; }
+    .cta-wrap .result-cta { margin-top: 0; }
+
+    /* ── Call Modal ── */
+    .call-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 500;
+      background: rgba(0,0,0,0.45); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .call-modal-overlay.open { display: flex; }
+    .call-modal {
+      background: #fff; border-radius: 24px; padding: 36px 32px 28px;
+      max-width: 340px; width: 100%; text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,.22);
+      animation: modalIn .25s cubic-bezier(.34,1.56,.64,1) forwards;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(.88) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .call-modal-icon { font-size: 44px; margin-bottom: 14px; }
+    .call-modal h2 { font-size: 20px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .call-modal p { font-size: 14px; color: #6e6e73; line-height: 1.5; margin-bottom: 22px; }
+    .call-modal-number {
+      display: block; font-size: 26px; font-weight: 800; color: #1d1d1f;
+      letter-spacing: -0.5px; margin-bottom: 22px; font-variant-numeric: tabular-nums;
+    }
+    .call-modal-btn {
+      display: block; width: 100%; padding: 15px;
+      background: #1d1d1f; color: #fff;
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      border: none; border-radius: 980px; cursor: pointer;
+      text-decoration: none; margin-bottom: 10px;
+      transition: background .2s;
+    }
+    .call-modal-btn:hover { background: #3a3a3c; }
+    .call-modal-close {
+      display: block; width: 100%; padding: 11px;
+      background: none; color: #86868b;
+      font-family: inherit; font-size: 14px; font-weight: 500;
+      border: none; cursor: pointer; border-radius: 980px;
+      transition: color .15s;
+    }
+    .call-modal-close:hover { color: #1d1d1f; }
+
+    /* Social proof */
+    .social-proof { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; padding: 11px 13px; margin-bottom: 14px; }
+    .sp-icon { width: 22px; height: 22px; background: #1d1d1f; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .sp-text { font-size: 12px; color: #48484a; line-height: 1.4; }
+    .sp-text strong { color: #1d1d1f; font-weight: 600; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 680px) {
+      .est-body { grid-template-columns: 1fr; }
+      .form-panel { border-right: none; border-bottom: 1px solid #e5e5ea; padding: 24px 20px 32px; }
+      .result-panel { padding: 24px 20px 32px; }
+      body { padding: 62px 0 0; }
+      .estimator { border-radius: 0; }
+      .est-header { padding: 12px 20px 12px; }
+      .est-header img.logo { height: 140px; max-width: calc(100% - 40px); margin-bottom: 6px; }
+      .est-header h1 { font-size: 17px; letter-spacing: -0.2px; }
+      .hero-pills { gap: 6px; }
+      .hero-pill { font-size: 11px; padding: 5px 10px; }
+      .date-picker-wrap { grid-template-columns: 1fr auto 1fr; gap: 6px; }
+      .date-card { padding: 12px 12px; }
+    }
+
+    /* ── RENTAL REVIEWS ── */
+    .rental-reviews {
+      max-width: 960px; margin: 32px auto 0; background: #fff;
+      border-radius: 20px; overflow: hidden; padding: 40px 48px;
+    }
+    .rental-reviews-eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+      color: #86868b; margin-bottom: 8px;
+    }
+    .rental-reviews-title { font-size: 22px; font-weight: 600; color: #1d1d1f; letter-spacing: -0.3px; margin-bottom: 6px; }
+    .rental-reviews-sub { font-size: 13px; color: #86868b; margin-bottom: 28px; }
+    .rental-reviews-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .rental-testi-card {
+      background: #f5f5f7; border: 1.5px solid #e5e5ea;
+      border-radius: 16px; padding: 24px;
+      display: flex; flex-direction: column; gap: 14px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .rental-testi-card:hover { border-color: #1d1d1f; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    .rental-testi-stars { color: #ff9f0a; font-size: 13px; letter-spacing: 2px; }
+    .rental-testi-quote { font-size: 13px; color: #1d1d1f; line-height: 1.65; flex: 1; font-style: italic; }
+    .rental-testi-author { display: flex; align-items: center; gap: 10px; }
+    .rental-testi-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: #e5e5ea; border: 1.5px solid #d2d2d7;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .rental-testi-avatar svg { width: 18px; height: 18px; }
+    .rental-testi-name { font-size: 13px; font-weight: 600; color: #1d1d1f; }
+    .rental-testi-tag { font-size: 11px; color: #86868b; }
+    .rental-review-platform { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; padding: 1px 7px; border-radius: 8px; margin-top: 2px; background: #e8f5e9; color: #2e7d32; }
+    .rental-reviews-footer { text-align: center; margin-top: 24px; font-size: 12px; color: #86868b; }
+    .rental-reviews-footer a { color: #1d1d1f; font-weight: 600; text-decoration: none; }
+    .rental-reviews-footer a:hover { text-decoration: underline; }
+    @media (max-width: 680px) {
+      .rental-reviews { padding: 28px 20px; }
+      .rental-reviews-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<script>if(location.search.includes('modal=1'))document.documentElement.classList.add('is-modal');</script>
+
+<!-- ══ NAV ══ -->
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="logo.png" alt="Olfindo Immigration Consulting"
+      onerror="this.src='https://static.wixstatic.com/media/49d109_2e888f8378134d64a75844cb4d81e09a~mv2.png/v1/crop/x_0,y_251,w_3072,h_890/fill/w_640,h_185,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Olcorp_New_Logo_High_Res.png';this.onerror=null">
+  </a>
+  <a href="https://www.facebook.com/olcorp.ca" target="_blank" class="nav-cta">Facebook</a>
+</nav>
+
+<!-- ══ ESTIMATOR ══ -->
+<div class="estimator">
+
+  <div class="est-header">
+    <img class="logo" src="rental-logo.png" alt="Olcorp Car Rental"
+      onerror="this.src='https://static.wixstatic.com/media/49d109_2e888f8378134d64a75844cb4d81e09a~mv2.png/v1/crop/x_0,y_251,w_3072,h_890/fill/w_640,h_185,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Olcorp_New_Logo_High_Res.png';this.onerror=null">
+    <h1>Rental Car Quotation</h1>
+    <p class="rcic">Olcorp Vehicle Rentals · Regina, SK · car@olcorp.ca</p>
+    <div class="hero-pills">
+      <span class="hero-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/></svg> Unlimited KMs</span>
+      <span class="hero-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Fully Insured</span>
+      <span class="hero-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="8" width="22" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><circle cx="7" cy="17" r="1"/><circle cx="17" cy="17" r="1"/></svg> 8-Seater Available</span>
+      <span class="hero-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Flexible Pickup</span>
+    </div>
+  </div>
+
+  <div class="est-body">
+
+    <!-- ══ FORM PANEL ══ -->
+    <div class="form-panel">
+
+      <!-- Step 1: Vehicle -->
+      <div class="field-group active" id="grp_vehicle">
+        <div class="step-q">Which vehicle do you need?</div>
+        <div class="vehicle-cards">
+
+          <button class="vehicle-card" id="card_carnival" onclick="selectVehicle('carnival')">
+            <img class="vc-img" src="car-carnival.jpg" alt="2025 Kia Carnival"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="vc-img-placeholder" style="display:none">🚐</div>
+            <div class="vc-body">
+              <div class="vc-info">
+                <div class="vc-name">2025 Kia Carnival Hybrid</div>
+                <div class="vc-meta">8-seater · Hybrid FWD · Ideal for families &amp; groups</div>
+                <div class="vc-rate">$129 <span>/ day</span></div>
+                <span class="vc-badge">Best for road trips &amp; Banff runs</span>
+              </div>
+              <div class="vc-check" id="chk_carnival">✓</div>
+            </div>
+          </button>
+
+          <button class="vehicle-card" id="card_wrangler" onclick="selectVehicle('wrangler')">
+            <img class="vc-img" src="car-wrangler.jpg" alt="2021 Jeep Wrangler Sahara"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+            <div class="vc-img-placeholder" style="display:none">🚙</div>
+            <div class="vc-body">
+              <div class="vc-info">
+                <div class="vc-name">2021 Jeep Wrangler Sahara</div>
+                <div class="vc-meta">5-seater · Plug-in Hybrid AWD · Off-road capable</div>
+                <div class="vc-rate">$89 <span>/ day</span></div>
+                <span class="vc-badge">Best for outdoor adventures</span>
+              </div>
+              <div class="vc-check" id="chk_wrangler">✓</div>
+            </div>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Step 2: Dates -->
+      <div class="field-group" id="grp_dates">
+        <div class="step-q">When do you need it?</div>
+        <div class="date-picker-wrap">
+          <!-- Pick-up card -->
+          <div class="date-card" id="startCard" onclick="startPicker.open()">
+            <span class="dc-icon">📅</span>
+            <div class="dc-label">Pick-up</div>
+            <div id="startDateDisplay" class="dc-placeholder">Select date</div>
+            <div id="startTimeDisplay" class="dc-time" style="display:none"></div>
+            <input id="fpStart" class="fp-hidden">
+          </div>
+          <div class="date-arrow">→</div>
+          <!-- Drop-off card -->
+          <div class="date-card" id="endCard" onclick="endPicker.open()">
+            <span class="dc-icon">🏁</span>
+            <div class="dc-label">Drop-off</div>
+            <div id="endDateDisplay" class="dc-placeholder">Select date</div>
+            <div id="endTimeDisplay" class="dc-time" style="display:none"></div>
+            <input id="fpEnd" class="fp-hidden">
+          </div>
+        </div>
+        <div id="daysBadge" style="display:none" class="days-badge">⏱ <span id="daysText"></span></div>
+        <p class="field-note">Minimum of 2 days. For 14+ day rentals contact us for a custom rate.</p>
+      </div>
+
+      <!-- Step 3: Destination / KM zone -->
+      <div class="field-group" id="grp_dest">
+        <div class="step-q">Where are you headed?</div>
+        <p class="step-sub">Choose your travel zone — this determines your add-on rate.</p>
+        <div class="opt-stack">
+          <button class="opt-card" id="dest_sk" onclick="selectOpt('dest','sk',this)">
+            <div class="oc-left">
+              <div class="oc-title">Within Saskatchewan</div>
+              <div class="oc-desc">Regina, Saskatoon, and anywhere in SK</div>
+            </div>
+            <span class="oc-price free">Free</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="dest_abmb" onclick="selectOpt('dest','abmb',this)">
+            <div class="oc-left">
+              <div class="oc-title">Alberta &amp; Manitoba</div>
+              <div class="oc-desc">Banff, Calgary, Edmonton, Winnipeg, etc.</div>
+            </div>
+            <span class="oc-price">+$59/day</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="dest_canada" onclick="selectOpt('dest','canada',this)">
+            <div class="oc-left">
+              <div class="oc-title">Anywhere in Canada</div>
+              <div class="oc-desc">BC, Ontario, or any other province</div>
+            </div>
+            <span class="oc-price">+$99/day</span>
+            <div class="oc-check">✓</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Delivery to you -->
+      <div class="field-group" id="grp_delivery">
+        <div class="step-q">Deliver the car to your location?</div>
+        <p class="step-sub">Airport, home, hotel, or workplace within Regina.</p>
+        <div class="opt-stack">
+          <button class="opt-card" id="delivery_no" onclick="selectOpt('delivery','no',this)">
+            <div class="oc-left">
+              <div class="oc-title">No, I'll pick it up at Olcorp</div>
+            </div>
+            <span class="oc-price free">Free</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="delivery_yes" onclick="selectOpt('delivery','yes',this)">
+            <div class="oc-left">
+              <div class="oc-title">Yes, deliver to my location</div>
+            </div>
+            <span class="oc-price">+$20</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="delivery_later" onclick="selectOpt('delivery','later',this)">
+            <div class="oc-left">
+              <div class="oc-title">I'll decide before turnover day</div>
+            </div>
+            <span class="oc-price" style="color:#aeaeb2">TBD</span>
+            <div class="oc-check">✓</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 5: Pickup after rental -->
+      <div class="field-group" id="grp_pickup">
+        <div class="step-q">Pick up the car from you after the rental?</div>
+        <p class="step-sub">Airport, home, hotel, or workplace within Regina.</p>
+        <div class="opt-stack">
+          <button class="opt-card" id="pickup_no" onclick="selectOpt('pickup','no',this)">
+            <div class="oc-left">
+              <div class="oc-title">No, I'll return it to Olcorp</div>
+            </div>
+            <span class="oc-price free">Free</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="pickup_yes" onclick="selectOpt('pickup','yes',this)">
+            <div class="oc-left">
+              <div class="oc-title">Yes, pick up from my location</div>
+            </div>
+            <span class="oc-price">+$20</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="pickup_later" onclick="selectOpt('pickup','later',this)">
+            <div class="oc-left">
+              <div class="oc-title">I'll decide before turnover day</div>
+            </div>
+            <span class="oc-price" style="color:#aeaeb2">TBD</span>
+            <div class="oc-check">✓</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 6: No Obligation Plan -->
+      <div class="field-group" id="grp_nop">
+        <div class="step-q">Add the No Obligation Plan?</div>
+        <p class="step-sub">Covers you in case of damage or accident during your rental — for extra peace of mind.</p>
+        <div class="opt-stack">
+          <button class="opt-card" id="nop_sgi" onclick="selectOpt('nop','sgi',this)">
+            <div class="oc-left">
+              <div class="oc-title">Basic SGI Insurance Coverage</div>
+              <div class="oc-desc">I'll rely on my existing SGI basic auto insurance</div>
+            </div>
+            <span class="oc-price free">Included</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="nop_yes" onclick="selectOpt('nop','yes',this)">
+            <div class="oc-left">
+              <div class="oc-title">Yes, add No Obligation Plan</div>
+              <div class="oc-desc">Covers damage or accident during your rental</div>
+            </div>
+            <span class="oc-price">+$15/day</span>
+            <div class="oc-check">✓</div>
+          </button>
+          <button class="opt-card" id="nop_later" onclick="selectOpt('nop','later',this)">
+            <div class="oc-left">
+              <div class="oc-title">I'll decide before turnover day</div>
+            </div>
+            <span class="oc-price" style="color:#aeaeb2">TBD</span>
+            <div class="oc-check">✓</div>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /form-panel -->
+
+    <!-- ══ RESULT PANEL ══ -->
+    <div class="result-panel">
+
+      <div class="placeholder" id="placeholder">
+        <div class="placeholder-icon">🚗</div>
+        <p>Select a vehicle to see your rental estimate.</p>
+      </div>
+
+      <div class="result-content" id="resultContent">
+
+        <div class="social-proof">
+          <div class="sp-icon">★</div>
+          <div class="sp-text"><strong>Olcorp Car Rental</strong> — Unlimited KMs, insured travel, flexible pickup across Regina.</div>
+        </div>
+
+        <!-- Vehicle chip -->
+        <div class="selected-vehicle-chip">
+          <img class="svc-chip-img" id="chipImg" src="car-carnival.jpg" alt=""
+            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="svc-chip-img-placeholder" id="chipIcon" style="display:none">🚐</div>
+          <div>
+            <div class="svc-chip-name" id="chipName">2025 Kia Carnival Hybrid</div>
+            <div class="svc-chip-rate" id="chipRate">$129/day · 8-seater</div>
+          </div>
+        </div>
+
+        <!-- Price hero -->
+        <div class="price-hero">
+          <div class="price-hero-label">Estimated Total <span id="heroTaxLabel" style="opacity:0">(incl. GST &amp; PST)</span></div>
+          <div class="price-hero-amount" id="totalAmount">—</div>
+          <div class="price-hero-cad">CAD</div>
+          <div class="price-hero-note" id="priceNote">Select your dates to calculate</div>
+        </div>
+
+        <!-- Breakdown -->
+        <div class="fee-section">
+          <div class="section-label">Breakdown</div>
+          <div class="fee-line" id="row_base">
+            <span class="fn" id="baseLabel">Base rate</span>
+            <span class="fa" id="baseAmt">—</span>
+          </div>
+          <div class="fee-line" id="row_dest" style="display:none">
+            <span class="fn" id="destLabel">KM zone add-on</span>
+            <span class="fa" id="destAmt">—</span>
+          </div>
+          <div class="fee-line" id="row_delivery" style="display:none">
+            <span class="fn">Delivery to your location</span>
+            <span class="fa">$20.00</span>
+          </div>
+          <div class="fee-line" id="row_pickup" style="display:none">
+            <span class="fn">Pickup from your location</span>
+            <span class="fa">$20.00</span>
+          </div>
+          <div class="fee-line" id="row_nop" style="display:none">
+            <span class="fn" id="nopLabel">No Obligation Plan</span>
+            <span class="fa" id="nopAmt">—</span>
+          </div>
+          <div class="fee-line green">
+            <span class="fn">Unlimited kilometres</span>
+            <span class="fa">Included ✓</span>
+          </div>
+          <div class="fee-line green">
+            <span class="fn" id="insuranceLabel">Insurance coverage</span>
+            <span class="fa">Included ✓</span>
+          </div>
+          <div class="fee-line subtotal" style="border-top:1px solid #d2d2d7; margin-top:4px; padding-top:12px;">
+            <span class="fn" style="font-size:13px;font-weight:600;color:#48484a">Subtotal</span>
+            <span class="fa" id="subtotalAmt" style="font-size:13px;font-weight:600;">—</span>
+          </div>
+          <div class="fee-line" id="row_gst" style="display:none">
+            <span class="fn">GST (5%)</span>
+            <span class="fa" id="gstAmt">—</span>
+          </div>
+          <div class="fee-line" id="row_pst" style="display:none">
+            <span class="fn">PST – Saskatchewan (6%)</span>
+            <span class="fa" id="pstAmt">—</span>
+          </div>
+          <div class="fee-line subtotal" id="row_grand" style="display:none">
+            <span class="fn">Total (incl. taxes)</span>
+            <span class="fa" id="grandAmt">—</span>
+          </div>
+        </div>
+
+        <!-- Deposit note -->
+        <div id="depositNote" class="field-note" style="margin-bottom:12px;display:none">
+          💡 A <strong>$50 CAD reservation fee</strong> is required to confirm your booking (applied as a returnable deposit on turnover day).
+        </div>
+
+        <!-- CTA -->
+        <div class="cta-wrap" id="ctaWrap">
+          <button class="result-cta" id="quoteCta" onclick="openCallModal()" disabled>
+            Confirm Availability →
+          </button>
+        </div>
+        <p class="result-cta-note" id="ctaNote">
+          Complete all options above to confirm availability.
+        </p>
+
+      </div>
+    </div>
+
+  </div><!-- /est-body -->
+</div><!-- /estimator -->
+
+<!-- ══ RENTAL REVIEWS ══ -->
+<div class="rental-reviews">
+  <div class="rental-reviews-eyebrow">Client Reviews</div>
+  <h2 class="rental-reviews-title">What Renters Say</h2>
+  <p class="rental-reviews-sub">Real experiences from clients who rented with Olcorp Vehicle Rentals.</p>
+  <div class="rental-reviews-grid">
+    <div class="rental-testi-card">
+      <div class="rental-testi-stars">★★★★★</div>
+      <div class="rental-testi-quote">"Thank you Olcorp Car Rentals for partnering with us in our winter vacay in Alberta and Banff. Their cars are pet and family friendly, economical and secured on its insurance provided. They're not just concerned about their business but also the safety and satisfaction of their clients. Highly recommended!"</div>
+      <div class="rental-testi-author">
+        <div class="rental-testi-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+        <div>
+          <div class="rental-testi-name">Nem Castro</div>
+          <div class="rental-testi-tag">Car Rental · 1 year ago</div>
+          <span class="rental-review-platform">Google Review</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="rental-reviews-footer">
+    See all reviews on <a href="https://www.google.com/maps/place/Olcorp.ca+Immigration,+Notary+Public,+%26+Car+Rentals+(Olfindo+Immigration+Consulting+Corp)/@50.4168448,-104.5889024,14z/data=!3m1!5s0x531bfeef414867a9:0x770e160cdcc5ae69!4m6!3m5!1s0xa6a634affbb34cb7:0x9caf7837261a2a88!8m2!3d50.4506043!4d-104.6099278!16s%2Fg%2F11pdht8k81?entry=ttu&g_ep=EgoyMDI2MDUyNy4wIKXMDSoASAFQAw%3D%3D" target="_blank">Google Maps</a>
+  </div>
+</div>
+
+<!-- ══ TEXT MODAL ══ -->
+<div class="call-modal-overlay" id="callModalOverlay" onclick="closeCallModal(event)">
+  <div class="call-modal">
+    <h2>Text Us Your Quotation</h2>
+    <p>Send us your quotation for approval and we'll confirm availability right away.</p>
+    <button class="call-modal-btn" onclick="sendQuotationBySMS()">Send Text →</button>
+    <button class="call-modal-close" onclick="closeCallModal()">Dismiss</button>
+  </div>
+</div>
+
+
+<script>
+  const VEHICLES = {
+    carnival: { name: '2025 Kia Carnival Hybrid', meta: '$129/day · 8-seater', img: 'car-carnival.jpg', icon: '🚐', rate: 129 },
+    wrangler: { name: '2021 Jeep Wrangler Sahara', meta: '$89/day · 5-seater · 4x4', img: 'car-wrangler.jpg', icon: '🚙', rate: 89 }
+  };
+  const DEST_ADDON = { sk: 0, abmb: 59, canada: 99 };
+  const DEST_LABEL = { sk: 'Within Saskatchewan', abmb: 'Alberta & Manitoba add-on', canada: 'Canada-wide add-on' };
+
+  let sel = { vehicle: null, hours: 0, dest: null, delivery: null, pickup: null, nop: null };
+
+  /* ── Format duration ── */
+  function formatDuration(hrs) {
+    if (hrs < 24) return hrs + (hrs === 1 ? ' hr' : ' hrs');
+    const d = Math.floor(hrs / 24), h = hrs % 24;
+    return d + (d === 1 ? ' day' : ' days') + (h > 0 ? ' ' + h + ' hr' + (h === 1 ? '' : 's') : '');
+  }
+
+  /* ── Vehicle ── */
+  function selectVehicle(key) {
+    sel.vehicle = key;
+    document.getElementById('card_carnival').classList.toggle('selected', key === 'carnival');
+    document.getElementById('card_carnival').classList.toggle('dimmed', key !== 'carnival');
+    document.getElementById('card_wrangler').classList.toggle('selected', key === 'wrangler');
+    document.getElementById('card_wrangler').classList.toggle('dimmed', key !== 'wrangler');
+    document.getElementById('grp_dates').classList.add('active');
+    updateResult();
+    // auto-scroll removed
+  }
+
+  /* ── Date Pickers ── */
+  let startPicker, endPicker;
+  let selStartDt = null, selEndDt = null;
+
+  function fmtDateCard(d) {
+    return d.toLocaleDateString('en-CA', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  }
+  function fmtTimeCard(d) {
+    return d.toLocaleTimeString('en-CA', { hour: 'numeric', minute: '2-digit', hour12: true });
+  }
+
+  function calcFromPickers() {
+    if (!selStartDt || !selEndDt) return;
+    const diffHrs = Math.ceil((selEndDt - selStartDt) / 3600000);
+    sel.hours = Math.max(1, diffHrs);
+    document.getElementById('daysBadge').style.display = 'inline-flex';
+    document.getElementById('daysText').textContent = formatDuration(sel.hours);
+    document.getElementById('grp_dest').classList.add('active');
+    updateResult();
+    // auto-scroll removed
+  }
+
+  function initPickers() {
+    startPicker = flatpickr('#fpStart', {
+      enableTime: true,
+      dateFormat: 'Y-m-d H:i',
+      minDate: 'today',
+      defaultHour: 8,
+      minuteIncrement: 15,
+      disableMobile: false,
+      onChange: function(dates) {
+        if (!dates[0]) return;
+        selStartDt = dates[0];
+        const card = document.getElementById('startCard');
+        card.classList.add('filled');
+        document.getElementById('startDateDisplay').className = 'dc-date';
+        document.getElementById('startDateDisplay').textContent = fmtDateCard(dates[0]);
+        document.getElementById('startTimeDisplay').style.display = 'block';
+        document.getElementById('startTimeDisplay').textContent = fmtTimeCard(dates[0]);
+        endPicker.set('minDate', dates[0]);
+        calcFromPickers();
+      }
+    });
+
+    endPicker = flatpickr('#fpEnd', {
+      enableTime: true,
+      dateFormat: 'Y-m-d H:i',
+      minDate: 'today',
+      defaultHour: 20,
+      minuteIncrement: 15,
+      disableMobile: false,
+      onChange: function(dates) {
+        if (!dates[0]) return;
+        selEndDt = dates[0];
+        const card = document.getElementById('endCard');
+        card.classList.add('filled');
+        document.getElementById('endDateDisplay').className = 'dc-date';
+        document.getElementById('endDateDisplay').textContent = fmtDateCard(dates[0]);
+        document.getElementById('endTimeDisplay').style.display = 'block';
+        document.getElementById('endTimeDisplay').textContent = fmtTimeCard(dates[0]);
+        calcFromPickers();
+      }
+    });
+  }
+
+  /* ── Generic option select ── */
+  function selectOpt(group, val, el) {
+    sel[group] = val;
+    // deselect and dim all siblings, highlight selected
+    el.parentElement.querySelectorAll('.opt-card').forEach(b => {
+      b.classList.remove('selected');
+      b.classList.add('dimmed');
+    });
+    el.classList.add('selected');
+    el.classList.remove('dimmed');
+
+    const nextMap = { dest: 'grp_delivery', delivery: 'grp_pickup', pickup: 'grp_nop', nop: null };
+    const nextId = nextMap[group];
+    if (nextId) {
+      document.getElementById(nextId).classList.add('active');
+      // auto-scroll removed
+    }
+    updateResult();
+  }
+
+  /* ── Calculate & render ── */
+  function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+  function updateResult() {
+    if (!sel.vehicle) return;
+    const v = VEHICLES[sel.vehicle];
+
+    // Show result panel
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('resultContent').classList.add('visible');
+
+    // Vehicle chip
+    const chipImg = document.getElementById('chipImg');
+    chipImg.src = v.img;
+    chipImg.onerror = function() { this.style.display='none'; document.getElementById('chipIcon').style.display='flex'; document.getElementById('chipIcon').textContent = v.icon; };
+    document.getElementById('chipName').textContent = v.name;
+    document.getElementById('chipRate').textContent = v.meta;
+
+    const hrs = sel.hours || 0;
+    const hrRate = v.rate / 24;  // daily rate ÷ 24
+
+    // Base
+    const base = hrRate * hrs;
+    document.getElementById('baseLabel').textContent = hrs > 0
+      ? fmt(hrRate) + '/hr × ' + formatDuration(hrs)
+      : 'Base rate';
+    document.getElementById('baseAmt').textContent = hrs > 0 ? fmt(base) : '—';
+
+    // Dest add-on
+    let destAddon = 0;
+    if (sel.dest && hrs > 0) {
+      const destHrRate = DEST_ADDON[sel.dest] / 24;
+      destAddon = destHrRate * hrs;
+      const dRow = document.getElementById('row_dest');
+      dRow.style.display = 'flex';
+      document.getElementById('destLabel').textContent = DEST_LABEL[sel.dest];
+      document.getElementById('destAmt').textContent = destAddon > 0 ? fmt(destAddon) : 'Included ✓';
+      dRow.querySelector('.fa').style.color = destAddon === 0 ? '#34c759' : '#1d1d1f';
+    }
+
+    // Delivery / pickup flat fees (these stay flat)
+    const deliveryFee = sel.delivery === 'yes' ? 20 : 0;
+    const pickupFee = sel.pickup === 'yes' ? 20 : 0;
+    document.getElementById('row_delivery').style.display = sel.delivery === 'yes' ? 'flex' : 'none';
+    document.getElementById('row_pickup').style.display = sel.pickup === 'yes' ? 'flex' : 'none';
+
+    // Insurance label based on NOP selection
+    const insLabel = document.getElementById('insuranceLabel');
+    if (sel.nop === 'yes') insLabel.textContent = '100% Insurance Coverage';
+    else if (sel.nop === 'later' || sel.nop === 'sgi') insLabel.textContent = 'Basic SGI Insurance Coverage';
+    else insLabel.textContent = 'Insurance coverage';
+
+    // No Obligation Plan ($15/day → $15/24 per hr)
+    let nopFee = 0;
+    if (sel.nop === 'yes' && hrs > 0) {
+      nopFee = (15 / 24) * hrs;
+      document.getElementById('row_nop').style.display = 'flex';
+      document.getElementById('nopLabel').textContent = 'No Obligation Plan · ' + formatDuration(hrs);
+      document.getElementById('nopAmt').textContent = fmt(nopFee);
+    } else {
+      document.getElementById('row_nop').style.display = 'none';
+    }
+
+    // Enable CTA only when all prompts are answered
+    const allAnswered = sel.vehicle && sel.hours > 0 && sel.dest && sel.delivery && sel.pickup && sel.nop;
+    const ctaBtn = document.getElementById('quoteCta');
+    const ctaNote = document.getElementById('ctaNote');
+    ctaBtn.disabled = !allAnswered;
+    ctaNote.textContent = allAnswered
+      ? 'Reach out to check availability and confirm your booking.'
+      : 'Complete all options above to confirm availability.';
+
+    // Subtotal & taxes
+    const subtotal = base + destAddon + deliveryFee + pickupFee + nopFee;
+    const gst = subtotal * 0.05;
+    const pst = subtotal * 0.06;
+    const grandTotal = subtotal + gst + pst;
+
+    // Only show tax rows when we have a valid subtotal
+    const hasTaxes = hrs > 0 && subtotal > 0;
+
+    document.getElementById('row_gst').style.display = hasTaxes ? 'flex' : 'none';
+    document.getElementById('row_pst').style.display = hasTaxes ? 'flex' : 'none';
+    document.getElementById('row_grand').style.display = hasTaxes ? 'flex' : 'none';
+
+    if (hasTaxes) {
+      document.getElementById('subtotalAmt').textContent = fmt(subtotal);
+      document.getElementById('gstAmt').textContent = fmt(gst);
+      document.getElementById('pstAmt').textContent = fmt(pst);
+      document.getElementById('grandAmt').textContent = fmt(grandTotal);
+      document.getElementById('totalAmount').textContent = fmt(grandTotal);
+      document.getElementById('heroTaxLabel').style.opacity = '1';
+      document.getElementById('priceNote').textContent = formatDuration(hrs) + ' · GST & PST included';
+      document.getElementById('depositNote').style.display = 'block';
+    } else {
+      document.getElementById('subtotalAmt').textContent = hrs > 0 ? fmt(subtotal) : '—';
+      document.getElementById('totalAmount').textContent = '—';
+      document.getElementById('heroTaxLabel').style.opacity = '0';
+      document.getElementById('priceNote').textContent = 'Select your dates to calculate';
+      document.getElementById('subtotalAmt').textContent = '—';
+    }
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<script>
+  initPickers();
+  selectVehicle('carnival');
+
+  /* ── SMS Quotation ── */
+  function sendQuotationBySMS(e) {
+    if (e) e.preventDefault();
+    if (!sel.vehicle || !sel.hours || !sel.dest || !sel.delivery || !sel.pickup || !sel.nop) return;
+    closeCallModal();
+    const v = VEHICLES[sel.vehicle];
+    const hrs = sel.hours;
+    const hrRate = v.rate / 24;
+    const base = hrRate * hrs;
+    const destAddon = sel.dest ? (DEST_ADDON[sel.dest] / 24) * hrs : 0;
+    const deliveryFee = sel.delivery === 'yes' ? 20 : 0;
+    const pickupFee = sel.pickup === 'yes' ? 20 : 0;
+    const nopFee = sel.nop === 'yes' ? (15 / 24) * hrs : 0;
+    const subtotal = base + destAddon + deliveryFee + pickupFee + nopFee;
+    const gst = subtotal * 0.05;
+    const pst = subtotal * 0.06;
+    const grandTotal = subtotal + gst + pst;
+
+    const startStr = selStartDt ? selStartDt.toLocaleString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+    const endStr = selEndDt ? selEndDt.toLocaleString('en-CA', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+
+    const insText = sel.nop === 'yes' ? '100% NOP Coverage' : 'Basic SGI Coverage';
+
+    let msg = `📋 RENTAL QUOTATION\n`;
+    msg += `─────────────────\n`;
+    msg += `Vehicle: ${v.name}\n`;
+    msg += `Pickup: ${startStr}\n`;
+    msg += `Drop-off: ${endStr}\n`;
+    msg += `Duration: ${formatDuration(hrs)}\n`;
+    msg += `Destination: ${DEST_LABEL[sel.dest]}\n`;
+    msg += `Delivery: ${sel.delivery === 'yes' ? 'Yes (+$20)' : 'No'}\n`;
+    msg += `Pickup Service: ${sel.pickup === 'yes' ? 'Yes (+$20)' : 'No'}\n`;
+    msg += `Insurance: ${insText}\n`;
+    msg += `─────────────────\n`;
+    msg += `Subtotal: ${fmt(subtotal)}\n`;
+    msg += `GST (5%): ${fmt(gst)}\n`;
+    msg += `PST (6%): ${fmt(pst)}\n`;
+    msg += `TOTAL: ${fmt(grandTotal)}\n`;
+    msg += `─────────────────\n`;
+    msg += `Sent via olcorp.ca`;
+
+    window.location.href = 'sms:+16399150209?body=' + encodeURIComponent(msg);
+  }
+
+  /* ── Call Modal ── */
+  function openCallModal() {
+    document.getElementById('callModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeCallModal(e) {
+    // Close if clicking the overlay background or the Dismiss button
+    if (!e || e.target === document.getElementById('callModalOverlay') || e.type === 'click') {
+      document.getElementById('callModalOverlay').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  }
+  // Close on Escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeCallModal();
+  });
+</script>
+</body>
+</html>

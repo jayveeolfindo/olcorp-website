@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fee Estimator | Olfindo Immigration Consulting</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      padding: 94px 20px 48px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── MODAL MODE (loaded inside landing page lightbox) ── */
+    html.is-modal body { padding-top: 32px !important; }
+    html.is-modal nav.est-nav { display: none !important; }
+    @media (max-width: 680px) {
+      html.is-modal body { padding-top: 0 !important; }
+    }
+
+    /* ── STICKY NAV ── */
+    nav.est-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      background: rgba(245,245,247,0.9);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid #e5e5ea;
+      padding: 0 48px; height: 62px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .est-nav-logo img { height: 32px; width: auto; display: block; }
+    .est-nav-back {
+      font-size: 13px; color: #6e6e73; text-decoration: none;
+      transition: color .15s; display: flex; align-items: center; gap: 5px;
+    }
+    .est-nav-back:hover { color: #1d1d1f; }
+    .est-nav-cta {
+      font-size: 13px; font-weight: 600;
+      color: #fff; background: #1d1d1f;
+      padding: 9px 20px; border-radius: 980px;
+      text-decoration: none; transition: background .2s;
+    }
+    .est-nav-cta:hover { background: #3a3a3c; }
+    @media (max-width: 680px) {
+      nav.est-nav { padding: 0 16px; }
+      .est-nav-back span { display: none; }
+    }
+
+    .estimator {
+      max-width: 920px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    .est-header {
+      padding: 44px 48px 32px;
+      text-align: center;
+      border-bottom: 1px solid #e5e5ea;
+    }
+    .est-header img.logo {
+      height: 128px;
+      width: auto;
+      margin: 0 auto 20px;
+      display: block;
+    }
+    .est-header h1 {
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.3px;
+      line-height: 1.1;
+      color: #1d1d1f;
+    }
+    .est-header .rcic { font-size: 12px; color: #86868b; margin-top: 4px; }
+    .est-header .subtitle { font-size: 15px; color: #6e6e73; margin-top: 8px; line-height: 1.5; font-weight: 400; letter-spacing: -0.2px; }
+
+    /* ── BODY ── */
+    .est-body { display: grid; grid-template-columns: 1fr 1fr; }
+    @media (max-width: 680px) {
+      .est-body { grid-template-columns: 1fr; }
+      .form-panel { border-right: none; border-bottom: 1px solid #e5e5ea; padding: 24px 20px 32px; }
+      .result-panel { padding: 24px 20px 32px; }
+      body { padding: 62px 0 0; }
+      .estimator { border-radius: 0; }
+      .est-header { padding: 28px 20px 20px; }
+      .est-header img.logo { height: 72px; margin-bottom: 14px; }
+      .est-header h1 { font-size: 22px; letter-spacing: -0.8px; }
+      .est-header .subtitle { font-size: 13px; }
+      /* Stack 2-col option grids on small screens */
+      .opt-grid-2 { grid-template-columns: 1fr; }
+    }
+
+    /* ── FORM PANEL ── */
+    .form-panel {
+      padding: 32px 32px 40px;
+      border-right: 1px solid #e5e5ea;
+      overflow-y: auto;
+    }
+
+    /* Step reveal animation */
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .field-group {
+      display: none;
+      margin-bottom: 28px;
+      scroll-margin-top: 20px;
+    }
+    .field-group.active {
+      display: block;
+      animation: stepIn 0.38s ease forwards;
+    }
+    /* ── CATEGORY CARDS (Phase 1) ── */
+    .cat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    button.cat-card {
+      display: flex; flex-direction: column; align-items: flex-start;
+      padding: 20px 16px; width: 100%;
+      background: #fff; border: 1.5px solid #e5e5ea; border-radius: 14px;
+      text-align: left; cursor: pointer; font-family: inherit;
+      transition: border-color 0.15s, background 0.12s, color 0.15s;
+      color: #aeaeb2;
+    }
+    button.cat-card:hover { border-color: #aeaeb2; background: #f5f5f7; color: #6e6e73; }
+    button.cat-card.selected { border-color: #1d1d1f; background: #f5f5f7; color: #1d1d1f; }
+    .cat-title { font-size: 14px; font-weight: 600; color: inherit; }
+    .cat-desc  { font-size: 11.5px; color: inherit; opacity: 0.75; margin-top: 5px; line-height: 1.35; }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      display: none; background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: 12px; color: #86868b;
+      padding: 0; margin-bottom: 18px;
+      transition: color 0.15s;
+    }
+    .back-btn:hover { color: #1d1d1f; }
+
+    /* ── START OVER FOOTER ── */
+    .start-over-footer {
+      display: none;
+      text-align: center;
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid #e5e5ea;
+    }
+    #consultationCreditGroup.active ~ .start-over-footer { display: block; }
+    .start-over-footer button {
+      background: none; border: none; cursor: pointer;
+      font-family: inherit; font-size: 12px; color: #86868b;
+      padding: 0; transition: color 0.15s;
+    }
+    .start-over-footer button:hover { color: #1d1d1f; }
+
+    /* Step question label */
+    .step-q {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin-bottom: 14px;
+      letter-spacing: -0.1px;
+      text-align: center;
+    }
+
+    /* ── SERVICE CARDS (compact grid for long list) ── */
+    .svc-group-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: #aeaeb2;
+      margin: 16px 0 8px;
+    }
+    .svc-group-label:first-of-type { margin-top: 0; }
+
+    .svc-cards { display: flex; flex-direction: column; gap: 6px; }
+
+    button.svc-card {
+      display: block;
+      width: 100%;
+      padding: 12px 14px;
+      background: #fff;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 10px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13.5px;
+      font-weight: 400;
+      color: #aeaeb2;
+      line-height: 1.3;
+      transition: border-color 0.15s, background 0.12s, color 0.15s;
+    }
+    button.svc-card:hover { border-color: #aeaeb2; background: #f5f5f7; color: #6e6e73; }
+    button.svc-card.selected {
+      border-color: #1d1d1f;
+      background: #f5f5f7;
+      font-weight: 600;
+      color: #1d1d1f;
+    }
+
+    /* ── OPTION CARDS (big choice cards for subsequent steps) ── */
+    .opt-stack { display: flex; flex-direction: column; gap: 8px; }
+    .opt-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    button.opt-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      transition: border-color 0.15s, background 0.12s, color 0.15s;
+      color: #aeaeb2;
+    }
+    button.opt-card:hover { border-color: #aeaeb2; color: #6e6e73; }
+    button.opt-card.selected { border-color: #1d1d1f; background: #f5f5f7; color: #1d1d1f; }
+
+    .opt-grid-2 button.opt-card {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .oc-title { font-size: 13.5px; font-weight: 500; color: inherit; }
+    .oc-desc  { font-size: 11px; color: inherit; opacity: 0.75; line-height: 1.4; }
+    .oc-price { font-size: 14px; font-weight: 600; color: inherit; white-space: nowrap; margin-left: 8px; }
+
+    /* ── STEPPER ── */
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 12px;
+      overflow: hidden;
+      width: fit-content;
+    }
+    .step-btn {
+      width: 46px; height: 46px;
+      background: #fff;
+      border: none;
+      font-size: 22px;
+      font-weight: 300;
+      color: #1d1d1f;
+      cursor: pointer;
+      transition: background 0.12s;
+      font-family: inherit;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-btn:hover { background: #f5f5f7; }
+    .step-btn:active { background: #e5e5ea; }
+    .step-val {
+      min-width: 52px;
+      text-align: center;
+      font-size: 17px;
+      font-weight: 600;
+      color: #1d1d1f;
+      border-left: 1.5px solid #e5e5ea;
+      border-right: 1.5px solid #e5e5ea;
+      height: 46px;
+      line-height: 46px;
+    }
+
+    /* ── TOGGLE CARD ── */
+    .toggle-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 14px 16px;
+      background: #fff;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: inherit;
+      margin-bottom: 8px;
+      transition: border-color 0.15s, background 0.12s, color 0.15s;
+      text-align: left;
+      color: #aeaeb2;
+    }
+    .toggle-card:last-child { margin-bottom: 0; }
+    .toggle-card:hover { border-color: #aeaeb2; color: #6e6e73; }
+    .toggle-card.selected { border-color: #1d1d1f; background: #f5f5f7; color: #1d1d1f; }
+    .tc-left { flex: 1; }
+    .tc-title { font-size: 13.5px; font-weight: 500; color: inherit; }
+    .tc-desc  { font-size: 11px; color: inherit; opacity: 0.75; margin-top: 2px; }
+    .tc-check {
+      width: 22px; height: 22px;
+      border: 1.5px solid #d2d2d7;
+      border-radius: 50%;
+      margin-left: 14px;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      color: transparent;
+      transition: all 0.15s;
+    }
+    .toggle-card.selected .tc-check {
+      background: #1d1d1f;
+      border-color: #1d1d1f;
+      color: #fff;
+    }
+
+    .field-note { font-size: 11px; color: #86868b; margin-top: 8px; line-height: 1.5; }
+
+    /* ── RESULT PANEL ── */
+    .result-panel {
+      padding: 32px 32px 40px;
+      background: #f5f5f7;
+      display: flex;
+      flex-direction: column;
+    }
+    .placeholder {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      flex: 1; min-height: 260px;
+      gap: 14px; text-align: center;
+    }
+    .placeholder p { font-size: 14px; color: #aeaeb2; line-height: 1.6; }
+
+    /* ── FEE LINES ── */
+    .fee-section { margin-bottom: 24px; }
+    .section-label {
+      font-size: 10px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: #aeaeb2;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 8px;
+      scroll-margin-top: 20px;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: #e5e5ea; }
+    .fee-line {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 7px 0; border-bottom: 1px solid #e5e5ea;
+    }
+    .fee-line:last-of-type { border-bottom: none; }
+    .fee-line .fn { font-size: 13px; color: #48484a; line-height: 1.4; padding-right: 12px; }
+    .fee-line .fa { font-size: 13px; font-weight: 500; color: #1d1d1f; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .fee-line.discount .fa { color: #34c759; }
+    .fee-line.subtotal { border-top: 1px solid #d2d2d7; border-bottom: none; margin-top: 4px; padding-top: 12px; }
+    .fee-line.subtotal .fn { font-size: 21px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.5px; }
+    .fee-line.subtotal .fa { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; }
+    .fee-note-inline { font-size: 11px; color: #86868b; margin: 5px 0 2px; line-height: 1.5; }
+    .installment-note { font-size: 11px; color: #86868b; margin-top: 8px; line-height: 1.7; }
+
+    /* ── REP FEE HERO ── */
+    .rep-hero { scroll-margin-top: 20px; }
+    .rep-hero {
+      margin: 16px 0 20px;
+      padding: 22px 20px;
+      background: #e5e5ea;
+      border-radius: 14px;
+      text-align: center;
+    }
+    .rep-hero .rep-hero-label {
+      font-size: 11px; font-weight: 500; letter-spacing: 0.8px;
+      text-transform: uppercase; color: #6e6e73; margin-bottom: 6px;
+    }
+    .rep-hero .rep-hero-amount {
+      font-size: 36px; font-weight: 700; color: #1d1d1f;
+      letter-spacing: -1px; line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .rep-hero .rep-hero-cad {
+      font-size: 12px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: #6e6e73; margin-top: 4px;
+    }
+    .rep-hero .rep-hero-note {
+      font-size: 11px; color: #86868b; margin-top: 8px;
+    }
+    .rep-hero .rep-hero-secondary {
+      font-size: 12px; color: #6e6e73; margin-top: 10px;
+      padding-top: 10px; border-top: 1px solid #d1d1d6;
+    }
+    .rep-hero .rep-hero-secondary strong {
+      color: #1d1d1f; font-weight: 600;
+    }
+
+    /* ── GOV FEES (de-emphasized) ── */
+    .gov-section { opacity: 0.75; }
+    .gov-section .section-label { color: #c7c7cc; }
+
+    /* ── GRAND TOTAL (secondary) ── */
+    .total-display {
+      margin: 16px 0 16px;
+      padding: 14px 16px;
+      background: #f5f5f7;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .total-display .total-label {
+      font-size: 12px; font-weight: 500; color: #6e6e73;
+    }
+    .total-display .total-amount {
+      font-size: 17px; font-weight: 600; color: #1d1d1f;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── SOCIAL PROOF ── */
+    .social-proof {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #f5f5f7;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+    .sp-icon {
+      width: 22px; height: 22px;
+      background: #1d1d1f;
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .sp-text { font-size: 12px; color: #48484a; line-height: 1.4; }
+    .sp-text strong { color: #1d1d1f; font-weight: 600; }
+
+    .disclaimer { font-size: 10.5px; color: #aeaeb2; line-height: 1.6; margin-bottom: 16px; }
+
+    .cta-btn {
+      display: block; width: 100%;
+      padding: 15px 20px; background: #1d1d1f; color: #fff;
+      text-align: center; text-decoration: none;
+      font-family: inherit; font-size: 15px; font-weight: 500;
+      border: none; border-radius: 980px; cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .cta-btn:hover { background: #3a3a3c; }
+    .cta-btn:active { transform: scale(0.98); }
+
+    .cta-note {
+      font-size: 11px;
+      color: #aeaeb2;
+      text-align: center;
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    /* ── START PROCESS TOOLTIP ── */
+    .cta-wrap { position: relative; }
+    .start-tooltip {
+      display: none;
+      position: absolute;
+      bottom: calc(100% + 12px);
+      left: 0; right: 0;
+      background: #fff;
+      border: 1.5px solid #e5e5ea;
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      z-index: 99;
+      animation: tooltipIn 0.22s ease forwards;
+    }
+    .start-tooltip::after {
+      content: '';
+      position: absolute;
+      bottom: -8px; left: 50%; transform: translateX(-50%);
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 8px solid #fff;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.06));
+    }
+    @keyframes tooltipIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .start-tooltip .tt-title {
+      font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 4px;
+    }
+    .start-tooltip .tt-body {
+      font-size: 12px; color: #6e6e73; line-height: 1.65; margin-bottom: 14px;
+    }
+    .start-tooltip .tt-email-btn {
+      display: block; width: 100%;
+      padding: 11px 16px; background: #1d1d1f; color: #fff;
+      text-align: center; text-decoration: none;
+      font-family: inherit; font-size: 13px; font-weight: 500;
+      border-radius: 980px; margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .start-tooltip .tt-email-btn:hover { background: #3a3a3c; }
+    .start-tooltip .tt-dismiss {
+      display: block; width: 100%; background: none; border: none;
+      font-size: 12px; color: #aeaeb2; cursor: pointer; padding: 4px 0;
+      font-family: inherit; text-align: center;
+    }
+    .start-tooltip .tt-dismiss:hover { color: #6e6e73; }
+    .payment-logos { margin-top: 16px; text-align: center; }
+    .payment-label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #c7c7cc; margin-bottom: 9px; }
+    .payment-icons { display: flex; gap: 8px; justify-content: center; align-items: center; }
+    .pay-logo { height: 26px; width: auto; border-radius: 5px; display: block; opacity: 0.85; }
+  </style>
+</head>
+<body>
+<script>if(location.search.includes('modal=1'))document.documentElement.classList.add('is-modal');</script>
+
+<!-- ══ STICKY NAV ══ -->
+<nav class="est-nav">
+  <a href="index.html" class="est-nav-logo">
+    <img src="logo.png" alt="Olfindo Immigration Consulting" onerror="this.src='https://static.wixstatic.com/media/49d109_2e888f8378134d64a75844cb4d81e09a~mv2.png/v1/crop/x_0,y_251,w_3072,h_890/fill/w_640,h_185,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Olcorp_New_Logo_High_Res.png';this.onerror=null">
+  </a>
+  <a href="index.html" class="est-nav-back">← <span>Back to Home</span></a>
+  <a href="https://calendly.com/olcorp" class="est-nav-cta" target="_blank">Book Assessment</a>
+</nav>
+
+<div class="estimator">
+
+  <!-- HEADER -->
+  <div class="est-header">
+    <img class="logo"
+      src="logo.png"
+      onerror="this.src='https://static.wixstatic.com/media/49d109_2e888f8378134d64a75844cb4d81e09a~mv2.png/v1/crop/x_0,y_251,w_3072,h_890/fill/w_640,h_185,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Olcorp_New_Logo_High_Res.png';this.onerror=null"
+      alt="Olfindo Immigration Consulting Corp">
+    <h1>Fee Estimator</h1>
+    <div class="subtitle">Estimate your Representation Service &amp; Government Fees</div>
+  </div>
+
+  <div class="est-body">
+
+    <!-- ══ FORM PANEL ══ -->
+    <div class="form-panel">
+
+      <!-- Phase navigation: Back button -->
+      <button id="backBtn" class="back-btn" onclick="resetToStart()">← Start Over</button>
+
+      <!-- Phase 1: Category Selection -->
+      <div class="field-group active" id="categoryGroup">
+        <div class="step-q">How can we help you?</div>
+        <div class="cat-grid">
+          <button class="cat-card" onclick="selectCategory('consultation', this)">
+            <div class="cat-title">Consultation</div>
+            <div class="cat-desc">Quick expert advice before you decide</div>
+          </button>
+          <button class="cat-card" onclick="selectCategory('tr', this)">
+            <div class="cat-title">Temporary Residence</div>
+            <div class="cat-desc">Work, study, visit &amp; eTA</div>
+          </button>
+          <button class="cat-card" onclick="selectCategory('pr', this)">
+            <div class="cat-title">Permanent Residence</div>
+            <div class="cat-desc">SINP, spousal &amp; family sponsorship</div>
+          </button>
+          <button class="cat-card" onclick="selectCategory('other', this)">
+            <div class="cat-title">Other Services</div>
+            <div class="cat-desc">Citizenship, school enrollment, SINP employer</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Phase 2a: PR Services -->
+      <div class="field-group" id="svcGroup_pr">
+        <div class="step-q">Which permanent residence pathway?</div>
+        <div class="svc-cards">
+          <button class="svc-card" onclick="selectService('sinp_pr', this)">SINP-Based Work Permit &amp; PR Applications</button>
+          <button class="svc-card" onclick="selectService('family_sponsorship', this)">Family Sponsorship (Spouse / Partner)</button>
+        </div>
+      </div>
+
+      <!-- Phase 2b: TR Services -->
+      <div class="field-group" id="svcGroup_tr">
+        <div class="step-q">Which temporary residence service?</div>
+        <div class="svc-cards">
+          <button class="svc-card" onclick="selectService('work_permit', this)">Work Permit</button>
+          <button class="svc-card" onclick="selectService('pgwp', this)">Post-Graduate Work Permit (PGWP)</button>
+          <button class="svc-card" onclick="selectService('francophone_wp', this)">Francophone Mobility Work Permit</button>
+          <button class="svc-card" onclick="selectService('study_permit', this)">International Student (Study Permit)</button>
+          <button class="svc-card" onclick="selectService('stay_extension', this)">Stay Extension (Visitor Record)</button>
+          <button class="svc-card" onclick="selectService('visitor_visa', this)">Tourist / Visitor Visa</button>
+          <button class="svc-card" onclick="selectService('super_visa', this)">Super Visa (Parents)</button>
+          <button class="svc-card" onclick="selectService('eta', this)">Electronic Travel Authorization (eTA)</button>
+          <button class="svc-card" onclick="selectService('status_restoration', this)">Status Restoration</button>
+        </div>
+      </div>
+
+      <!-- Phase 2c: Other Services -->
+      <div class="field-group" id="svcGroup_other">
+        <div class="step-q">Which service?</div>
+        <div class="svc-cards">
+          <button class="svc-card" onclick="selectService('citizenship', this)">Citizenship</button>
+          <button class="svc-card" onclick="selectService('school_enrollment', this)">School Enrollment to Canadian DLI</button>
+          <button class="svc-card" onclick="selectService('sinp_employer', this)">SINP Employer Certification</button>
+        </div>
+      </div>
+
+      <!-- Returning Client -->
+      <div class="field-group" id="returningClientGroup">
+        <div class="step-q">Are you a returning client?</div>
+        <p class="field-note" style="margin-bottom:12px">"Client" means we have signed a Service Agreement before.</p>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('clientStatus', 'new', this); revealAfter('returningClientGroup')">
+            <div><div class="oc-title">No, this is my first time.</div><div class="oc-desc">Standard rates apply</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('clientStatus', 'family', this); revealAfter('returningClientGroup')">
+            <div><div class="oc-title">No, but I am a close family member of your client.</div><div class="oc-desc">Spouse, Child, or Parents · 10% off representation fees</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('clientStatus', 'returning', this); revealAfter('returningClientGroup')">
+            <div><div class="oc-title">Yes, I am a returning client.</div><div class="oc-desc">20% off representation fees</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Consultation Type -->
+      <div class="field-group" id="consultationTypeGroup">
+        <div class="step-q">Choose your consultation type</div>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('consultationType', 35, this)">
+            <div><div class="oc-title">15-min Quick Phone Call</div><div class="oc-desc">Ideal for quick questions, brief case updates, or non-urgent general inquiries.</div></div>
+            <span class="oc-price">$35</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 45, this)">
+            <div><div class="oc-title">15-min URGENT Phone Call</div><div class="oc-desc">Ideal for urgent questions or pressing time-sensitive updates.</div></div>
+            <span class="oc-price">$45</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 55, this)">
+            <div><div class="oc-title">30-min Phone Call</div><div class="oc-desc">Ideal for in-depth case discussions, reviews, or detailed non-urgent inquiries.</div></div>
+            <span class="oc-price">$55</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 70, this)">
+            <div><div class="oc-title">30-min URGENT Phone Call</div><div class="oc-desc">Ideal for urgent concerns or time-sensitive in-depth reviews.</div></div>
+            <span class="oc-price">$70</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 90, this)">
+            <div><div class="oc-title">30-min Video Consultation</div><div class="oc-desc">Recommended for detailed case reviews where face-to-face discussion or visual document walk-through is helpful.</div></div>
+            <span class="oc-price">$90</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 150, this)">
+            <div><div class="oc-title">1 Hour Video Consultation</div><div class="oc-desc">Ideal for application reviews, complex case assessments, or extended discussions.</div></div>
+            <span class="oc-price">$150</span>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationType', 200, this)">
+            <div><div class="oc-title">1 Hour In Person / In Your Home</div><div class="oc-desc">Ideal for comprehensive case assessments and detailed document review.</div></div>
+            <span class="oc-price">$200</span>
+          </button>
+        </div>
+        <p class="field-note">Fee credited toward representation fee if you proceed.</p>
+      </div>
+
+      <!-- Work Permit Type -->
+      <div class="field-group" id="wpTypeGroup">
+        <div class="step-q">Work permit type</div>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('wpType', 'employer', this); revealAfter('wpTypeGroup')">
+            <div class="oc-title">Employer-Specific</div>
+            <div class="oc-desc">LMIA / SINP / LMIA-Exempt</div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('wpType', 'open', this); revealAfter('wpTypeGroup')">
+            <div class="oc-title">Open Work Permit</div>
+            <div class="oc-desc">+$100 holder fee</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Family Composition (sinp_pr, study_permit) -->
+      <div class="field-group" id="familyGroup">
+        <div class="step-q">Who is applying?</div>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('family', 'single', this); onFamilyChange()">
+            <div><div class="oc-title">Just me</div><div class="oc-desc">Principal applicant only</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('family', 'spouse', this); onFamilyChange()">
+            <div><div class="oc-title">Me + Spouse / Partner</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('family', 'family', this); onFamilyChange()">
+            <div><div class="oc-title">Me + Spouse + Children</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sponsorship Dependents -->
+      <div class="field-group" id="sponsorFamilyGroup">
+        <div class="step-q">Who are you sponsoring?</div>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('sponsorFamily', 'couple', this); onSponsorFamilyChange()">
+            <div><div class="oc-title">Spouse / Partner only</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('sponsorFamily', 'couple_children', this); onSponsorFamilyChange()">
+            <div><div class="oc-title">Spouse + Dependent Children</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Children Count -->
+      <div class="field-group" id="childrenGroup">
+        <div class="step-q">Number of dependent children</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="adjustCount('children', -1)">−</button>
+          <span class="step-val" id="childrenVal">1</span>
+          <button class="step-btn" onclick="adjustCount('children', 1)">+</button>
+        </div>
+      </div>
+
+      <!-- Number of Applicants -->
+      <div class="field-group" id="numApplicantsGroup">
+        <div class="step-q">Number of applicants</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="adjustCount('numApplicants', -1)">−</button>
+          <span class="step-val" id="numApplicantsVal">1</span>
+          <button class="step-btn" onclick="adjustCount('numApplicants', 1)">+</button>
+        </div>
+        <p class="field-note">Fees calculated per applicant.</p>
+      </div>
+
+      <!-- Status Type -->
+      <div class="field-group" id="statusTypeGroup">
+        <div class="step-q">Status being restored</div>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('statusType', 'worker', this); revealAfter('statusTypeGroup')">
+            <div><div class="oc-title">Worker</div><div class="oc-desc">$246.25 restore + $155 WP = $401.25</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('statusType', 'student', this); revealAfter('statusTypeGroup')">
+            <div><div class="oc-title">Student</div><div class="oc-desc">$246.25 restore + $150 SP = $396.25</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('statusType', 'visitor', this); revealAfter('statusTypeGroup')">
+            <div><div class="oc-title">Visitor</div><div class="oc-desc">$246.25</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Citizenship Type -->
+      <div class="field-group" id="citizenshipTypeGroup">
+        <div class="step-q">Applicant type</div>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('citizenshipType', 'adult', this); revealAfter('citizenshipTypeGroup')">
+            <div class="oc-title">Adult</div>
+            <div class="oc-desc">Gov. fee $630</div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('citizenshipType', 'minor', this); revealAfter('citizenshipTypeGroup')">
+            <div class="oc-title">Minor / Child</div>
+            <div class="oc-desc">Gov. fee $100</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- SINP Employer Candidates -->
+      <div class="field-group" id="sinpCandidatesGroup">
+        <div class="step-q">Number of EPA candidates</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="adjustCount('sinpCandidates', -1)">−</button>
+          <span class="step-val" id="sinpCandidatesVal">1</span>
+          <button class="step-btn" onclick="adjustCount('sinpCandidates', 1)">+</button>
+        </div>
+        <p class="field-note">First candidate included. Each additional: +$990.</p>
+      </div>
+
+      <!-- Visa Spouse (Tourist Visa & Super Visa) -->
+      <div class="field-group" id="visaSpouseGroup">
+        <div class="step-q">Is your spouse / partner applying with you?</div>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('visaSpouse', false, this); revealAfter('visaSpouseGroup')">
+            <div><div class="oc-title">No, just me</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('visaSpouse', true, this); revealAfter('visaSpouseGroup')">
+            <div><div class="oc-title">Yes, include my spouse</div><div class="oc-desc">+50% of representation fee</div></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Common Law -->
+      <div class="field-group" id="commonLawGroup">
+        <div class="step-q">Relationship type <span style="font-weight:400;color:#86868b">(optional)</span></div>
+        <button class="toggle-card" id="commonLawCard" onclick="toggleOpt('commonLaw', this)">
+          <div class="tc-left">
+            <div class="tc-title">Common-Law Relationship</div>
+            <div class="tc-desc">+$500 rep fee</div>
+          </div>
+          <span class="tc-check">✓</span>
+        </button>
+      </div>
+
+      <!-- TR Biometrics -->
+      <div class="field-group" id="trBiometricsGroup">
+        <div class="step-q">Is this the first time applying for this visa or permit?</div>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('trBiometrics', 'required', this); revealAfter('trBiometricsGroup')">
+            <div class="oc-title">Yes</div>
+            <div class="oc-desc">Biometrics fee ($85) will be added</div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('trBiometrics', 'exempt', this); revealAfter('trBiometricsGroup')">
+            <div class="oc-title">No</div>
+            <div class="oc-desc">Biometrics already paid or exempt</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- PR Biometrics — always required since June 2023, no choice shown -->
+
+      <!-- Consultation Credit (always last prompt) -->
+      <div class="field-group" id="consultationCreditGroup">
+        <div class="step-q">Have you paid a phone, video or in-person consultation before?</div>
+        <p class="field-note" style="margin-bottom:12px">If yes, the amount paid will be credited towards your representation fee.</p>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('consultationPaid', false, this); onConsultCreditChange()">
+            <div><div class="oc-title">No</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('consultationPaid', true, this); onConsultCreditChange()">
+            <div><div class="oc-title">Yes</div><div class="oc-desc">Amount will be credited</div></div>
+          </button>
+        </div>
+        <div id="consultAmountWrapper" style="display:none; margin-top:14px;">
+          <div class="step-q" style="font-size:12px; margin-bottom:8px;">Enter the total amount paid (CAD)</div>
+          <input type="number" id="consultAmountInput" min="0" step="0.01" placeholder="e.g. 150.00"
+            oninput="state.consultationAmount = parseFloat(this.value) || 0; calculate()"
+            style="width:100%; padding:12px 14px; border:1.5px solid #e5e5ea; border-radius:10px; font-size:15px; font-family:inherit; outline:none;">
+        </div>
+      </div>
+
+      <!-- Start Over footer — visible once last prompt is active -->
+      <div class="start-over-footer">
+        <button onclick="resetToStart()">← Start Over</button>
+      </div>
+
+    </div><!-- /form-panel -->
+
+    <!-- ══ RESULT PANEL ══ -->
+    <div class="result-panel">
+
+      <div class="placeholder" id="placeholder">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="1.2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M3 9h18M9 21V9"/>
+        </svg>
+        <p>Select a service<br>to see your estimate</p>
+      </div>
+
+      <div id="resultContent" style="display:none">
+
+        <div class="fee-section">
+          <div class="section-label" id="repSectionLabel">Representation Fees</div>
+          <div id="repFeeLines"></div>
+        </div>
+
+        <div class="rep-hero">
+          <div class="rep-hero-label" id="repHeroLabel">First Due to Start the Process</div>
+          <div class="rep-hero-amount" id="repHeroAmount">—</div>
+          <div class="rep-hero-note">Price in CAD, includes 5% GST.</div>
+          <div class="rep-hero-secondary" id="repHeroSecondary" style="display:none">
+            Total Contract Payable to Olcorp: <strong id="repHeroTotal">—</strong>
+          </div>
+        </div>
+
+        <div class="fee-section gov-section">
+          <div class="section-label">Government Fees (paid directly to IRCC)</div>
+          <div id="govFeeLines"></div>
+        </div>
+
+        <div class="total-display">
+          <div class="total-label" id="totalLabel">Total Estimated Cost (CAD)</div>
+          <div class="total-amount" id="grandTotal">—</div>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="social-proof" id="socialProof">
+          <span class="sp-icon">✓</span>
+          <span class="sp-text" id="socialProofText"></span>
+        </div>
+
+        <p class="disclaimer" id="disclaimer"></p>
+
+        <div class="cta-wrap">
+          <!-- Tooltip: has paid consultation -->
+          <div class="start-tooltip" id="startTooltip">
+            <div class="tt-title">✅ Thank You for Using Our Fee Estimator!</div>
+            <div class="tt-body">If you are ready to begin your immigration journey, please send us an email at <a href="mailto:consulting@olcorp.ca" style="color:#0071e3;text-decoration:none;">consulting@olcorp.ca</a> to let us know that you would like to proceed with the process.<br><br>We look forward to welcoming you to our professional representation service and assisting you every step of the way toward your Canadian dream.</div>
+            <div id="emailStatus" style="display:none; font-size:13px; font-weight:500; color:#1d1d1f; text-align:center; padding:10px 0 4px; line-height:1.6;">
+              Thank you! We will wait for your email to<br>
+              <a href="mailto:consulting@olcorp.ca" style="color:#0071e3; text-decoration:none;">consulting@olcorp.ca</a>
+            </div>
+            <button class="tt-email-btn" id="startEmailBtn" onclick="showEmailThankYou()">📧 Email Olcorp Now</button>
+            <button class="tt-dismiss" onclick="document.getElementById('startTooltip').style.display='none'">Dismiss</button>
+          </div>
+          <!-- Tooltip: has NOT paid consultation -->
+          <div class="start-tooltip" id="bookTooltip">
+            <div class="tt-title">📅 Book Your Initial Consultation First</div>
+            <div class="tt-body">Every representation process begins with an initial consultation. This allows us to carefully assess your eligibility, review your immigration history and documents, discuss possible pathways, and determine whether it is advisable to proceed with your application.<br><br>Our goal is to provide you with honest, professional, and strategic guidance before you invest in the full process.</div>
+            <a class="tt-email-btn" href="https://calendly.com/olcorp" target="_blank">Book a Consultation</a>
+            <button class="tt-dismiss" onclick="document.getElementById('bookTooltip').style.display='none'">Dismiss</button>
+          </div>
+          <button class="cta-btn" onclick="handleStartProcess()">Start the Process</button>
+        </div>
+        <p class="cta-note">All representation begins with a consultation for initial assessment. Consultation fees are deducted towards the representation fees.</p>
+
+        <div class="payment-logos">
+          <span class="payment-label">We Accept</span>
+          <div class="payment-icons">
+            <svg class="pay-logo" viewBox="0 0 60 38" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="38" rx="5" fill="#1A1F71"/>
+              <text x="30" y="25" font-family="Arial,Helvetica,sans-serif" font-size="15" font-weight="900" font-style="italic" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">VISA</text>
+            </svg>
+            <svg class="pay-logo" viewBox="0 0 60 38" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="38" rx="5" fill="#1A1A1A"/>
+              <circle cx="23" cy="19" r="10" fill="#EB001B"/>
+              <circle cx="37" cy="19" r="10" fill="#F79E1B"/>
+              <path d="M30 11.2a10 10 0 0 1 0 15.6 10 10 0 0 1 0-15.6z" fill="#FF5F00"/>
+            </svg>
+            <svg class="pay-logo" viewBox="0 0 60 38" xmlns="http://www.w3.org/2000/svg">
+              <rect width="60" height="38" rx="5" fill="#FFB3C7"/>
+              <text x="27" y="23" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="800" fill="#1A1A1A" text-anchor="middle" letter-spacing="0.3">klarna</text>
+              <circle cx="45" cy="23" r="1.5" fill="#1A1A1A"/>
+            </svg>
+            <svg class="pay-logo" viewBox="0 0 80 38" xmlns="http://www.w3.org/2000/svg">
+              <rect width="80" height="38" rx="5" fill="#FFD100"/>
+              <text x="40" y="14" font-family="Arial,Helvetica,sans-serif" font-size="7.5" font-weight="900" fill="#1A1A1A" text-anchor="middle" letter-spacing="0.5">INTERAC</text>
+              <text x="40" y="26" font-family="Arial,Helvetica,sans-serif" font-size="6.5" font-weight="700" fill="#1A1A1A" text-anchor="middle" letter-spacing="0.3">e-Transfer</text>
+              <line x1="10" y1="18" x2="70" y2="18" stroke="#1A1A1A" stroke-width="0.7" opacity="0.4"/>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// EMAILJS CONFIGURATION
+// 1. Sign up free at https://emailjs.com
+// 2. Add your email service (Gmail / Outlook / etc.)
+// 3. Create a template — include variables:
+//    {{service_name}}, {{estimate_summary}}, {{reply_to}}
+//    Add an attachment block in the template for {{screenshot}}
+// 4. Replace the three values below with your actual IDs
+// ─────────────────────────────────────────────
+const EMAILJS_PUBLIC_KEY  = 'YOUR_PUBLIC_KEY';   // Account → API Keys
+const EMAILJS_SERVICE_ID  = 'YOUR_SERVICE_ID';   // Email Services tab
+const EMAILJS_TEMPLATE_ID = 'YOUR_TEMPLATE_ID';  // Email Templates tab
+(function() { if (typeof emailjs !== 'undefined') emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); })();
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const state = {
+  service: null,
+  consultationType: 35,
+  family: 'single',
+  sponsorFamily: 'couple',
+  children: 1,
+  numApplicants: 1,
+  wpType: 'employer',
+  statusType: 'worker',
+  citizenshipType: 'adult',
+  sinpCandidates: 1,
+  commonLaw: false,
+  prevRefusal: false,
+  specialAssist: false,
+  visaSpouse: false,
+  trBiometrics: 'required',
+  prBiometrics: 'required',
+  consultationPaid: false,
+  consultationAmount: 0,
+  clientStatus: 'new',
+};
+
+// ─────────────────────────────────────────────
+// FEE DATA
+// ─────────────────────────────────────────────
+const REP = {
+  sinp_pr:            { base: 2690, spouse: 500, child: 300 },
+  family_sponsorship: { base: 2690, spouse: 0,   child: 300 },
+  work_permit:        { base: 990,  spouse: 0,   child: 0   },
+  pgwp:               { base: 990,  spouse: 0,   child: 0   },
+  francophone_wp:     { base: 1290, spouse: 0,   child: 0   },
+  study_permit:       { base: 2690, spouse: 500, child: 300 },
+  stay_extension:     { base: 890,  spouse: 0,   child: 0   },
+  visitor_visa:       { base: 990,  spouse: 0,   child: 0   },
+  super_visa:         { base: 990,  spouse: 0,   child: 0   },
+  eta:                { base: 150,  spouse: 0,   child: 0   },
+  status_restoration: { base: 990,  spouse: 0,   child: 0   },
+  citizenship:        { base: 890,  spouse: 0,   child: 0   },
+  school_enrollment:  { base: 890,  spouse: 0,   child: 0   },
+  sinp_employer:      { base: 2590, spouse: 0,   child: 0   },
+};
+const IRCC = {
+  pr_pa: 990, pr_spouse: 990, pr_child: 270, rprf: 600,
+  sponsorship_couple: 1260, sponsorship_child: 180,
+  work_permit: 155, open_wp_holder: 100, study_permit: 150,
+  visitor_record: 100, visitor_visa: 100,
+  citizenship_adult: 630, citizenship_minor: 100,
+  restore_worker: 401.25, restore_student: 396.25, restore_visitor: 246.25,
+  bio_single: 85, bio_family: 170,
+};
+const GST = 0.05;
+const INSTALLMENTS = {
+  sinp_pr: null,
+  family_sponsorship: 'Payable in 3 equal installments',
+  study_permit: 'Payable in 3 equal installments',
+  sinp_employer: 'Payable in 3 equal installments',
+  work_permit: 'Payable in 2 installments',
+  pgwp: 'Payable in 2 installments',
+  francophone_wp: 'Payable in 2 installments',
+  stay_extension: 'Payable in 2 equal installments',
+  visitor_visa: 'Payable in 2 installments',
+  super_visa: 'Payable in 2 installments',
+  status_restoration: 'Payable in 2 equal installments',
+  school_enrollment: 'Payable in 2 equal installments',
+};
+
+// Social proof data from olcorp.ca homepage (updated Dec 2021 — to date)
+const SOCIAL_PROOF = {
+  consultation:       { n: '320', label: 'total represented applications approved since December 2021' },
+  sinp_pr:            { n: '29',  label: 'clients are now Permanent Residents through SINP' },
+  family_sponsorship: { n: '7',   label: 'Spousal / Common-Law Sponsorships approved' },
+  work_permit:        { n: '48',  label: 'Work Permits approved (PGWP, SINP-based, SOWP)' },
+  pgwp:               { n: '48',  label: 'Work Permits approved including PGWP' },
+  francophone_wp:     { n: '48',  label: 'Work Permits approved' },
+  study_permit:       { n: '31',  label: 'Study Permits approved' },
+  stay_extension:     { n: '20',  label: 'Stay Extensions (Visitor Records) approved' },
+  visitor_visa:       { n: '49',  label: 'Visitor Visas approved (including artists & business)' },
+  super_visa:         { n: '5',   label: 'Super Visas approved' },
+  eta:                { n: '13',  label: 'eTAs approved' },
+  status_restoration: { n: '12',  label: 'Restorations of Status approved' },
+  citizenship:        { n: '3',   label: 'Citizenship applications approved' },
+  school_enrollment:  { n: '31',  label: 'Study Permits approved' },
+  sinp_employer:      { n: '10',  label: 'Employer SINP Certifications completed' },
+};
+
+// ─────────────────────────────────────────────
+// SEQUENCES
+// ─────────────────────────────────────────────
+const SEQUENCES = {
+  consultation:       ['consultationTypeGroup'],
+  sinp_pr:            ['returningClientGroup', 'familyGroup', 'consultationCreditGroup'],
+  family_sponsorship: ['returningClientGroup', 'sponsorFamilyGroup', 'commonLawGroup', 'consultationCreditGroup'],
+  work_permit:        ['returningClientGroup', 'wpTypeGroup', 'familyGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  pgwp:               ['returningClientGroup', 'consultationCreditGroup'],
+  francophone_wp:     ['returningClientGroup', 'familyGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  study_permit:       ['returningClientGroup', 'familyGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  stay_extension:     ['returningClientGroup', 'numApplicantsGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  visitor_visa:       ['returningClientGroup', 'visaSpouseGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  super_visa:         ['returningClientGroup', 'visaSpouseGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  eta:                ['returningClientGroup', 'consultationCreditGroup'],
+  status_restoration: ['returningClientGroup', 'statusTypeGroup', 'trBiometricsGroup', 'consultationCreditGroup'],
+  citizenship:        ['returningClientGroup', 'citizenshipTypeGroup', 'consultationCreditGroup'],
+  school_enrollment:  ['returningClientGroup', 'consultationCreditGroup'],
+  sinp_employer:      ['returningClientGroup', 'sinpCandidatesGroup', 'consultationCreditGroup'],
+};
+
+const ALL_CONDITIONAL = [
+  'consultationTypeGroup','familyGroup','sponsorFamilyGroup','childrenGroup',
+  'numApplicantsGroup','wpTypeGroup','statusTypeGroup','citizenshipTypeGroup',
+  'sinpCandidatesGroup','visaSpouseGroup','commonLawGroup',
+  'trBiometricsGroup','consultationCreditGroup','returningClientGroup'
+];
+
+const ALL_SERVICE_GROUPS = ['svcGroup_pr', 'svcGroup_tr', 'svcGroup_other'];
+
+// ─────────────────────────────────────────────
+// REVEAL SYSTEM
+// ─────────────────────────────────────────────
+function g(id) { return document.getElementById(id); }
+
+function showField(id, delay) {
+  setTimeout(() => {
+    const el = g(id);
+    if (!el || el.classList.contains('active')) return;
+    el.classList.add('active');
+    // Desktop only: scroll into view if the element is below the visible area
+    setTimeout(() => {
+      if (window.innerWidth > 680) {
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom > window.innerHeight) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }, 80);
+  }, delay || 0);
+}
+
+function hideField(id) {
+  const el = g(id);
+  if (!el) return;
+  el.classList.remove('active');
+}
+
+function hideAllConditional() {
+  ALL_CONDITIONAL.forEach(hideField);
+  // Reset defaults
+  state.family = 'single';
+  state.sponsorFamily = 'couple';
+  state.children = 1;
+  state.numApplicants = 1;
+  state.wpType = 'employer';
+  state.statusType = 'worker';
+  state.citizenshipType = 'adult';
+  state.sinpCandidates = 1;
+  state.commonLaw = false;
+  state.prevRefusal = false;
+  state.specialAssist = false;
+  state.visaSpouse = false;
+  state.trBiometrics = 'required';
+  state.prBiometrics = 'required';
+  state.clientStatus = 'new';
+  state.consultationPaid = false;
+  state.consultationAmount = 0;
+  // Reset card selections to defaults
+  resetCardSelections();
+  // Reset stepper displays
+  g('childrenVal').textContent = 1;
+  g('numApplicantsVal').textContent = 1;
+  g('sinpCandidatesVal').textContent = 1;
+  // Reset toggles
+  ['prevRefusalCard','specialAssistCard','commonLawCard'].forEach(id => {
+    const el = g(id);
+    if (el) el.classList.remove('selected');
+  });
+}
+
+function resetCardSelections() {
+  // Clear all opt-card selections across every conditional group
+  ALL_CONDITIONAL.forEach(id => {
+    const group = g(id);
+    if (group) group.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+  });
+  const inp = g('consultAmountInput'); if (inp) inp.value = '';
+  const wrap = g('consultAmountWrapper'); if (wrap) wrap.style.display = 'none';
+}
+
+function selectDefault(groupId, idx) {
+  const group = g(groupId);
+  if (!group) return;
+  const cards = group.querySelectorAll('.opt-card');
+  cards.forEach((c, i) => c.classList.toggle('selected', i === idx));
+}
+
+// Stepper groups have no click-to-advance, so auto-chain after they appear
+const STEPPER_GROUPS = new Set(['numApplicantsGroup', 'sinpCandidatesGroup']);
+
+function revealAfter(afterId) {
+  const svc = state.service;
+  const seq = SEQUENCES[svc] || [];
+  const idx = seq.indexOf(afterId);
+  if (idx >= 0 && idx + 1 < seq.length) {
+    const nextId = seq[idx + 1];
+    showField(nextId, 130);
+    // Stepper groups have no selection; auto-advance to the group after them
+    if (STEPPER_GROUPS.has(nextId)) {
+      setTimeout(() => revealAfter(nextId), 700);
+    }
+  }
+}
+
+function startSequence(svc) {
+  const seq = SEQUENCES[svc] || [];
+  if (seq.length) showField(seq[0], 150);
+}
+
+// ─────────────────────────────────────────────
+// EVENT HANDLERS
+// ─────────────────────────────────────────────
+
+function selectCategory(cat, btn) {
+  // Highlight selected category card
+  document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+
+  // Hide Phase 1, reveal back button
+  hideField('categoryGroup');
+  g('backBtn').style.display = 'block';
+
+  if (cat === 'consultation') {
+    // Skip Phase 2 — consultation has only one service
+    ALL_SERVICE_GROUPS.forEach(id => hideField(id));
+    state.service = 'consultation';
+    hideAllConditional();
+    startSequence('consultation');
+    calculate();
+  } else {
+    // Show Phase 2 service list for this category
+    ALL_SERVICE_GROUPS.forEach(id => hideField(id));
+    // Reset any prior service state
+    if (state.service) {
+      state.service = null;
+      hideAllConditional();
+      g('placeholder').style.display = 'flex';
+      g('resultContent').style.display = 'none';
+    }
+    showField('svcGroup_' + cat, 150);
+  }
+}
+
+function resetToStart() {
+  // Clear all state
+  state.service = null;
+  hideAllConditional();
+  ALL_SERVICE_GROUPS.forEach(id => hideField(id));
+
+  // Clear all card selections
+  document.querySelectorAll('.svc-card, .cat-card').forEach(c => c.classList.remove('selected'));
+
+  // Re-animate category group
+  const catEl = g('categoryGroup');
+  catEl.classList.remove('active');
+  void catEl.offsetWidth; // force reflow so animation replays
+  catEl.classList.add('active');
+
+  // Hide back button
+  g('backBtn').style.display = 'none';
+
+  // Reset result panel
+  g('placeholder').style.display = 'flex';
+  g('resultContent').style.display = 'none';
+}
+
+function selectService(svc, btn) {
+  // Phase 2 → Phase 3: hide service list
+  ALL_SERVICE_GROUPS.forEach(id => hideField(id));
+
+  // Update selected card
+  document.querySelectorAll('.svc-card').forEach(c => c.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+
+  state.service = svc;
+  hideAllConditional();
+  startSequence(svc);
+  calculate();
+}
+
+function selectOpt(field, value, btn) {
+  state[field] = value;
+  // Update selected card within the same opt-stack / opt-grid
+  const group = btn.closest('.opt-stack, .opt-grid-2');
+  if (group) group.querySelectorAll('.opt-card').forEach(c => c.classList.remove('selected'));
+  btn.classList.add('selected');
+  calculate();
+}
+
+function toggleOpt(field, btn) {
+  state[field] = !state[field];
+  btn.classList.toggle('selected', state[field]);
+  calculate();
+}
+
+function adjustCount(field, delta) {
+  const min = 1, max = field === 'sinpCandidates' ? 20 : 10;
+  state[field] = Math.max(min, Math.min(max, (state[field] || 1) + delta));
+  const displayId = field === 'numApplicants' ? 'numApplicantsVal' : field + 'Val';
+  const el = g(displayId);
+  if (el) el.textContent = state[field];
+  calculate();
+}
+
+function onFamilyChange() {
+  const svc = state.service;
+  const needChildren = state.family === 'family' && !['work_permit','francophone_wp'].includes(svc);
+  const hasBiometrics = svc !== 'sinp_pr';
+  if (needChildren) {
+    showField('childrenGroup', 130);
+    if (hasBiometrics) {
+      showField('trBiometricsGroup', 300);
+      // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
+    } else {
+      hideField('trBiometricsGroup');
+      showField('consultationCreditGroup', 300);
+    }
+  } else {
+    hideField('childrenGroup');
+    if (hasBiometrics) {
+      showField('trBiometricsGroup', 130);
+      // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
+    } else {
+      hideField('trBiometricsGroup');
+      showField('consultationCreditGroup', 130);
+    }
+  }
+}
+
+function showEmailThankYou() {
+  g('startEmailBtn').style.display = 'none';
+  g('emailStatus').style.display = 'block';
+}
+
+function handleStartProcess() {
+  if (state.consultationPaid === true) {
+    const tooltip = g('startTooltip');
+    const other   = g('bookTooltip');
+    other.style.display = 'none';
+    tooltip.style.display = tooltip.style.display === 'block' ? 'none' : 'block';
+  } else {
+    const tooltip = g('bookTooltip');
+    const other   = g('startTooltip');
+    other.style.display = 'none';
+    tooltip.style.display = tooltip.style.display === 'block' ? 'none' : 'block';
+  }
+}
+
+function onConsultCreditChange() {
+  const show = state.consultationPaid === true;
+  g('consultAmountWrapper').style.display = show ? 'block' : 'none';
+  if (show) {
+    setTimeout(() => {
+      const inp = g('consultAmountInput');
+      if (inp) inp.focus();
+    }, 80);
+  }
+  else { state.consultationAmount = 0; }
+  revealAfter('consultationCreditGroup');
+}
+
+function onSponsorFamilyChange() {
+  const needChildren = state.sponsorFamily === 'couple_children';
+  if (needChildren) {
+    showField('childrenGroup', 130);
+    showField('commonLawGroup', 300);
+    // commonLawGroup is an optional toggle — auto-show consultationCreditGroup after it appears
+    showField('consultationCreditGroup', 700);
+  } else {
+    hideField('childrenGroup');
+    showField('commonLawGroup', 130);
+    showField('consultationCreditGroup', 500);
+  }
+}
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+function fmt(n) {
+  return '$' + Math.abs(n).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function addLine(container, name, amount, isSubtotal, isDiscount) {
+  const d = document.createElement('div');
+  d.className = 'fee-line' + (isSubtotal ? ' subtotal' : '') + (isDiscount ? ' discount' : '');
+  d.innerHTML = `<span class="fn">${name}</span><span class="fa">${isDiscount ? '−' : ''}${fmt(amount)}</span>`;
+  container.appendChild(d);
+}
+function addNote(container, text) {
+  const p = document.createElement('p');
+  p.className = 'fee-note-inline';
+  p.textContent = text;
+  container.appendChild(p);
+}
+function addInstallNote(container, svc) {
+  if (INSTALLMENTS[svc]) {
+    const p = document.createElement('p');
+    p.className = 'installment-note';
+    p.innerHTML = INSTALLMENTS[svc];
+    container.appendChild(p);
+  }
+}
+
+// ─────────────────────────────────────────────
+// CALCULATE
+// ─────────────────────────────────────────────
+function calculate() {
+  const svc       = state.service;
+  const family    = state.family;
+  const sponFam   = state.sponsorFamily;
+  const numChild  = state.children;
+  const numApp    = state.numApplicants;
+  const wpType    = state.wpType;
+  const statusT   = state.statusType;
+  const citType   = state.citizenshipType;
+  const sinpCand  = state.sinpCandidates;
+  const commonLaw = state.commonLaw;
+  const prevRef   = state.prevRefusal;
+  const specAst   = state.specialAssist;
+  const trBioReq  = state.trBiometrics === 'required';
+  const prBioReq  = true; // Always required since June 2023
+  const returning = state.clientStatus === 'returning';
+  const needChildren = (family === 'family') || (sponFam === 'couple_children');
+  const children = needChildren ? numChild : 0;
+
+  if (!svc) {
+    g('placeholder').style.display = 'flex';
+    g('resultContent').style.display = 'none';
+    return;
+  }
+
+  g('placeholder').style.display = 'none';
+  g('resultContent').style.display = 'block';
+
+  const repDiv = g('repFeeLines');
+  const govDiv = g('govFeeLines');
+  repDiv.innerHTML = '';
+  govDiv.innerHTML = '';
+  let govTotal = 0;
+
+  // ── Consultation ──
+  g('repSectionLabel').textContent = svc === 'consultation' ? 'Consultation Fee' : 'Representation Fees';
+  g('totalLabel').textContent = 'Total Estimated Cost (CAD)';
+  document.querySelector('.total-display').style.display = 'flex';
+  if (svc === 'consultation') {
+    const fee = state.consultationType;
+    const gst = fee * GST;
+    const total = fee + gst;
+    addLine(repDiv, 'Consultation Fee', fee);
+    addLine(repDiv, 'GST (5%)', gst);
+    addLine(repDiv, 'Total (incl. GST)', total, true);
+    const n = document.createElement('p'); n.className = 'installment-note';
+    n.textContent = 'Fee credited toward representation fee if you proceed.';
+    repDiv.appendChild(n);
+    addNote(govDiv, 'No government fees for consultations.');
+    document.querySelector('.rep-hero').style.display = 'none';
+    document.querySelector('.total-display').style.display = 'none';
+    g('repHeroAmount').textContent = fmt(total);
+    g('grandTotal').textContent = fmt(total);
+    updateSocialProof(svc);
+    g('disclaimer').textContent = 'All amounts in CAD, include 5% GST. Consultation fees are non-refundable but credited toward your representation fee if you proceed. This estimate is for guidance only.';
+    return;
+  }
+
+  const hasSpouse   = (family === 'spouse' || family === 'family') && svc !== 'family_sponsorship';
+  const hasChildren = needChildren && children > 0;
+
+  // ── REP FEES ──
+  let repSub = 0;
+  if (svc === 'sinp_employer') {
+    const extra = Math.max(0, sinpCand - 1);
+    addLine(repDiv, `SINP Employer Certification (${sinpCand} Candidate${sinpCand > 1 ? 's' : ''})`, REP[svc].base + extra * 990);
+    repSub = REP[svc].base + extra * 990;
+  } else if (svc === 'stay_extension') {
+    const t = REP[svc].base * numApp;
+    addLine(repDiv, numApp > 1 ? `${numApp} Applicants × ${fmt(REP[svc].base)}` : 'Principal Applicant', t);
+    repSub = t;
+  } else if (['visitor_visa','super_visa'].includes(svc)) {
+    addLine(repDiv, 'Principal Applicant', REP[svc].base);
+    repSub = REP[svc].base;
+    if (state.visaSpouse) {
+      const spouseFee = REP[svc].base * 0.5;
+      addLine(repDiv, 'Spouse / Partner (50% rate)', spouseFee);
+      repSub += spouseFee;
+    }
+  } else {
+    addLine(repDiv, 'Principal Applicant', REP[svc].base); repSub = REP[svc].base;
+    if (hasSpouse && REP[svc].spouse > 0) { addLine(repDiv, 'Spouse / Partner', REP[svc].spouse); repSub += REP[svc].spouse; }
+    if (hasChildren && REP[svc].child > 0) { const cf = REP[svc].child * children; addLine(repDiv, `Dependent Children × ${children}`, cf); repSub += cf; }
+  }
+  if (svc === 'family_sponsorship' && commonLaw) { addLine(repDiv, 'Common-Law Surcharge', 500); repSub += 500; }
+  if (svc === 'eta') addNote(repDiv, '$7 IRCC eTA fee included in representation fee.');
+  if (state.clientStatus === 'family') { const disc = repSub * 0.10; addLine(repDiv, 'Family of Client Discount (−10%)', disc, false, true); repSub -= disc; }
+  if (state.clientStatus === 'returning') { const disc = repSub * 0.20; addLine(repDiv, 'Returning Client Discount (−20%)', disc, false, true); repSub -= disc; }
+  if (state.consultationPaid && state.consultationAmount > 0) { const credit = Math.min(state.consultationAmount, repSub); addLine(repDiv, 'Consultation Fee Credit', credit, false, true); repSub -= credit; }
+  const gst = repSub * GST;
+  addLine(repDiv, 'GST (5%)', gst);
+  const repTotal = repSub + gst;
+  addLine(repDiv, 'Subtotal (incl. GST)', repTotal, true);
+  if (svc === 'sinp_pr') {
+    const inst = repTotal / 3;
+    const p = document.createElement('p');
+    p.className = 'installment-note';
+    p.innerHTML = `<strong>Payable in 3 equal billing milestones of <span style="color:#1d1d1f;font-size:12.5px">${fmt(inst)}</span> each upon:</strong><br>`
+      + `1. Signing of Service Agreement and to start representation<br>`
+      + `2. Issuance of SINP Nomination<br>`
+      + `3. Completion of Work Permit and PR Applications`;
+    repDiv.appendChild(p);
+  } else {
+    addInstallNote(repDiv, svc);
+  }
+
+  // ── GOV FEES ──
+  if (svc === 'sinp_pr') {
+    addLine(govDiv, 'SINP Application Fee', 500); govTotal += 500;
+    addNote(govDiv, '📅 Due upon submission of SINP Nomination Application');
+    addLine(govDiv, 'Work Permit – Principal', IRCC.work_permit); govTotal += IRCC.work_permit;
+    if (hasSpouse) { addLine(govDiv, 'Work Permit – Spouse (Open)', IRCC.work_permit); govTotal += IRCC.work_permit; addLine(govDiv, 'Open WP Holder Fee – Spouse', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
+    addNote(govDiv, '📅 Due upon completion of Work Permit requirements');
+    addLine(govDiv, 'PR Application – Principal (incl. RPRF)', IRCC.pr_pa + IRCC.rprf); govTotal += IRCC.pr_pa + IRCC.rprf;
+    if (hasSpouse) { addLine(govDiv, 'PR Application – Spouse (incl. RPRF)', IRCC.pr_spouse + IRCC.rprf); govTotal += IRCC.pr_spouse + IRCC.rprf; }
+    if (hasChildren) { addLine(govDiv, `PR Application – Children × ${children}`, IRCC.pr_child * children); govTotal += IRCC.pr_child * children; }
+    if (prBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'PR Biometrics – PR Phase' + (hasSpouse ? ' (family)' : ''), b); govTotal += b; }
+    addNote(govDiv, '📅 Due upon completion of PR requirements');
+  } else if (svc === 'family_sponsorship') {
+    addLine(govDiv, 'Sponsorship + Processing + RPRF', IRCC.sponsorship_couple); govTotal += IRCC.sponsorship_couple;
+    if (hasChildren) { addLine(govDiv, `Children × ${children}`, IRCC.sponsorship_child * children); govTotal += IRCC.sponsorship_child * children; }
+    if (prBioReq) {
+      // Sponsor is already PR/citizen — only the sponsored person(s) pay biometrics
+      const sponsoredCount = 1 + (hasChildren ? children : 0); // spouse + any children
+      const bioFee = sponsoredCount >= 2 ? IRCC.bio_family : IRCC.bio_single;
+      const bioLabel = sponsoredCount >= 2 ? 'PR Biometrics – Spouse + Children (family rate)' : 'PR Biometrics – Sponsored Spouse';
+      addLine(govDiv, bioLabel, bioFee); govTotal += bioFee;
+    }
+  } else if (svc === 'work_permit') {
+    addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
+    if (wpType === 'open') { addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
+    if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
+  } else if (svc === 'pgwp') {
+    addLine(govDiv, 'Work Permit (PGWP)', IRCC.work_permit); govTotal += IRCC.work_permit;
+    addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder;
+  } else if (svc === 'francophone_wp') {
+    addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
+    addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder;
+    if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
+  } else if (svc === 'study_permit') {
+    addLine(govDiv, 'Study Permit – Principal', IRCC.study_permit); govTotal += IRCC.study_permit;
+    if (hasSpouse) { addLine(govDiv, 'Spouse Open Work Permit', IRCC.work_permit + IRCC.open_wp_holder); govTotal += IRCC.work_permit + IRCC.open_wp_holder; }
+    if (hasChildren) { addLine(govDiv, `Children Study Permit × ${children}`, IRCC.study_permit * children); govTotal += IRCC.study_permit * children; }
+    if (trBioReq) { const p = 1 + (hasSpouse ? 1 : 0) + children; const b = p >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (p >= 2 ? ' (family rate)' : ''), b); govTotal += b; }
+  } else if (svc === 'stay_extension') {
+    addLine(govDiv, `Visitor Record × ${numApp}`, IRCC.visitor_record * numApp); govTotal += IRCC.visitor_record * numApp;
+    if (trBioReq) { const b = numApp >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (numApp >= 2 ? ' (family)' : ''), b); govTotal += b; }
+  } else if (svc === 'visitor_visa') {
+    const vvCount = state.visaSpouse ? 2 : 1;
+    addLine(govDiv, vvCount > 1 ? `Visitor Visa × ${vvCount}` : 'Visitor Visa', IRCC.visitor_visa * vvCount); govTotal += IRCC.visitor_visa * vvCount;
+    if (trBioReq) { const b = vvCount >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (vvCount >= 2 ? ' (family)' : ''), b); govTotal += b; }
+  } else if (svc === 'super_visa') {
+    const svCount = state.visaSpouse ? 2 : 1;
+    addLine(govDiv, svCount > 1 ? `Super Visa × ${svCount}` : 'Super Visa', IRCC.visitor_visa * svCount); govTotal += IRCC.visitor_visa * svCount;
+    if (trBioReq) { const b = svCount >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (svCount >= 2 ? ' (family)' : ''), b); govTotal += b; }
+    addNote(govDiv, 'Medical exam required — cost varies, not included.');
+  } else if (svc === 'eta') {
+    addNote(govDiv, '$7 IRCC eTA fee is included in the representation fee above.');
+  } else if (svc === 'status_restoration') {
+    const fee = statusT === 'worker' ? IRCC.restore_worker : statusT === 'student' ? IRCC.restore_student : IRCC.restore_visitor;
+    addLine(govDiv, `Status Restoration (${statusT.charAt(0).toUpperCase() + statusT.slice(1)})`, fee); govTotal += fee;
+    if (trBioReq) { addLine(govDiv, 'TR Biometrics', IRCC.bio_single); govTotal += IRCC.bio_single; }
+  } else if (svc === 'citizenship') {
+    const fee = citType === 'adult' ? IRCC.citizenship_adult : IRCC.citizenship_minor;
+    addLine(govDiv, `Citizenship – ${citType === 'adult' ? 'Adult' : 'Minor'}`, fee); govTotal += fee;
+  } else if (svc === 'school_enrollment') {
+    addLine(govDiv, 'School Application Fees (avg.)', 150); govTotal += 150;
+    addNote(govDiv, 'School fees vary by institution. Study permit is separate.');
+  } else if (svc === 'sinp_employer') {
+    addNote(govDiv, 'No IRCC fees — this is a provincial SINP application.');
+  }
+
+  if (govTotal > 0) addLine(govDiv, 'Government Fees Subtotal', govTotal, true);
+  if (svc !== 'eta') addNote(govDiv, 'Government fees are paid directly by the applicant using their credit card. We do not collect these fees on your behalf.');
+
+  const grand = repTotal + govTotal;
+  document.querySelector('.rep-hero').style.display = '';
+
+  // Determine first installment amount
+  const threeInstall = ['sinp_pr','family_sponsorship','study_permit','sinp_employer'];
+  const twoInstall   = ['work_permit','pgwp','francophone_wp','stay_extension','visitor_visa','super_visa','status_restoration','school_enrollment'];
+  let firstInstall;
+  if (threeInstall.includes(svc))    firstInstall = repTotal / 3;
+  else if (twoInstall.includes(svc)) firstInstall = repTotal / 2;
+  else                                firstInstall = repTotal; // full upfront (eta, citizenship)
+
+  const hasInstallments = threeInstall.includes(svc) || twoInstall.includes(svc);
+  g('repHeroLabel').textContent   = hasInstallments ? 'First Due to Start the Process' : 'Total Contract Payable to Olcorp';
+  g('repHeroAmount').textContent  = fmt(firstInstall);
+  if (hasInstallments) {
+    g('repHeroTotal').textContent     = fmt(repTotal);
+    g('repHeroSecondary').style.display = '';
+  } else {
+    g('repHeroSecondary').style.display = 'none';
+  }
+
+  g('grandTotal').textContent = fmt(grand);
+  updateSocialProof(svc);
+
+  const d = [
+    'All amounts in CAD. Representation fees include 5% GST. IRCC fees updated April 30, 2026.',
+    'Since June 2023, valid TR biometrics do not waive the PR biometrics requirement.',
+    'Final fees depend on individual case specifics. This is an estimate only.'
+  ];
+  if (svc === 'sinp_pr') d.push('SINP estimate includes both the work permit (TR) and PR application phases.');
+  if (svc === 'family_sponsorship') d.push('The $1,260 gov. fee covers sponsorship, processing, and RPRF for the sponsored spouse.');
+  if (svc === 'super_visa') d.push('Super Visa applicants must provide proof of private medical insurance and a medical exam.');
+  g('disclaimer').textContent = d.join(' ');
+
+}
+
+function updateSocialProof(svc) {
+  const data = SOCIAL_PROOF[svc];
+  if (!data) { g('socialProof').style.display = 'none'; return; }
+  g('socialProof').style.display = 'flex';
+  g('socialProofText').innerHTML = `<strong>${data.n}</strong> ${data.label}`;
+}
+</script>
+</body>
+</html>
