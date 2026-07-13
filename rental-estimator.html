@@ -620,7 +620,7 @@
         <!-- CTA -->
         <div class="cta-wrap" id="ctaWrap">
           <button class="result-cta" id="quoteCta" onclick="openCallModal()" disabled>
-            Confirm Availability →
+            Check Availability →
           </button>
         </div>
         <p class="result-cta-note" id="ctaNote">
@@ -778,7 +778,9 @@
     const nextId = nextMap[group];
     if (nextId) {
       document.getElementById(nextId).classList.add('active');
-      // auto-scroll removed
+      } else if (group === 'nop' && window.innerWidth >= 1024) {
+      // Last step on desktop — scroll to top so user sees the total & CTA
+      setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 300);
     }
     updateResult();
   }
