@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Client Intake | Olfindo Immigration Consulting</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.0.4/tesseract.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<title>Client Information | Olfindo Immigration Consulting</title>
 <style>
   :root{
     --navy:#161616;
@@ -49,8 +47,7 @@
   .rail-seg.done{background:var(--gold);}
   .rail-seg.active{background:linear-gradient(90deg,var(--gold) 50%,#dfe4e8 50%);}
 
-  .layout{display:grid; grid-template-columns:1fr 320px; gap:24px; align-items:start;}
-  @media(max-width:880px){.layout{grid-template-columns:1fr;}}
+  .layout{display:grid; grid-template-columns:1fr; gap:24px; align-items:start; max-width:760px; margin:0 auto;}
 
   .card{background:#fff; border:1px solid var(--line); border-radius:20px; padding:26px; box-shadow:0 1px 2px rgba(20,20,20,.03);}
   .step-label{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--gold); font-weight:500;}
@@ -59,7 +56,9 @@
 
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
   .grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px;}
-  @media(max-width:600px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .grid4{display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:14px;}
+  @media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr;}}
+  @media(max-width:880px){.grid4{grid-template-columns:1fr 1fr;}}
 
   label.field{display:block; margin-bottom:14px;}
   label.field span{display:block; font-size:12px; font-weight:600; color:#3d4c58; margin-bottom:6px;}
@@ -79,6 +78,15 @@
   .choice:hover{border-color:var(--gold);}
   .choice.sel{border-color:var(--gold); background:#f2f8f0; color:var(--navy-deep);}
   .choice .sub{display:block; font-weight:400; color:#8a97a1; font-size:11.5px; margin-top:3px;}
+  .pill-row{display:flex; flex-wrap:wrap; gap:8px; margin:6px 0 2px;}
+  .pill{padding:5px 12px; border:1px solid #cfd8dd; border-radius:999px; font-size:12.5px; cursor:pointer; color:#3d4c58; background:#fff;}
+  .pill:hover{border-color:var(--gold);}
+  .pill.sel{border-color:var(--gold); background:#f2f8f0; color:var(--navy-deep);}
+  .modal-overlay{position:fixed; inset:0; background:rgba(10,10,10,.45); display:flex; align-items:center; justify-content:center; z-index:2000; padding:20px;}
+  .modal-box{background:#fff; border-radius:18px; padding:24px; max-width:420px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.2);}
+  .modal-box h4{margin:0 0 8px; font-family:var(--display); font-size:16px; color:var(--navy-deep);}
+  .modal-box p{margin:0 0 14px; font-size:13px; color:#5b6b75;}
+  .modal-actions{display:flex; gap:10px; margin-top:16px; justify-content:flex-end;}
 
   .repeat-block{border:1px dashed var(--line); border-radius:16px; padding:16px; margin-bottom:12px; position:relative; background:#fbfcfd;}
   .repeat-block .rm{position:absolute; top:10px; right:10px; background:none; border:none; color:#b3432b; font-size:12px; cursor:pointer; font-weight:600;}
@@ -102,17 +110,6 @@
   .toast.show{opacity:1;}
   .toast.error{background:var(--danger);}
 
-  .sidebar{position:sticky; top:78px; display:flex; flex-direction:column; gap:14px;}
-  .sb-card{background:var(--navy-deep); color:#dfe6ea; border-radius:18px; padding:20px; font-family:var(--mono);}
-  .sb-card h3{font-family:var(--body); font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--gold-bright); margin:0 0 12px;}
-  .sb-row{display:flex; justify-content:space-between; font-size:12px; padding:6px 0; border-bottom:1px solid #34454f;}
-  .sb-row:last-child{border-bottom:none;}
-  .sb-row .k{color:#8fa0aa;}
-  .sb-row .v{color:#fff; font-weight:500;}
-  .completeness{margin-top:10px;}
-  .bar-outer{height:6px; background:#34454f; border-radius:3px; overflow:hidden;}
-  .bar-inner{height:100%; background:var(--gold); transition:width .3s;}
-  .pct{font-size:11px; color:var(--gold-bright); margin-top:6px;}
 
 
   .review-block{margin-bottom:18px;}
@@ -125,28 +122,6 @@
   .note{font-size:12px; color:#8a97a1; margin-top:10px; line-height:1.5;}
   .success-banner{background:#e6f2ea; border:1px solid #b9dcc4; color:var(--ok); padding:14px 16px; border-radius:10px; font-size:13px; margin-bottom:18px; display:none;}
 
-  .privacy-note{display:flex; gap:10px; align-items:flex-start; background:#eeeeec; border:1px solid var(--line); border-radius:14px; padding:13px 15px; font-size:12.5px; color:#3d3d3b; margin-bottom:22px; line-height:1.5;}
-  .privacy-note b{color:#141414;}
-  .doc-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;}
-  @media(max-width:800px){.doc-grid{grid-template-columns:1fr;}}
-  .doc-zone{border:1.5px dashed var(--line); border-radius:16px; padding:18px; text-align:left; background:#fbfcfd;}
-  .doc-zone h4{font-family:var(--display); font-size:14px; margin:0 0 4px; color:var(--navy-deep);}
-  .doc-zone .dz-sub{font-size:11.5px; color:#8a97a1; margin:0 0 12px;}
-  .doc-zone input[type=file]{font-size:12px; width:100%; margin-bottom:10px;}
-  .doc-status{font-family:var(--mono); font-size:11px; color:#5b6b78; min-height:16px; margin:8px 0;}
-  .doc-status.busy{color:var(--gold);}
-  .doc-status.ok{color:var(--ok);}
-  .doc-status.warn{color:var(--danger);}
-  .mrz-result{background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:12px; margin-top:8px;}
-  .mrz-result .kv2{display:flex; justify-content:space-between; padding:3px 0;}
-  .mrz-result .kv2 .k{color:#8a97a1;}
-  .check-pill{font-family:var(--mono); font-size:10px; padding:1px 6px; border-radius:8px;}
-  .check-pill.good{background:#e6f2ea; color:var(--ok);}
-  .check-pill.bad{background:#faeae5; color:var(--danger);}
-  .chip-row{display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;}
-  .chip{background:#fff; border:1px solid var(--line); border-radius:20px; padding:5px 10px; font-size:11px; font-family:var(--mono); color:#3d4c58;}
-  .chip button{background:none; border:none; color:var(--navy); font-weight:600; font-size:10.5px; margin-left:6px; cursor:pointer; text-decoration:underline;}
-  .raw-text{width:100%; min-height:70px; font-family:var(--mono); font-size:10.5px; color:#5b6b78; background:#fbfcfd; border:1px solid var(--line); border-radius:8px; padding:8px; margin-top:8px;}
   .autofill-banner{background:#f2f8f0; border:1px solid #d3e6cd; color:#33502d; padding:11px 14px; border-radius:14px; font-size:12.5px; margin-bottom:16px;}
 
   .coverage-box{background:#fbfcfd; border:1px solid var(--line); border-radius:16px; padding:14px 16px; margin-bottom:18px;}
@@ -160,33 +135,57 @@
   .cov-item{font-size:12px; color:var(--danger); font-family:var(--mono);}
   .cov-item span{color:#b3432b99;}
   .cov-range{font-size:11px; color:#8a97a1; margin-top:6px;}
+
+  /* ---- Mobile ---- */
+  @media(max-width:700px){
+    .topbar{padding:12px 16px; flex-wrap:wrap; row-gap:8px;}
+    .topbar-actions{gap:10px; flex-wrap:wrap;}
+    .topbar .meta{width:100%; text-align:right;}
+    .brand-suffix{display:none;}
+    .shell{padding:20px 14px 60px;}
+    .head{gap:12px;}
+    .head h1{font-size:22px;}
+    .head p{max-width:none;}
+    .head > div:last-child{align-items:stretch; width:100%;}
+    .head > div:last-child > div[style]{flex-wrap:wrap;}
+    .record-id{align-self:flex-start;}
+    .card{padding:18px;}
+    .step-title{font-size:18px;}
+    .nav-row{flex-direction:column-reverse; gap:10px;}
+    .nav-row .btn{width:100%;}
+    .kv{grid-template-columns:1fr;}
+    .final-actions .btn{width:100%;}
+  }
+  @media(max-width:420px){
+    .choice-row{grid-template-columns:1fr;}
+  }
 </style>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 
 <div class="topbar">
   <div class="brand">
     <div class="logo-box"><img src="data:image/png;base64,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" alt="OLCORP.ca"></div>
-    <span class="brand-suffix">— Client Intake</span>
+    <span class="brand-suffix">— Client Information</span>
   </div>
   <div class="topbar-actions">
-    <a class="topbar-link" href="https://olcorp.ca" target="_blank" rel="noopener">🏠 Back to Olcorp.ca</a>
-    <button class="topbar-link" id="newApplicantBtn">🔄 New Applicant</button>
-    <div class="meta" id="topbarTime"></div>
+    <a class="topbar-link" href="https://olcorp.ca" target="_blank" rel="noopener">Back to Olcorp.ca</a>
+    <button class="topbar-link" id="newApplicantBtn">New Client</button>
   </div>
 </div>
 
 <div class="shell">
   <div class="head">
     <div>
-      <h1>Immigration Intake Form</h1>
-      <p>Your responses will be used to prepare all the required immigration forms, making the application process faster and more accurate.<br>Estimated completion time: 30–45 minutes, depending on your personal circumstances.</p>
+      <h1>Client Information Form</h1>
+      <p>Your responses will be used to prepare all the required immigration forms, making the application process faster and more accurate. Estimated completion time: 30–45 minutes, depending on your personal circumstances.</p>
     </div>
     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
       <div class="record-id">Record ID: <strong id="recordId">—</strong></div>
       <div style="display:flex; gap:8px;">
-        <button class="btn btn-ghost btn-sm" id="saveProgressBtn">💾 Save & Continue Later</button>
-        <button class="btn btn-ghost btn-sm" id="resumeProgressBtn">📂 Resume Saved Intake</button>
+        <button class="btn btn-ghost btn-sm" id="saveProgressBtn">Save & Continue Later</button>
+        <button class="btn btn-ghost btn-sm" id="resumeProgressBtn">Resume Saved Intake</button>
         <input type="file" id="resumeFileInput" accept="application/json" style="display:none;">
       </div>
     </div>
@@ -197,45 +196,79 @@
   <div class="layout">
     <div>
       <div class="card" id="stepCard"></div>
+      <p class="note" id="stepValidationMsg" style="display:none;color:#8a3a26;"></p>
       <div class="nav-row">
-        <button class="btn btn-ghost" id="backBtn">← Back</button>
-        <button class="btn btn-ghost btn-sm" id="saveProgressBtn2" style="align-self:center;">💾 Save & Continue Later</button>
-        <button class="btn btn-primary" id="nextBtn">Continue →</button>
-      </div>
-    </div>
-
-    <div class="sidebar">
-      <div class="sb-card">
-        <h3>Live Record Preview</h3>
-        <div id="sbRows"></div>
-        <div class="completeness">
-          <div class="bar-outer"><div class="bar-inner" id="bar" style="width:0%"></div></div>
-          <div class="pct" id="pctText">0% of intake complete</div>
-        </div>
+        <button class="btn btn-ghost" id="backBtn">Back</button>
+        <button class="btn btn-ghost btn-sm" id="saveProgressBtn2" style="align-self:center;">Save & Continue Later</button>
+        <button class="btn btn-primary" id="nextBtn">Continue</button>
       </div>
     </div>
   </div>
 </div>
 
+<div class="modal-overlay" id="doneModal" style="display:none;">
+  <div class="modal-box">
+    <h4>Thank you!</h4>
+    <p>Thank you for completing your intake form. Your consultant will contact you if there are any questions about your responses.</p>
+    <p>Would you like to fill out a new form for another applicant?</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="doneModalNo" type="button">No, I'm done</button>
+      <button class="btn btn-primary btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
+    </div>
+  </div>
+</div>
+
 <script>
+// ---------- Google Drive upload config ----------
+// Fill this in once you've created the OAuth Client ID. Each client pastes their own
+// shared-folder link into the form itself, so no folder ID needs to be hardcoded here.
+const GOOGLE_CLIENT_ID = ''; // e.g. '1234567890-abc.apps.googleusercontent.com'
+
+function extractDriveFolderId(url){
+  if(!url) return '';
+  const patterns = [
+    /\/folders\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+  ];
+  for(const re of patterns){
+    const m = re.exec(url);
+    if(m) return m[1];
+  }
+  // if they pasted just the bare ID instead of a full link
+  if(/^[a-zA-Z0-9_-]{10,}$/.test(url.trim())) return url.trim();
+  return '';
+}
+
 // ---------- Data model ----------
 const data = {
   identity:{uci:'',lastName:'',givenNames:'',dob:'',pob:'',sex:'',citizenship:''},
   passport:{number:'',issue:'',expiry:'',country:''},
-  contact:{mailing:'',residential:'',sameAsMailing:false,phone:'',email:''},
+  contact:{
+    mailing:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
+    residential:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
+    sameAsMailing:false,phone:'',email:''
+  },
+  entry:{originalDate:'',originalPort:'',latestDate:'',latestPort:''},
   marital:{status:'',marriageDate:'',marriagePlace:'',prevMarriages:''},
-  spouse:{lastName:'',givenNames:'',dob:'',pob:''},
+  spouse:{lastName:'',givenNames:'',dob:'',pobCity:'',pobCountry:''},
   children:[],
-  parents:{motherName:'',motherDob:'',motherPob:'',motherAddress:'',motherStatus:'',
-           fatherName:'',fatherDob:'',fatherPob:'',fatherAddress:'',fatherStatus:''},
+  childrenNone:false,
+  parents:{motherName:'',motherDob:'',motherPobCity:'',motherPobCountry:'',
+           motherAddress:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
+           motherOccupation:'',motherDeceased:false,motherDeceasedDate:'',
+           fatherName:'',fatherDob:'',fatherPobCity:'',fatherPobCountry:'',
+           fatherAddress:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
+           fatherSameAddrAsMother:false,fatherOccupation:'',fatherDeceased:false,fatherDeceasedDate:''},
   siblings:[],
+  siblingsNone:false,
   addressHistory:[],
   travelHistory:[],
   travelHistoryNone:false,
   education:[],
   employment:[],
   background:{militaryPoliceGovt:'', criminal:'', medical:'', refusalsRemovals:'', details:''},
-  status:{currentStatus:'',expiryDate:'',extensionType:'',reason:''}
+  status:{currentStatus:'',expiryDate:'',extensionType:'',reason:''},
+  consent:{accurate:false,authorizeSignature:false,signatureDataUrl:'',driveFolderLink:''}
 };
 
 const autofillNotice = {identity:false, contact:false, status:false};
@@ -243,40 +276,23 @@ const autofillNotice = {identity:false, contact:false, status:false};
 let recordId = 'OLC-' + Math.random().toString(36).slice(2,8).toUpperCase();
 document.getElementById('recordId').textContent = recordId;
 
-function nowStamp(){
-  const d = new Date();
-  document.getElementById('topbarTime').textContent = d.toLocaleDateString('en-CA') + ' · ' + d.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-}
-nowStamp(); setInterval(nowStamp, 30000);
 
 // ---------- Steps ----------
 let stepIndex = 0;
 
-function fieldsFilled(obj){
-  let total=0, filled=0;
-  const walk = v => {
-    if(Array.isArray(v)){ v.forEach(item=>walk(item)); return; }
-    if(v && typeof v === 'object'){ Object.values(v).forEach(walk); return; }
-    total++; if(v!=='' && v!==undefined && v!==null && v!==false) filled++;
-  };
-  walk(obj);
-  return {total,filled};
-}
-
 const steps = [
-  {key:'documents', label:'00 · Documents', title:'Upload Your Documents', sub:'Speed things up by scanning your passport, driver\'s licence, or work permit.', render: renderDocuments},
-  {key:'identity', label:'01 · Identity', title:'Applicant Identity', sub:'Core biographical details used across every form.', render: renderIdentity},
+  {key:'identity', label:'01 · Identity', title:'Client Identity', sub:'Core biographical details used across every form.', render: renderIdentity},
   {key:'contact', label:'02 · Contact', title:'Contact Information', sub:'Where IRCC and your representative can reach you.', render: renderContact},
   {key:'marital', label:'03 · Marital', title:'Marital Status & Spouse', sub:'Feeds IMM 0008, IMM 5406, and IMM 5710.', render: renderMarital},
   {key:'children', label:'04 · Children', title:'Children', sub:'Add one entry per child, of any age.', render: renderChildren},
   {key:'parents', label:'05 · Parents & Siblings', title:'Parents & Siblings', sub:'Required for IMM 5406 — Additional Family Information.', render: renderParents},
-  {key:'address', label:'06 · Address History', title:'Address History (10 years)', sub:'Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past 10 years, whichever is shorter.', render: renderAddressHistory},
-  {key:'travel', label:'07 · Travel History', title:'Travel History (10 years)', sub:'Required for IMM 5562. All trips outside your country of residence in the same 10-year / since-18 window.', render: renderTravelHistory},
-  {key:'education', label:'08 · Education', title:'Education History', sub:'Institutions attended since secondary school.', render: renderEducation},
+  {key:'entry', label:'06 · Entry to Canada', title:'Entry to Canada', sub:'Details of your original and most recent entry into Canada.', render: renderEntry},
+  {key:'education', label:'07 · Education', title:'Education History', sub:'Institutions attended since secondary school. Only list schools where you graduated — if you did not complete or graduate from a program, you do not need to include it.', render: renderEducation},
+  {key:'address', label:'08 · Address History', title:'Address History (10 years)', sub:'Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past 10 years, whichever is shorter.', render: renderAddressHistory},
   {key:'employment', label:'09 · Employment', title:'Employment / Activity History', sub:'Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity.', render: renderEmployment},
-  {key:'background', label:'10 · Background', title:'Background Declarations', sub:'Sensitive questions required on IMM 5669e. Answer honestly — these are reviewed by your RCIC before submission, not sent anywhere automatically.', render: renderBackground},
-  {key:'statusinfo', label:'11 · Status', title:'Current Status & Extension Request', sub:'Only needed if you are extending or changing conditions of stay (IMM 5710).', render: renderStatus},
-  {key:'review', label:'13 · Review', title:'Review & Generate Record', sub:'Confirm everything below, then generate your intake record.', render: renderReview},
+  {key:'travel', label:'10 · Travel History', title:'Travel History (10 years)', sub:'Required for IMM 5562. All trips outside your country of residence in the same 10-year / since-18 window.', render: renderTravelHistory},
+  {key:'background', label:'11 · Background', title:'Background Declarations', sub:'Sensitive questions required on IMM 5669e. Answer honestly — these are reviewed by your RCIC before submission, not sent anywhere automatically.', render: renderBackground},
+  {key:'review', label:'12 · Review', title:'Review & Generate Record', sub:'Confirm everything below, then generate your intake record.', render: renderReview},
 ];
 
 function buildRail(){
@@ -291,13 +307,130 @@ function buildRail(){
 
 function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
 
+const PROVINCES = ['','AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT','Outside Canada / N/A'];
+
+function renderAddressBlock(prefix, addr, disabled){
+  const d = disabled ? 'disabled' : '';
+  const opt = (v)=>PROVINCES.map(p=>`<option value="${p}" ${addr.province===p?'selected':''}>${p||'—'}</option>`).join('');
+  return `
+    <div class="grid4">
+      <label class="field"><span>P.O. box</span><input type="text" ${d} id="${prefix}_poBox" value="${(addr.poBox||'').replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Apt/Unit</span><input type="text" ${d} id="${prefix}_aptUnit" value="${(addr.aptUnit||'').replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Street no.</span><input type="text" ${d} id="${prefix}_streetNo" value="${(addr.streetNo||'').replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Street name</span><input type="text" ${d} id="${prefix}_streetName" value="${(addr.streetName||'').replace(/"/g,'&quot;')}"></label>
+    </div>
+    <div class="grid4">
+      <label class="field"><span>City/Town</span><input type="text" ${d} id="${prefix}_city" value="${(addr.city||'').replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Country or Territory</span><input type="text" ${d} id="${prefix}_country" value="${(addr.country||'').replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Province</span><select ${d} id="${prefix}_province">${opt()}</select></label>
+      <label class="field"><span>Postal code</span><input type="text" ${d} id="${prefix}_postalCode" value="${(addr.postalCode||'').replace(/"/g,'&quot;')}"></label>
+    </div>
+  `;
+}
+
+function bindAddressBlock(card, prefix, addr, onChange){
+  ['poBox','aptUnit','streetNo','streetName','city','country','postalCode'].forEach(k=>{
+    const el = card.querySelector(`#${prefix}_${k}`);
+    if(el) el.addEventListener('input', e=>{ addr[k]=e.target.value; onChange && onChange(); });
+  });
+  const provEl = card.querySelector(`#${prefix}_province`);
+  if(provEl) provEl.addEventListener('change', e=>{ addr.province=e.target.value; onChange && onChange(); });
+}
+
+function setAddressBlockValues(card, prefix, addr){
+  ['poBox','aptUnit','streetNo','streetName','city','country','postalCode'].forEach(k=>{
+    const el = card.querySelector(`#${prefix}_${k}`);
+    if(el) el.value = addr[k]||'';
+  });
+  const provEl = card.querySelector(`#${prefix}_province`);
+  if(provEl) provEl.value = addr.province||'';
+}
+
+function formatAddress(addr){
+  if(!addr) return '—';
+  const line1 = [addr.streetNo, addr.streetName].filter(Boolean).join(' ');
+  const unit = [addr.aptUnit ? `Unit ${addr.aptUnit}` : '', addr.poBox ? `PO Box ${addr.poBox}` : ''].filter(Boolean).join(', ');
+  const line2 = [addr.city, addr.province, addr.postalCode].filter(Boolean).join(', ');
+  return [line1, unit, line2, addr.country].filter(Boolean).join(' — ') || '—';
+}
+
 function fieldText(labelText, obj, key, opts={}){
   const id = opts.id || ('f_'+Math.random().toString(36).slice(2,9));
-  return `<label class="field"><span>${labelText}${opts.hint?`<small>${opts.hint}</small>`:''}</span>
-    <input type="${opts.type||'text'}" id="${id}" data-bind="1" value="${(obj[key]||'').replace(/"/g,'&quot;')}" placeholder="${opts.placeholder||''}"></label>`;
+  const isDate = opts.type==='date', isMonth = opts.type==='month';
+  const inputType = (isDate||isMonth) ? 'text' : (opts.type||'text');
+  const defaultHint = isDate ? 'yyyy-mm-dd' : isMonth ? 'yyyy-mm' : '';
+  const hintText = opts.hint || defaultHint;
+  const placeholder = isDate ? 'yyyy-mm-dd' : isMonth ? 'yyyy-mm' : (opts.placeholder||'');
+  const inputMode = (isDate||isMonth) ? ' inputmode="numeric"' : '';
+  return `<label class="field"><span>${labelText}${hintText?`<small>${hintText}</small>`:''}</span>
+    <input type="${inputType}"${inputMode} id="${id}" data-bind="1" value="${(obj[key]||'').replace(/"/g,'&quot;')}" placeholder="${placeholder}"></label>`;
 }
 function bindText(container, obj, key, id){
   container.querySelector('#'+id).addEventListener('input', e=>{ obj[key]=e.target.value; refreshSidebar(); });
+}
+
+// ---- Date typing: lets applicants type digits straight through (e.g. 20200106)
+// without tabbing between segments — auto-inserts the dashes as they go. ----
+function clampRange(str, min, max){
+  const n = parseInt(str, 10);
+  if (isNaN(n)) return str;
+  let c = n;
+  if (c < min) c = min;
+  if (c > max) c = max;
+  return String(c).padStart(2,'0');
+}
+
+function maskDateInput(raw, mode){
+  const digits = (raw||'').replace(/\D/g,'');
+  const year = digits.slice(0,4);
+  let cursor = year.length;
+  let month = '';
+  let monthDone = false;
+  if(year.length===4 && digits.length>4){
+    const d1 = digits[4];
+    if(d1 > '1'){
+      month = '0'+d1;
+      monthDone = true;
+      cursor = 5;
+    } else if(digits.length>=6){
+      month = clampRange(digits.slice(4,6), 1, 12);
+      monthDone = true;
+      cursor = 6;
+    } else {
+      month = d1;
+      cursor = 5;
+    }
+  }
+  let day = '';
+  if(mode==='full' && monthDone && digits.length>cursor){
+    const d1 = digits[cursor];
+    if(d1 >= '4'){
+      day = '0'+d1;
+      cursor += 1;
+    } else if(digits.length >= cursor+2){
+      day = clampRange(digits.slice(cursor, cursor+2), 1, 31);
+      cursor += 2;
+    } else {
+      day = d1;
+      cursor += 1;
+    }
+  }
+  let out = year;
+  if(year.length===4){
+    out += '-' + month;
+  }
+  if(mode==='full' && monthDone){
+    out += '-' + day;
+  }
+  return out;
+}
+function bindDate(el, obj, key, mode){
+  el.addEventListener('input', e=>{
+    const masked = maskDateInput(e.target.value, mode);
+    e.target.value = masked;
+    obj[key] = masked;
+    refreshSidebar();
+  });
 }
 
 function choiceRow(options, current, onPick){
@@ -378,339 +511,11 @@ document.getElementById('newApplicantBtn').addEventListener('click', ()=>{
   }
 });
 
-// ---- Document scanning (passport MRZ + OCR-assist) ----
-function mrzCheckDigit(str){
-  const weights=[7,3,1];
-  const val = c => { if(c==='<') return 0; if(/[0-9]/.test(c)) return +c; return c.charCodeAt(0)-55; };
-  let sum=0;
-  for(let i=0;i<str.length;i++){ sum += val(str[i]) * weights[i%3]; }
-  return sum % 10;
-}
-
-function parseMRZ(text){
-  const clean = text.toUpperCase().replace(/[^A-Z0-9<\n]/g,'');
-  const lines = clean.split('\n').map(l=>l.trim()).filter(l=>l.length>=25);
-  for(let i=0;i<lines.length-1;i++){
-    let l1 = (lines[i]+'<'.repeat(44)).slice(0,44);
-    let l2 = (lines[i+1]+'<'.repeat(44)).slice(0,44);
-    if(l1[0]!=='P') continue;
-    try{
-      const country = l1.slice(2,5).replace(/</g,'');
-      const namePart = l1.slice(5,44);
-      const parts = namePart.split('<<');
-      const surname = (parts[0]||'').replace(/</g,' ').trim();
-      const given = (parts[1]||'').replace(/</g,' ').trim();
-      const passportNum = l2.slice(0,9).replace(/</g,'');
-      const nationality = l2.slice(10,13).replace(/</g,'');
-      const dob = l2.slice(13,19), dobCheck = l2[19];
-      const sex = l2[20];
-      const expiry = l2.slice(21,27), expiryCheck = l2[27];
-      const passportCheck = l2[9];
-      if(!/^[A-Z0-9<]{9}$/.test(l2.slice(0,9)) || !/^\d{6}$/.test(dob) || !/^\d{6}$/.test(expiry)) continue;
-      const fmtDate = ymd => { const yy=+ymd.slice(0,2), mm=ymd.slice(2,4), dd=ymd.slice(4,6); const yyyy = yy>30 ? 1900+yy : 2000+yy; return `${yyyy}-${mm}-${dd}`; };
-      const checks = {
-        passport: mrzCheckDigit(l2.slice(0,9)) === +passportCheck,
-        dob: mrzCheckDigit(dob) === +dobCheck,
-        expiry: mrzCheckDigit(expiry) === +expiryCheck,
-      };
-      if(!surname && !given) continue;
-      return { found:true, country, surname, given, passportNum, nationality,
-        dob: fmtDate(dob), sex: sex==='M'?'M':sex==='F'?'F':'X', expiry: fmtDate(expiry), checks };
-    }catch(e){ continue; }
-  }
-  return {found:false};
-}
-
-function extractCandidates(text){
-  const monthWord = '(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*';
-  const patterns = [
-    /\b\d{4}[-\/.]\d{2}[-\/.]\d{2}\b/g,
-    /\b\d{2}[-\/.]\d{2}[-\/.]\d{4}\b/g,
-    new RegExp('\\b\\d{1,2}[\\s-]'+monthWord+'[\\s-]\\d{2,4}\\b','gi'),
-    new RegExp('\\b'+monthWord+'[\\s-]\\d{1,2}[,\\s-]+\\d{2,4}\\b','gi'),
-    new RegExp('\\b\\d{4}[\\s-]'+monthWord+'[\\s-]\\d{1,2}\\b','gi'),
-  ];
-  const dates = [...new Set(patterns.flatMap(re => text.match(re) || []))].slice(0,8);
-  const nameCandidates = [...new Set(text.split('\n').map(l=>l.trim())
-    .filter(l=>/^[A-Z][A-Z\s,.'-]{4,40}$/.test(l) && l===l.toUpperCase() && !/\d/.test(l)))].slice(0,4);
-  return {dates, nameCandidates};
-}
-
-function loadImageFromFile(file){
-  return new Promise((resolve,reject)=>{
-    const img = new Image();
-    img.onload = ()=>resolve(img);
-    img.onerror = ()=>reject(new Error('Could not read that image file.'));
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-async function rasterizeToCanvas(file){
-  if(file.type === 'application/pdf'){
-    const buf = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
-    const page = await pdf.getPage(1);
-    const viewport = page.getViewport({scale:2.2});
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width; canvas.height = viewport.height;
-    await page.render({canvasContext:canvas.getContext('2d'), viewport}).promise;
-    return canvas;
-  }
-  const img = await loadImageFromFile(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth || img.width;
-  canvas.height = img.naturalHeight || img.height;
-  canvas.getContext('2d').drawImage(img, 0, 0);
-  return canvas;
-}
-
-// ID cards (holograms, microprint, patterned backgrounds) OCR far worse than plain
-// document scans. Upscaling + grayscale + contrast stretch measurably improves reads.
-function preprocessCanvas(canvas){
-  const MIN_WIDTH = 1500;
-  let work = canvas;
-  if(canvas.width < MIN_WIDTH){
-    const scale = MIN_WIDTH / canvas.width;
-    const scaled = document.createElement('canvas');
-    scaled.width = Math.round(canvas.width*scale);
-    scaled.height = Math.round(canvas.height*scale);
-    const sctx = scaled.getContext('2d');
-    sctx.imageSmoothingEnabled = true;
-    sctx.imageSmoothingQuality = 'high';
-    sctx.drawImage(canvas, 0, 0, scaled.width, scaled.height);
-    work = scaled;
-  }
-  const ctx = work.getContext('2d');
-  const imgData = ctx.getImageData(0, 0, work.width, work.height);
-  const d = imgData.data;
-  let min=255, max=0;
-  for(let i=0;i<d.length;i+=4){
-    const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-    d[i]=d[i+1]=d[i+2]=gray;
-    if(gray<min) min=gray; if(gray>max) max=gray;
-  }
-  const range = Math.max(1, max-min);
-  for(let i=0;i<d.length;i+=4){
-    const v = ((d[i]-min)/range)*255;
-    d[i]=d[i+1]=d[i+2]=v;
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return work;
-}
-
-function cropBottomBand(canvas, topFraction){
-  if(topFraction<=0) return canvas;
-  const top = Math.round(canvas.height * topFraction);
-  const h = canvas.height - top;
-  const out = document.createElement('canvas');
-  out.width = canvas.width; out.height = h;
-  out.getContext('2d').drawImage(canvas, 0, top, canvas.width, h, 0, 0, canvas.width, h);
-  return out;
-}
-
-// Hard black/white threshold — MRZ's monospace OCR-B font against a security-
-// patterned background reads far better as pure black-on-white than soft contrast.
-function binarize(canvas){
-  const ctx = canvas.getContext('2d');
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = imgData.data;
-  let sum=0;
-  for(let i=0;i<d.length;i+=4) sum += d[i];
-  const threshold = (sum/(d.length/4)) * 0.92;
-  for(let i=0;i<d.length;i+=4){
-    const v = d[i] < threshold ? 0 : 255;
-    d[i]=d[i+1]=d[i+2]=v;
-  }
-  ctx.putImageData(imgData, 0, 0);
-  return canvas;
-}
-
-let mrzWorkerPromise = null;
-function getMRZWorker(){
-  if(!mrzWorkerPromise){
-    mrzWorkerPromise = (async ()=>{
-      const worker = await Tesseract.createWorker('eng');
-      await worker.setParameters({
-        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
-        tessedit_pageseg_mode: '6'
-      });
-      return worker;
-    })();
-  }
-  return mrzWorkerPromise;
-}
-
-// Full-page OCR struggles on passports: the photo, guilloche patterns, and
-// holograms compete with the MRZ for the recognizer's attention. Isolating the
-// MRZ band, binarizing it, and restricting the charset to A-Z0-9< (with a
-// page-segmentation mode suited to a small block of monospace text) reads far
-// more reliably. Framing varies by photo, so a few crop heights are tried in turn.
-async function scanPassportMRZ(file, statusEl){
-  statusEl.className='doc-status busy';
-  statusEl.textContent='Loading document…';
-  let canvas = await rasterizeToCanvas(file);
-  statusEl.textContent='Enhancing image…';
-  canvas = preprocessCanvas(canvas);
-
-  const worker = await getMRZWorker();
-  const cropFractions = [0, 0.50, 0.65, 0.80];
-  let lastText = '';
-  for(let i=0;i<cropFractions.length;i++){
-    statusEl.textContent = `Reading MRZ… (attempt ${i+1} of ${cropFractions.length})`;
-    const region = binarize(cropBottomBand(canvas, cropFractions[i]));
-    const { data:{ text } } = await worker.recognize(region);
-    lastText = text;
-    const mrz = parseMRZ(text);
-    if(mrz.found) return { text, mrz };
-  }
-  return { text:lastText, mrz:{found:false} };
-}
-
-async function scanFile(file, statusEl){
-  statusEl.className='doc-status busy';
-  statusEl.textContent='Loading document…';
-  let canvas = await rasterizeToCanvas(file);
-  statusEl.textContent='Enhancing image for OCR…';
-  canvas = preprocessCanvas(canvas);
-  statusEl.textContent='Scanning (on-device OCR)…';
-  const result = await Tesseract.recognize(canvas, 'eng', {
-    logger: m => { if(m.status==='recognizing text'){ statusEl.textContent = `Scanning… ${Math.round(m.progress*100)}%`; } }
-  });
-  return result.data.text;
-}
-
-function renderDocuments(card){
-  card.innerHTML = `
-    <div class="step-label">Step 1 of 12</div>
-    <div class="step-title">Upload Your Documents</div>
-    <p class="step-sub">Optional — scanning a document can pre-fill several steps for you. You can also skip this and enter everything manually.</p>
-    <div class="privacy-note"><span>🔒</span><span><b>Processed on your device only.</b> Scanning happens entirely in your browser using on-device OCR. Your document images are never uploaded to Olcorp's servers or any third party.</span></div>
-    <div class="doc-grid">
-      <div class="doc-zone" id="dz-passport">
-        <h4>Passport</h4>
-        <p class="dz-sub">Photo page. Auto-fills Identity + Passport fields with checksum verification. A close, well-lit photo of just the two bottom MRZ lines works too, often even better.</p>
-        <input type="file" accept="image/*,application/pdf" id="file-passport">
-        <button class="add-btn" id="scan-passport">Scan Passport</button>
-        <div class="doc-status" id="status-passport"></div>
-        <div id="result-passport"></div>
-      </div>
-      <div class="doc-zone" id="dz-dl">
-        <h4>Driver's Licence / Provincial ID</h4>
-        <p class="dz-sub">Format varies by province, so results are suggestions you confirm, not auto-filled. Best results: flat surface, even lighting, no glare, cropped close.</p>
-        <input type="file" accept="image/*,application/pdf" id="file-dl">
-        <button class="add-btn" id="scan-dl">Scan Licence</button>
-        <div class="doc-status" id="status-dl"></div>
-        <div id="result-dl"></div>
-      </div>
-      <div class="doc-zone" id="dz-wp">
-        <h4>Work / Study Permit</h4>
-        <p class="dz-sub">Detects dates for your status expiry. Suggestions only, click to confirm. Best results: flat surface, even lighting, no glare, cropped close.</p>
-        <input type="file" accept="image/*,application/pdf" id="file-wp">
-        <button class="add-btn" id="scan-wp">Scan Permit</button>
-        <div class="doc-status" id="status-wp"></div>
-        <div id="result-wp"></div>
-      </div>
-    </div>
-  `;
-
-  card.querySelector('#scan-passport').addEventListener('click', async ()=>{
-    const f = card.querySelector('#file-passport').files[0];
-    const statusEl = card.querySelector('#status-passport');
-    const resultEl = card.querySelector('#result-passport');
-    if(!f){ statusEl.className='doc-status warn'; statusEl.textContent='Choose a file first.'; return; }
-    try{
-      const { text, mrz } = await scanPassportMRZ(f, statusEl);
-      if(mrz.found){
-        data.identity.lastName = mrz.surname || data.identity.lastName;
-        data.identity.givenNames = mrz.given || data.identity.givenNames;
-        data.identity.dob = mrz.dob || data.identity.dob;
-        data.identity.sex = mrz.sex || data.identity.sex;
-        data.identity.citizenship = mrz.nationality || data.identity.citizenship;
-        data.passport.number = mrz.passportNum || data.passport.number;
-        data.passport.country = mrz.country || data.passport.country;
-        data.passport.expiry = mrz.expiry || data.passport.expiry;
-        autofillNotice.identity = true;
-        statusEl.className='doc-status ok';
-        statusEl.textContent='✓ MRZ found and applied to your record.';
-        resultEl.innerHTML = `<div class="mrz-result">
-          <div class="kv2"><span class="k">Name</span><span>${mrz.given} ${mrz.surname}</span></div>
-          <div class="kv2"><span class="k">DOB</span><span>${mrz.dob} <span class="check-pill ${mrz.checks.dob?'good':'bad'}">${mrz.checks.dob?'checksum ok':'check manually'}</span></span></div>
-          <div class="kv2"><span class="k">Passport #</span><span>${mrz.passportNum} <span class="check-pill ${mrz.checks.passport?'good':'bad'}">${mrz.checks.passport?'checksum ok':'check manually'}</span></span></div>
-          <div class="kv2"><span class="k">Expiry</span><span>${mrz.expiry} <span class="check-pill ${mrz.checks.expiry?'good':'bad'}">${mrz.checks.expiry?'checksum ok':'check manually'}</span></span></div>
-        </div>`;
-        refreshSidebar();
-      } else {
-        statusEl.className='doc-status warn';
-        statusEl.textContent='Could not read the MRZ lines clearly after several attempts.';
-        resultEl.innerHTML = `<p style="font-size:12px;color:#8a97a1;margin:6px 0 0;">Try a photo taken straight-on (not at an angle), with the passport flat and filling most of the frame, in even light with no glare on the bottom two lines. Raw text detected, for reference:</p>
-          <textarea class="raw-text" readonly>${(text||'').trim().slice(0,400) || '(no text detected)'}</textarea>`;
-      }
-    }catch(e){
-      statusEl.className='doc-status warn'; statusEl.textContent='Scan failed: '+e.message;
-    }
-  });
-
-  function wireHeuristicScan(kind, applyDateTarget){
-    card.querySelector('#scan-'+kind).addEventListener('click', async ()=>{
-      const f = card.querySelector('#file-'+kind).files[0];
-      const statusEl = card.querySelector('#status-'+kind);
-      const resultEl = card.querySelector('#result-'+kind);
-      if(!f){ statusEl.className='doc-status warn'; statusEl.textContent='Choose a file first.'; return; }
-      try{
-        const text = await scanFile(f, statusEl);
-        const {dates, nameCandidates} = extractCandidates(text);
-        let html = '';
-        if(!dates.length && !nameCandidates.length){
-          statusEl.className='doc-status warn';
-          statusEl.textContent='Scan finished, but no clear dates or names were found.';
-          html += `<p style="font-size:12px;color:#8a97a1;margin:6px 0 0;">This can happen with glare, low resolution, or a card photographed at an angle. Try a closer, flatter, well-lit photo — or just fill in the fields manually below, the raw text is shown here in case any of it helps.</p>`;
-        } else {
-          statusEl.className='doc-status ok';
-          statusEl.textContent='✓ Scan complete — review suggestions below.';
-        }
-        if(nameCandidates.length){
-          html += `<div class="chip-row">` + nameCandidates.map((n,i)=>`<span class="chip">${n}<button data-kind="name" data-val="${n.replace(/"/g,'&quot;')}">→ use as name</button></span>`).join('') + `</div>`;
-        }
-        if(dates.length){
-          html += `<div class="chip-row">` + dates.map(d=>`<span class="chip">${d}<button data-kind="date" data-val="${d}">→ ${applyDateTarget.label}</button></span>`).join('') + `</div>`;
-        }
-        html += `<textarea class="raw-text" readonly>${text.trim().slice(0,600) || '(no text detected)'}</textarea>`;
-        resultEl.innerHTML = html;
-        resultEl.querySelectorAll('button[data-kind]').forEach(btn=>{
-          btn.addEventListener('click', e=>{
-            const v = e.target.dataset.val;
-            if(e.target.dataset.kind==='date'){
-              applyDateTarget.set(v);
-              autofillNotice[applyDateTarget.notice]=true;
-            } else {
-              data.identity.givenNames = data.identity.givenNames || v;
-              autofillNotice.identity = true;
-            }
-            e.target.textContent='inserted ✓';
-            refreshSidebar();
-          });
-        });
-      }catch(e){
-        statusEl.className='doc-status warn'; statusEl.textContent='Scan failed: '+e.message;
-      }
-    });
-  }
-  wireHeuristicScan('dl', {label:'use as DOB', notice:'identity', set:v=>{ data.identity.dob = normalizeDateGuess(v); }});
-  wireHeuristicScan('wp', {label:'use as status expiry', notice:'status', set:v=>{ data.status.expiryDate = normalizeDateGuess(v); }});
-}
-
-function normalizeDateGuess(v){
-  const m1 = v.match(/^(\d{4})[-\/](\d{2})[-\/](\d{2})$/);
-  if(m1) return `${m1[1]}-${m1[2]}-${m1[3]}`;
-  const m2 = v.match(/^(\d{2})[-\/](\d{2})[-\/](\d{4})$/);
-  if(m2) return `${m2[3]}-${m2[2]}-${m2[1]}`;
-  return v;
-}
-
 // ---- History gap / coverage detection ----
 function parseDate(str){
   if(!str) return null;
-  const d = new Date(str+'T00:00:00');
+  const s = /^\d{4}-\d{2}$/.test(str) ? str+'-01' : str;
+  const d = new Date(s+'T00:00:00');
   return isNaN(d.getTime()) ? null : d;
 }
 function requiredHistoryStart(){
@@ -751,6 +556,21 @@ function computeGaps(entries, start, end){
 function fmtMonthYear(d){ return d.toLocaleDateString('en-CA',{month:'short',year:'numeric'}); }
 function monthsBetween(a,b){ return Math.max(1, Math.round((b-a)/(86400000*30.44))); }
 
+function tripDuration(from,to){
+  if(!from || !to) return '';
+  const fm = /^(\d{4})-(\d{2})$/.exec(from), tm = /^(\d{4})-(\d{2})$/.exec(to);
+  if(!fm || !tm) return '';
+  const fy=+fm[1], fmo=+fm[2], ty=+tm[1], tmo=+tm[2];
+  let totalMonths = (ty-fy)*12 + (tmo-fmo);
+  if(totalMonths<0) return '';
+  if(totalMonths===0) return 'Less than 1 month';
+  const years = Math.floor(totalMonths/12), months = totalMonths%12;
+  const parts=[];
+  if(years) parts.push(`${years} year${years>1?'s':''}`);
+  if(months) parts.push(`${months} month${months>1?'s':''}`);
+  return parts.join(' ');
+}
+
 function renderCoveragePanel(containerId, entries, label){
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -762,7 +582,7 @@ function renderCoveragePanel(containerId, entries, label){
   }
   const gaps = computeGaps(entries, start, end);
   let html = `<div class="coverage-box"><div class="cov-head"><span>${label} coverage required: ${fmtMonthYear(start)} – Present</span>`;
-  html += gaps.length ? `<span class="cov-badge bad">${gaps.length} gap${gaps.length>1?'s':''} found</span>` : `<span class="cov-badge good">No gaps ✓</span>`;
+  html += gaps.length ? `<span class="cov-badge bad">${gaps.length} gap${gaps.length>1?'s':''} found</span>` : `<span class="cov-badge good">No gaps</span>`;
   html += `</div><div class="cov-bar">`;
   gaps.forEach(g=>{
     const leftPct = ((g[0]-start)/(end-start))*100;
@@ -771,7 +591,7 @@ function renderCoveragePanel(containerId, entries, label){
   });
   html += `</div>`;
   if(gaps.length){
-    html += `<div class="cov-list">` + gaps.map(g=>`<div class="cov-item">⚠ ${fmtMonthYear(g[0])} – ${fmtMonthYear(g[1])} <span>(~${monthsBetween(g[0],g[1])} mo unaccounted)</span></div>`).join('') + `</div>`;
+    html += `<div class="cov-list">` + gaps.map(g=>`<div class="cov-item">${fmtMonthYear(g[0])} – ${fmtMonthYear(g[1])} <span>(~${monthsBetween(g[0],g[1])} mo unaccounted)</span></div>`).join('') + `</div>`;
   }
   html += `</div>`;
   el.innerHTML = html;
@@ -781,41 +601,38 @@ function renderCoveragePanel(containerId, entries, label){
 function renderIdentity(card){
   card.innerHTML = `
     <div class="step-label">Step 1 of 12</div>
-    <div class="step-title">Applicant Identity</div>
+    <div class="step-title">Client Identity</div>
     <p class="step-sub">Core biographical details used across every form.</p>
-    ${autofillNotice.identity ? `<div class="autofill-banner">✓ Fields below were auto-filled from your passport scan. Please check each one carefully before continuing.</div>` : ''}
     <div class="grid2">
-      ${fieldText('UCI (if you have one)', data.identity, 'uci', {id:'i_uci', hint:'optional'})}
-      ${fieldText('Citizenship(s)', data.identity, 'citizenship', {id:'i_cit'})}
       ${fieldText('Last / Family Name', data.identity, 'lastName', {id:'i_ln'})}
       ${fieldText('Given Name(s)', data.identity, 'givenNames', {id:'i_gn'})}
       ${fieldText('Date of Birth', data.identity, 'dob', {id:'i_dob', type:'date'})}
-      ${fieldText('Place of Birth (city, country)', data.identity, 'pob', {id:'i_pob'})}
-    </div>
-    <div id="sexRow"></div>
-    <div class="grid3" style="margin-top:16px;">
-      ${fieldText('Passport Number', data.passport, 'number', {id:'p_num'})}
-      ${fieldText('Passport Country of Issue', data.passport, 'country', {id:'p_country'})}
-      ${fieldText('Passport Expiry', data.passport, 'expiry', {id:'p_exp', type:'date'})}
     </div>
   `;
-  ['i_uci','i_cit','i_ln','i_gn','i_dob','i_pob'].forEach(id=>{
-    const map = {i_uci:['identity','uci'], i_cit:['identity','citizenship'], i_ln:['identity','lastName'], i_gn:['identity','givenNames'], i_dob:['identity','dob'], i_pob:['identity','pob']};
+  ['i_ln','i_gn'].forEach(id=>{
+    const map = {i_ln:['identity','lastName'], i_gn:['identity','givenNames']};
     const [obj,key]=map[id];
     card.querySelector('#'+id).addEventListener('input', e=>{ data[obj][key]=e.target.value; refreshSidebar(); });
   });
-  ['p_num','p_country','p_exp'].forEach(id=>{
-    const map = {p_num:'number', p_country:'country', p_exp:'expiry'};
-    card.querySelector('#'+id).addEventListener('input', e=>{ data.passport[map[id]]=e.target.value; refreshSidebar(); });
-  });
-  const sexWrap = card.querySelector('#sexRow');
-  const label = document.createElement('div'); label.innerHTML = `<span style="font-size:12px;font-weight:600;color:#3d4c58;">Sex (as on identity document)</span>`;
-  sexWrap.appendChild(label);
-  sexWrap.appendChild(choiceRow(
-    [{value:'F',label:'Female'},{value:'M',label:'Male'},{value:'X',label:'X — unspecified'}],
-    data.identity.sex,
-    v=>{ data.identity.sex=v; renderStep(); }
-  ));
+  bindDate(card.querySelector('#i_dob'), data.identity, 'dob', 'full');
+}
+
+function renderEntry(card){
+  card.innerHTML = `
+    <div class="step-label">Step 2 of 12</div>
+    <div class="step-title">Entry to Canada</div>
+    <p class="step-sub">Details of your original and most recent entry into Canada.</p>
+    <div class="grid2">
+      ${fieldText('Original Entry Date in Canada', data.entry, 'originalDate', {id:'e_origDate', type:'date'})}
+      ${fieldText('Port of Entry (Original Entry)', data.entry, 'originalPort', {id:'e_origPort'})}
+      ${fieldText('Latest Entry Date in Canada', data.entry, 'latestDate', {id:'e_latestDate', type:'date'})}
+      ${fieldText('Port of Entry (Latest Entry)', data.entry, 'latestPort', {id:'e_latestPort'})}
+    </div>
+  `;
+  card.querySelector('#e_origPort').addEventListener('input', e=>{ data.entry.originalPort=e.target.value; refreshSidebar(); });
+  card.querySelector('#e_latestPort').addEventListener('input', e=>{ data.entry.latestPort=e.target.value; refreshSidebar(); });
+  bindDate(card.querySelector('#e_origDate'), data.entry, 'originalDate', 'full');
+  bindDate(card.querySelector('#e_latestDate'), data.entry, 'latestDate', 'full');
 }
 
 function renderContact(card){
@@ -823,16 +640,35 @@ function renderContact(card){
     <div class="step-label">Step 2 of 12</div>
     <div class="step-title">Contact Information</div>
     <p class="step-sub">Where IRCC and your representative can reach you.</p>
-    ${autofillNotice.contact ? `<div class="autofill-banner">✓ Some fields below were inserted from a scanned document. Please verify.</div>` : ''}
-    <label class="field"><span>Mailing Address</span><textarea id="c_mail">${data.contact.mailing}</textarea></label>
-    <label class="field"><span>Residential Address <small>leave blank if same as mailing</small></span><textarea id="c_res">${data.contact.residential}</textarea></label>
+    ${autofillNotice.contact ? `<div class="autofill-banner">Some fields below were inserted from a scanned document. Please verify.</div>` : ''}
+    <label class="field"><span>Current mailing address</span></label>
+    ${renderAddressBlock('c_mail', data.contact.mailing, false)}
+    <label class="field" style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;">
+      <input type="checkbox" id="c_sameAddr" style="width:auto;" ${data.contact.sameAsMailing?'checked':''}>
+      <span style="margin:0;">Residential address is the same as mailing address</span>
+    </label>
+    <label class="field"><span>Residential address</span></label>
+    ${renderAddressBlock('c_res', data.contact.residential, data.contact.sameAsMailing)}
     <div class="grid2">
       ${fieldText('Phone', data.contact, 'phone', {id:'c_phone', type:'tel'})}
       ${fieldText('Email', data.contact, 'email', {id:'c_email', type:'email'})}
     </div>
   `;
-  card.querySelector('#c_mail').addEventListener('input', e=>{data.contact.mailing=e.target.value; refreshSidebar();});
-  card.querySelector('#c_res').addEventListener('input', e=>{data.contact.residential=e.target.value; refreshSidebar();});
+  const sameEl = card.querySelector('#c_sameAddr');
+  function syncResidential(){
+    if(data.contact.sameAsMailing){
+      Object.assign(data.contact.residential, data.contact.mailing);
+      setAddressBlockValues(card, 'c_res', data.contact.residential);
+    }
+  }
+  bindAddressBlock(card, 'c_mail', data.contact.mailing, ()=>{ syncResidential(); refreshSidebar(); });
+  bindAddressBlock(card, 'c_res', data.contact.residential, ()=>{ refreshSidebar(); });
+  sameEl.addEventListener('change', e=>{
+    data.contact.sameAsMailing = e.target.checked;
+    if(e.target.checked) Object.assign(data.contact.residential, data.contact.mailing);
+    renderContact(card);
+    refreshSidebar();
+  });
   card.querySelector('#c_phone').addEventListener('input', e=>{data.contact.phone=e.target.value; refreshSidebar();});
   card.querySelector('#c_email').addEventListener('input', e=>{data.contact.email=e.target.value; refreshSidebar();});
 }
@@ -858,16 +694,19 @@ function renderMarital(card){
       <div class="grid2">
         ${fieldText('Date of Marriage / Common-Law Start', data.marital, 'marriageDate', {id:'m_date', type:'date'})}
         ${fieldText('Place of Marriage / Common-Law Start', data.marital, 'marriagePlace', {id:'m_place'})}
-        ${fieldText("Spouse's Last Name", data.spouse, 'lastName', {id:'s_ln'})}
+        ${fieldText("Spouse's Current Last Name", data.spouse, 'lastName', {id:'s_ln'})}
         ${fieldText("Spouse's Given Name(s)", data.spouse, 'givenNames', {id:'s_gn'})}
         ${fieldText("Spouse's Date of Birth", data.spouse, 'dob', {id:'s_dob', type:'date'})}
-        ${fieldText("Spouse's Place of Birth", data.spouse, 'pob', {id:'s_pob'})}
+        ${fieldText("Spouse's Place of Birth — City", data.spouse, 'pobCity', {id:'s_pobCity'})}
+        ${fieldText("Spouse's Place of Birth — Country", data.spouse, 'pobCountry', {id:'s_pobCountry'})}
       </div>`;
-    const map = {m_date:['marital','marriageDate'], m_place:['marital','marriagePlace'], s_ln:['spouse','lastName'], s_gn:['spouse','givenNames'], s_dob:['spouse','dob'], s_pob:['spouse','pob']};
+    const map = {m_place:['marital','marriagePlace'], s_ln:['spouse','lastName'], s_gn:['spouse','givenNames'], s_pobCity:['spouse','pobCity'], s_pobCountry:['spouse','pobCountry']};
     Object.keys(map).forEach(id=>{
       const [obj,key]=map[id];
       spouseWrap.querySelector('#'+id).addEventListener('input', e=>{ data[obj][key]=e.target.value; refreshSidebar(); });
     });
+    bindDate(spouseWrap.querySelector('#m_date'), data.marital, 'marriageDate', 'full');
+    bindDate(spouseWrap.querySelector('#s_dob'), data.spouse, 'dob', 'full');
   }
   card.querySelector('#m_prev').addEventListener('input', e=>{ data.marital.prevMarriages=e.target.value; refreshSidebar(); });
 }
@@ -881,13 +720,30 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
     <button class="add-btn" id="addRow">+ Add entry</button>
   `;
   const wrap = card.querySelector('#repWrap');
+  function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''}; }
   function draw(){
     wrap.innerHTML='';
     data[listKey].forEach((row,idx)=>{
+      if(fieldsDef.some(f=>f.type==='addressBlock') ) fieldsDef.filter(f=>f.type==='addressBlock').forEach(f=>{ if(!row[f.key] || typeof row[f.key]!=='object') row[f.key] = blankAddr(); });
       const block = document.createElement('div'); block.className='repeat-block';
       let inner = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">`;
       fieldsDef.forEach(f=>{
-        inner += `<label class="field"><span>${f.label}</span><input type="${f.type||'text'}" data-k="${f.key}" data-idx="${idx}" value="${(row[f.key]||'').toString().replace(/"/g,'&quot;')}"></label>`;
+        if(f.type==='addressBlock'){
+          inner += `<label class="field" style="grid-column:1/-1;"><span>${f.label}</span></label><div style="grid-column:1/-1;" data-addr-key="${f.key}" data-addr-idx="${idx}">${renderAddressBlock('rep_'+listKey+'_'+idx+'_'+f.key, row[f.key], false)}</div>`;
+          return;
+        }
+        if(f.type==='select'){
+          const opts = (f.options||[]).map(o=>`<option value="${o}" ${row[f.key]===o?'selected':''}>${o}</option>`).join('');
+          inner += `<label class="field"><span>${f.label}</span><select data-k="${f.key}" data-type="select" data-idx="${idx}"><option value="">— Select —</option>${opts}</select></label>`;
+          return;
+        }
+        const isDateLike = f.type==='date' || f.type==='month';
+        const inputType = isDateLike ? 'text' : (f.type||'text');
+        const placeholder = f.type==='date' ? 'yyyy-mm-dd' : f.type==='month' ? 'yyyy-mm' : '';
+        const inputMode = isDateLike ? ' inputmode="numeric"' : '';
+        const defaultHint = f.type==='date' ? 'yyyy-mm-dd' : f.type==='month' ? 'yyyy-mm' : '';
+        const hintText = f.hint || defaultHint;
+        inner += `<label class="field"><span>${f.label}${hintText?`<small>${hintText}</small>`:''}</span><input type="${inputType}"${inputMode} placeholder="${placeholder}" data-k="${f.key}" data-type="${f.type||'text'}" data-idx="${idx}" value="${(row[f.key]||'').toString().replace(/"/g,'&quot;')}"></label>`;
       });
       inner += `</div>`;
       block.innerHTML = inner;
@@ -895,11 +751,25 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
     });
     wrap.querySelectorAll('input').forEach(inp=>{
       inp.addEventListener('input', e=>{
+        const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
+        let v = e.target.value;
+        if(t==='date' || t==='month'){ v = maskDateInput(v, t); e.target.value = v; }
+        data[listKey][idx][k] = v;
+        refreshSidebar();
+        if(opts.onChange) opts.onChange();
+      });
+    });
+    wrap.querySelectorAll('select[data-k]').forEach(sel=>{
+      sel.addEventListener('change', e=>{
         const idx = +e.target.dataset.idx, k = e.target.dataset.k;
         data[listKey][idx][k] = e.target.value;
         refreshSidebar();
         if(opts.onChange) opts.onChange();
       });
+    });
+    wrap.querySelectorAll('[data-addr-key]').forEach(el=>{
+      const idx = +el.dataset.addrIdx, k = el.dataset.addrKey;
+      bindAddressBlock(el, 'rep_'+listKey+'_'+idx+'_'+k, data[listKey][idx][k], ()=>{ refreshSidebar(); if(opts.onChange) opts.onChange(); });
     });
     wrap.querySelectorAll('.rm').forEach(btn=>{
       btn.addEventListener('click', e=>{
@@ -910,7 +780,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
     });
   }
   card.querySelector('#addRow').addEventListener('click', ()=>{
-    const blank={}; fieldsDef.forEach(f=>blank[f.key]='');
+    const blank={}; fieldsDef.forEach(f=>blank[f.key] = f.type==='addressBlock' ? blankAddr() : '');
     data[listKey].push(blank); draw(); refreshSidebar();
     if(opts.onChange) opts.onChange();
   });
@@ -918,13 +788,103 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
   if(opts.onChange) opts.onChange();
 }
 
+function heightCmToFtIn(cm){
+  const n = parseFloat(cm);
+  if(!n || n<=0) return '';
+  const totalIn = n/2.54;
+  let ft = Math.floor(totalIn/12);
+  let inch = Math.round(totalIn - ft*12);
+  if(inch===12){ ft+=1; inch=0; }
+  return `${ft}'${inch}"`;
+}
+function heightFtInToCm(str){
+  const m = (str||'').match(/(\d+)\s*'\s*(\d{1,2})?/);
+  if(!m) return '';
+  const ft = +m[1], inch = m[2]?+m[2]:0;
+  const cm = (ft*12+inch)*2.54;
+  return cm ? (Math.round(cm*10)/10)+'' : '';
+}
 function renderChildren(card){
-  renderRepeatable(card, 'Children', 'Add one entry per child, of any age.', 'children', [
-    {label:'Full Name', key:'name'},
-    {label:'Date of Birth', key:'dob', type:'date'},
-    {label:'Relationship', key:'relationship'},
-    {label:'Current Address', key:'address'},
-  ]);
+  card.innerHTML = `
+    <div class="step-title">Children</div>
+    <p class="step-sub">Add one entry per child, of any age.</p>
+    <label class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="noChildren" style="width:auto;" ${data.childrenNone?'checked':''}>
+      <span style="margin:0;">I have no children</span>
+    </label>
+    <div id="repWrap"></div>
+    <button class="add-btn" id="addRow">+ Add entry</button>
+  `;
+  const wrap = card.querySelector('#repWrap');
+  const addBtn = card.querySelector('#addRow');
+  card.querySelector('#noChildren').addEventListener('change', e=>{
+    data.childrenNone = e.target.checked;
+    if(e.target.checked) data.children = [];
+    wrap.style.display = data.childrenNone ? 'none' : '';
+    addBtn.style.display = data.childrenNone ? 'none' : '';
+    draw(); refreshSidebar();
+  });
+  wrap.style.display = data.childrenNone ? 'none' : '';
+  addBtn.style.display = data.childrenNone ? 'none' : '';
+  function draw(){
+    wrap.innerHTML='';
+    data.children.forEach((row,idx)=>{
+      if(row.sameAsMyAddress) row.address = formatAddress(data.contact.mailing);
+      const block = document.createElement('div'); block.className='repeat-block';
+      block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
+        <label class="field"><span>Full Name</span><input type="text" data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Date of Birth <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
+        <label class="field"><span>Relationship</span><input type="text" data-k="relationship" data-idx="${idx}" value="${(row.relationship||'').replace(/"/g,'&quot;')}"></label>
+        <div></div>
+        <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="checkbox" data-k="sameAsMyAddress" data-idx="${idx}" style="width:auto;" ${row.sameAsMyAddress?'checked':''}>
+          <span style="margin:0;">Same as your address</span>
+        </label>
+        <label class="field" style="grid-column:1/-1;"><span>Current Address</span><input type="text" data-k="address" data-idx="${idx}" ${row.sameAsMyAddress?'disabled':''} value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Eye Color</span><input type="text" data-k="eyeColor" data-idx="${idx}" value="${(row.eyeColor||'').replace(/"/g,'&quot;')}"></label>
+        <div></div>
+        <label class="field"><span>Height (cm)</span><input type="text" data-k="heightCm" data-idx="${idx}" value="${(row.heightCm||'').toString().replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Height (ft &amp; in) <small>e.g. 5'7"</small></span><input type="text" data-k="heightFtIn" data-idx="${idx}" value="${(row.heightFtIn||'').replace(/"/g,'&quot;')}"></label>
+      </div>`;
+      wrap.appendChild(block);
+    });
+    wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', e=>{
+        const idx = +e.target.dataset.idx;
+        data.children[idx].sameAsMyAddress = e.target.checked;
+        if(e.target.checked) data.children[idx].address = formatAddress(data.contact.mailing);
+        draw(); refreshSidebar();
+      });
+    });
+    wrap.querySelectorAll('input:not([type=checkbox])').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
+        let v = e.target.value;
+        if(t==='date'){ v = maskDateInput(v, 'full'); e.target.value = v; }
+        data.children[idx][k] = v;
+        if(k==='heightCm'){
+          const ftin = heightCmToFtIn(v);
+          data.children[idx].heightFtIn = ftin;
+          const pairEl = wrap.querySelector(`input[data-idx="${idx}"][data-k="heightFtIn"]`);
+          if(pairEl) pairEl.value = ftin;
+        } else if(k==='heightFtIn'){
+          const cm = heightFtInToCm(v);
+          data.children[idx].heightCm = cm;
+          const pairEl = wrap.querySelector(`input[data-idx="${idx}"][data-k="heightCm"]`);
+          if(pairEl) pairEl.value = cm;
+        }
+        refreshSidebar();
+      });
+    });
+    wrap.querySelectorAll('.rm').forEach(btn=>{
+      btn.addEventListener('click', e=>{ data.children.splice(+e.target.dataset.idx,1); draw(); refreshSidebar(); });
+    });
+  }
+  card.querySelector('#addRow').addEventListener('click', ()=>{
+    data.children.push({name:'',dob:'',relationship:'',address:'',sameAsMyAddress:false,eyeColor:'',heightCm:'',heightFtIn:''});
+    draw(); refreshSidebar();
+  });
+  draw();
 }
 
 function renderParents(card){
@@ -933,50 +893,141 @@ function renderParents(card){
     <p class="step-sub">Required for IMM 5406 — Additional Family Information.</p>
     <h4 style="font-family:var(--display);font-size:14px;margin:14px 0 8px;">Mother</h4>
     <div class="grid2" id="motherGrid"></div>
+    <label class="field"><span>Current Address</span></label>
+    <div id="motherAddrBlock"></div>
+    <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
+      <input type="checkbox" id="p_motherDeceased" style="width:auto;" ${data.parents.motherDeceased?'checked':''}>
+      <span style="margin:0;">Deceased</span>
+    </label>
+    <div id="motherDeceasedWrap" style="max-width:260px;"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Father</h4>
+    <label class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <input type="checkbox" id="p_fatherSameAddr" style="width:auto;" ${data.parents.fatherSameAddrAsMother?'checked':''}>
+      <span style="margin:0;">Same address as Mother above</span>
+    </label>
     <div class="grid2" id="fatherGrid"></div>
+    <label class="field"><span>Current Address</span></label>
+    <div id="fatherAddrBlock"></div>
+    <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
+      <input type="checkbox" id="p_fatherDeceased" style="width:auto;" ${data.parents.fatherDeceased?'checked':''}>
+      <span style="margin:0;">Deceased</span>
+    </label>
+    <div id="fatherDeceasedWrap" style="max-width:260px;"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Siblings</h4>
+    <label class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="noSiblings" style="width:auto;" ${data.siblingsNone?'checked':''}>
+      <span style="margin:0;">I have no siblings</span>
+    </label>
     <div id="sibWrap"></div>
     <button class="add-btn" id="addSib">+ Add sibling</button>
   `;
   const mGrid = card.querySelector('#motherGrid');
-  mGrid.innerHTML = ['motherName:Full Name','motherDob:Date of Birth:date','motherPob:Place of Birth','motherAddress:Current Address','motherStatus:Status (living / deceased, country)']
-    .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
+  const motherAddrWrap = card.querySelector('#motherAddrBlock');
+  function drawMother(){
+    mGrid.innerHTML = ['motherName:Full Name','motherDob:Date of Birth:date','motherPobCity:Place of Birth — City','motherPobCountry:Place of Birth — Country','motherOccupation:Occupation']
+      .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
+    ['motherName','motherPobCity','motherPobCountry','motherOccupation'].forEach(k=>{
+      mGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
+    });
+    bindDate(mGrid.querySelector('#p_motherDob'), data.parents, 'motherDob', 'full');
+    motherAddrWrap.innerHTML = renderAddressBlock('p_motherAddress', data.parents.motherAddress, false);
+    bindAddressBlock(card, 'p_motherAddress', data.parents.motherAddress, ()=>{
+      if(data.parents.fatherSameAddrAsMother){
+        Object.assign(data.parents.fatherAddress, data.parents.motherAddress);
+        setAddressBlockValues(card, 'p_fatherAddress', data.parents.fatherAddress);
+      }
+      refreshSidebar();
+    });
+  }
   const fGrid = card.querySelector('#fatherGrid');
-  fGrid.innerHTML = ['fatherName:Full Name','fatherDob:Date of Birth:date','fatherPob:Place of Birth','fatherAddress:Current Address','fatherStatus:Status (living / deceased, country)']
-    .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
-  ['motherName','motherDob','motherPob','motherAddress','motherStatus','fatherName','fatherDob','fatherPob','fatherAddress','fatherStatus'].forEach(k=>{
-    card.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
+  const fatherAddrWrap = card.querySelector('#fatherAddrBlock');
+  function drawFather(){
+    if(data.parents.fatherSameAddrAsMother) Object.assign(data.parents.fatherAddress, data.parents.motherAddress);
+    fGrid.innerHTML = ['fatherName:Full Name','fatherDob:Date of Birth:date','fatherPobCity:Place of Birth — City','fatherPobCountry:Place of Birth — Country','fatherOccupation:Occupation']
+      .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
+    ['fatherName','fatherPobCity','fatherPobCountry','fatherOccupation'].forEach(k=>{
+      fGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
+    });
+    bindDate(fGrid.querySelector('#p_fatherDob'), data.parents, 'fatherDob', 'full');
+    fatherAddrWrap.innerHTML = renderAddressBlock('p_fatherAddress', data.parents.fatherAddress, data.parents.fatherSameAddrAsMother);
+    bindAddressBlock(card, 'p_fatherAddress', data.parents.fatherAddress, ()=> refreshSidebar());
+  }
+  function drawDeceasedDate(who){
+    const wrap = card.querySelector('#'+who+'DeceasedWrap');
+    const key = who+'Deceased', dateKey = who+'DeceasedDate';
+    wrap.innerHTML = data.parents[key] ? fieldText('Date of Death', data.parents, dateKey, {id:'p_'+dateKey, type:'date'}) : '';
+    if(data.parents[key]) bindDate(wrap.querySelector('#p_'+dateKey), data.parents, dateKey, 'full');
+  }
+  drawMother(); drawFather();
+  drawDeceasedDate('mother'); drawDeceasedDate('father');
+  card.querySelector('#p_motherDeceased').addEventListener('change', e=>{
+    data.parents.motherDeceased = e.target.checked;
+    drawDeceasedDate('mother'); refreshSidebar();
+  });
+  card.querySelector('#p_fatherDeceased').addEventListener('change', e=>{
+    data.parents.fatherDeceased = e.target.checked;
+    drawDeceasedDate('father'); refreshSidebar();
+  });
+  card.querySelector('#p_fatherSameAddr').addEventListener('change', e=>{
+    data.parents.fatherSameAddrAsMother = e.target.checked;
+    drawFather(); refreshSidebar();
   });
   const sibWrap = card.querySelector('#sibWrap');
+  const addSibBtn = card.querySelector('#addSib');
+  card.querySelector('#noSiblings').addEventListener('change', e=>{
+    data.siblingsNone = e.target.checked;
+    if(e.target.checked) data.siblings = [];
+    sibWrap.style.display = data.siblingsNone ? 'none' : '';
+    addSibBtn.style.display = data.siblingsNone ? 'none' : '';
+    drawSibs(); refreshSidebar();
+  });
+  sibWrap.style.display = data.siblingsNone ? 'none' : '';
+  addSibBtn.style.display = data.siblingsNone ? 'none' : '';
   function drawSibs(){
     sibWrap.innerHTML='';
     data.siblings.forEach((row,idx)=>{
       const block = document.createElement('div'); block.className='repeat-block';
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
-        <label class="field"><span>Full Name</span><input data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Date of Birth</span><input type="date" data-k="dob" data-idx="${idx}" value="${row.dob||''}"></label>
-        <label class="field"><span>Address</span><input data-k="address" data-idx="${idx}" value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Status</span><input data-k="status" data-idx="${idx}" value="${(row.status||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Full Name</span><input type="text" data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Date of Birth <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
+        <label class="field"><span>Address</span><input type="text" data-k="address" data-idx="${idx}" value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field" style="display:flex;align-items:center;gap:8px;">
+          <input type="checkbox" data-k="deceased" data-idx="${idx}" style="width:auto;" ${row.deceased?'checked':''}>
+          <span style="margin:0;">Deceased</span>
+        </label>
+        ${row.deceased ? `<label class="field"><span>Date of Death <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="deceasedDate" data-type="date" data-idx="${idx}" value="${row.deceasedDate||''}"></label>` : '<div></div>'}
       </div>`;
       sibWrap.appendChild(block);
     });
-    sibWrap.querySelectorAll('input').forEach(inp=>{
-      inp.addEventListener('input', e=>{ data.siblings[+e.target.dataset.idx][e.target.dataset.k]=e.target.value; refreshSidebar(); });
+    sibWrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', e=>{
+        data.siblings[+e.target.dataset.idx].deceased = e.target.checked;
+        drawSibs(); refreshSidebar();
+      });
+    });
+    sibWrap.querySelectorAll('input:not([type=checkbox])').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const idx=+e.target.dataset.idx, k=e.target.dataset.k;
+        let v = e.target.value;
+        if(e.target.dataset.type==='date'){ v = maskDateInput(v,'full'); e.target.value = v; }
+        data.siblings[idx][k]=v;
+        refreshSidebar();
+      });
     });
     sibWrap.querySelectorAll('.rm').forEach(btn=>{
       btn.addEventListener('click', e=>{ data.siblings.splice(+e.target.dataset.idx,1); drawSibs(); refreshSidebar(); });
     });
   }
-  card.querySelector('#addSib').addEventListener('click', ()=>{ data.siblings.push({name:'',dob:'',address:'',status:''}); drawSibs(); refreshSidebar(); });
+  card.querySelector('#addSib').addEventListener('click', ()=>{ data.siblings.push({name:'',dob:'',address:'',occupation:'',deceased:false,deceasedDate:''}); drawSibs(); refreshSidebar(); });
   drawSibs();
 }
 
 function renderAddressHistory(card){
   renderRepeatable(card, 'Address History (10 years)', 'Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past 10 years, whichever is shorter. The panel below flags any unaccounted stretches of time.', 'addressHistory', [
-    {label:'Address, City, Country', key:'address'},
-    {label:'From', key:'from', type:'date'},
-    {label:'To (leave blank if current)', key:'to', type:'date'},
+    {label:'From', key:'from', type:'month'},
+    {label:'To (leave blank if current)', key:'to', type:'month'},
+    {label:'Complete Address', key:'address', type:'addressBlock'},
   ], {
     panelId:'addrCoverage',
     onChange: ()=> renderCoveragePanel('addrCoverage', data.addressHistory, 'Address')
@@ -1001,16 +1052,39 @@ function renderTravelHistory(card){
     wrap.innerHTML='';
     data.travelHistory.forEach((row,idx)=>{
       const block = document.createElement('div'); block.className='repeat-block';
+      const purposeOpts = ['Leisure','Work','Business','Family Visit','Study','Medical','Other'];
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
-        <label class="field"><span>Country / City Visited</span><input data-k="destination" data-idx="${idx}" value="${(row.destination||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Purpose of Trip</span><input data-k="purpose" data-idx="${idx}" value="${(row.purpose||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Departure Date</span><input type="date" data-k="from" data-idx="${idx}" value="${row.from||''}"></label>
-        <label class="field"><span>Return Date</span><input type="date" data-k="to" data-idx="${idx}" value="${row.to||''}"></label>
+        <label class="field"><span>City, Country Visited</span><input type="text" data-k="destination" data-idx="${idx}" value="${(row.destination||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Purpose of Trip</span><input type="text" data-k="purpose" data-idx="${idx}" value="${(row.purpose||'').replace(/"/g,'&quot;')}"></label>
+        <div class="pill-row" style="grid-column:2/3;">
+          ${purposeOpts.map(p=>`<div class="pill${row.purpose===p?' sel':''}" data-purpose-idx="${idx}" data-purpose-val="${p}">${p}</div>`).join('')}
+        </div>
+        <label class="field"><span>Departure Date <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
+        <label class="field"><span>Return Date <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
+        <label class="field"><span>Duration</span><input type="text" disabled data-duration-idx="${idx}" value="${tripDuration(row.from,row.to)}" style="background:#f4f6f7;color:#5b6b75;"></label>
+        <div></div>
       </div>`;
       wrap.appendChild(block);
     });
+    wrap.querySelectorAll('.pill').forEach(pill=>{
+      pill.addEventListener('click', e=>{
+        const idx = +e.target.dataset.purposeIdx, val = e.target.dataset.purposeVal;
+        data.travelHistory[idx].purpose = val;
+        draw(); refreshSidebar();
+      });
+    });
     wrap.querySelectorAll('input').forEach(inp=>{
-      inp.addEventListener('input', e=>{ data.travelHistory[+e.target.dataset.idx][e.target.dataset.k]=e.target.value; refreshSidebar(); });
+      inp.addEventListener('input', e=>{
+        const idx=+e.target.dataset.idx, k=e.target.dataset.k;
+        let v = e.target.value;
+        if(e.target.dataset.type==='month'){ v = maskDateInput(v,'month'); e.target.value = v; }
+        data.travelHistory[idx][k]=v;
+        if(k==='from' || k==='to'){
+          const durEl = wrap.querySelector('[data-duration-idx="'+idx+'"]');
+          if(durEl) durEl.value = tripDuration(data.travelHistory[idx].from, data.travelHistory[idx].to);
+        }
+        refreshSidebar();
+      });
     });
     wrap.querySelectorAll('.rm').forEach(btn=>{
       btn.addEventListener('click', e=>{ data.travelHistory.splice(+e.target.dataset.idx,1); draw(); refreshSidebar(); });
@@ -1028,25 +1102,95 @@ function renderTravelHistory(card){
 }
 
 function renderEducation(card){
-  renderRepeatable(card, 'Education History', 'Institutions attended since secondary school.', 'education', [
-    {label:'Institution', key:'institution'},
+  renderRepeatable(card, 'Education History', 'Institutions attended since secondary school. Only list schools where you graduated — if you did not complete or graduate from a program, you do not need to include it.', 'education', [
+    {label:'From', key:'from', type:'month'},
+    {label:'To', key:'to', type:'month'},
+    {label:'Education Level', key:'level', type:'select', options:['Secondary Level','Post Secondary','Vocational','Post Graduate Diploma','Post Graduate Degree','Masteral Degree','Doctoral Degree']},
     {label:'City, Country', key:'location'},
-    {label:'From', key:'from', type:'date'},
-    {label:'To', key:'to', type:'date'},
+    {label:'Institution', key:'institution'},
     {label:'Credential Obtained', key:'credential'},
   ]);
 }
+function addressCityCountry(addr){
+  if(!addr) return '';
+  return [addr.city, addr.country].filter(Boolean).join(', ');
+}
+function currentAddressFromHistory(){
+  if(!data.addressHistory.length) return '';
+  const hasContent = e => e.address && (e.address.city || e.address.streetName || e.address.country);
+  const current = data.addressHistory.find(e=>hasContent(e) && !e.to);
+  if(current) return addressCityCountry(current.address);
+  const dated = [...data.addressHistory].filter(e=>hasContent(e) && e.from).sort((a,b)=> (b.from||'').localeCompare(a.from||''));
+  if(dated.length) return addressCityCountry(dated[0].address);
+  const any = data.addressHistory.find(hasContent);
+  return any ? addressCityCountry(any.address) : '';
+}
 function renderEmployment(card){
-  renderRepeatable(card, 'Employment / Activity History', 'Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity. Combined with your Education entries, the panel below flags any unaccounted stretches of time (IMM 5669e requires none).', 'employment', [
-    {label:'Employer / Activity', key:'employer'},
-    {label:'Position / Description', key:'position'},
-    {label:'City, Country', key:'location'},
-    {label:'From', key:'from', type:'date'},
-    {label:'To (leave blank if current)', key:'to', type:'date'},
-  ], {
-    panelId:'activityCoverage',
-    onChange: ()=> renderCoveragePanel('activityCoverage', [...data.employment, ...data.education], 'Employment/Education')
+  card.innerHTML = `
+    <div class="step-title">Employment / Activity History</div>
+    <p class="step-sub">Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity. Combined with your Education entries, the panel below flags any unaccounted stretches of time (IMM 5669e requires none).</p>
+    <div id="activityCoverage"></div>
+    <div id="repWrap"></div>
+    <button class="add-btn" id="addRow">+ Add entry</button>
+  `;
+  const wrap = card.querySelector('#repWrap');
+  function onChange(){ renderCoveragePanel('activityCoverage', [...data.employment, ...data.education], 'Employment/Education'); }
+  function draw(){
+    wrap.innerHTML='';
+    data.employment.forEach((row,idx)=>{
+      const block = document.createElement('div'); block.className='repeat-block';
+      block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
+        <label class="field"><span>From <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
+        <label class="field"><span>To (leave blank if current) <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
+        <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="checkbox" data-k="unemployed" data-idx="${idx}" style="width:auto;" ${row.unemployed?'checked':''}>
+          <span style="margin:0;">I was not employed during this period (unemployed)</span>
+        </label>
+        <label class="field"><span>City, Country</span><input type="text" data-k="location" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.location||'').replace(/"/g,'&quot;')}"></label>
+        <div></div>
+        <label class="field"><span>Employer / Activity</span><input type="text" data-k="employer" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.employer||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Position / Description</span><input type="text" data-k="position" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.position||'').replace(/"/g,'&quot;')}"></label>
+      </div>`;
+      wrap.appendChild(block);
+    });
+    wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+      cb.addEventListener('change', e=>{
+        const idx = +e.target.dataset.idx;
+        const row = data.employment[idx];
+        row.unemployed = e.target.checked;
+        if(e.target.checked){
+          row.location = currentAddressFromHistory();
+          row.employer = 'At Residence';
+          row.position = 'Unemployed';
+        } else {
+          row.location=''; row.employer=''; row.position='';
+        }
+        draw(); refreshSidebar(); onChange();
+      });
+    });
+    wrap.querySelectorAll('input:not([type=checkbox])').forEach(inp=>{
+      inp.addEventListener('input', e=>{
+        const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
+        let v = e.target.value;
+        if(t==='month'){ v = maskDateInput(v, 'month'); e.target.value = v; }
+        data.employment[idx][k] = v;
+        refreshSidebar();
+        onChange();
+      });
+    });
+    wrap.querySelectorAll('.rm').forEach(btn=>{
+      btn.addEventListener('click', e=>{
+        data.employment.splice(+e.target.dataset.idx,1);
+        draw(); refreshSidebar(); onChange();
+      });
+    });
+  }
+  card.querySelector('#addRow').addEventListener('click', ()=>{
+    data.employment.push({employer:'',position:'',location:'',from:'',to:'',unemployed:false});
+    draw(); refreshSidebar(); onChange();
   });
+  draw();
+  onChange();
 }
 
 function renderBackground(card){
@@ -1072,38 +1216,50 @@ function renderBackground(card){
   card.querySelector('#bg_details').addEventListener('input', e=>{ data.background.details=e.target.value; refreshSidebar(); });
 }
 
-function renderStatus(card){
-  card.innerHTML = `
-    <div class="step-title">Current Status & Extension Request</div>
-    <p class="step-sub">Only needed if you are extending or changing conditions of stay (IMM 5710). Leave blank if not applicable.</p>
-    ${autofillNotice.status ? `<div class="autofill-banner">✓ A date below was inserted from a scanned work/study permit. Please verify.</div>` : ''}
-    <div class="grid2">
-      ${fieldText('Current Status in Canada', data.status, 'currentStatus', {id:'st_cur'})}
-      ${fieldText('Status Expiry Date', data.status, 'expiryDate', {id:'st_exp', type:'date'})}
-    </div>
-    <label class="field"><span>Type of Extension / Change Requested</span><input id="st_type" value="${data.status.extensionType}"></label>
-    <label class="field"><span>Reason for Request</span><textarea id="st_reason">${data.status.reason}</textarea></label>
-  `;
-  card.querySelector('#st_cur').addEventListener('input', e=>{ data.status.currentStatus=e.target.value; refreshSidebar(); });
-  card.querySelector('#st_exp').addEventListener('input', e=>{ data.status.expiryDate=e.target.value; refreshSidebar(); });
-  card.querySelector('#st_type').addEventListener('input', e=>{ data.status.extensionType=e.target.value; refreshSidebar(); });
-  card.querySelector('#st_reason').addEventListener('input', e=>{ data.status.reason=e.target.value; refreshSidebar(); });
-}
-
 function renderReview(card){
   const fullName = `${data.identity.givenNames} ${data.identity.lastName}`.trim() || '—';
   card.innerHTML = `
     <div class="step-title">Review & Generate Record</div>
     <p class="step-sub">Confirm everything below, then generate your intake record for your consultant.</p>
-    <div class="success-banner" id="successBanner">✓ Record generated. Use the download button to save your file, or the copy button to paste it into an email to your consultant.</div>
+    <div class="success-banner" id="successBanner">Record generated. Use the download button to save your file, or the copy button to paste it into an email to your consultant.</div>
     <div id="gapSummary"></div>
     <div id="reviewBody"></div>
-    <div class="final-actions">
-      <button class="btn btn-primary" id="genBtn">Generate Intake Record</button>
-      <button class="btn btn-ghost" id="downloadBtn" disabled>Download JSON</button>
-      <button class="btn btn-ghost" id="copyBtn" disabled>Copy to Clipboard</button>
+    <div class="review-block" style="margin-top:18px;">
+      <h4>Consent & Signature</h4>
+      <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+        <input type="checkbox" id="consentAccurate" style="width:auto;margin-top:3px;" ${data.consent.accurate?'checked':''}>
+        <span style="margin:0;">I confirm that the information provided in this form is accurate and complete to the best of my knowledge. <strong>(Mandatory)</strong></span>
+      </label>
+      <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
+        <input type="checkbox" id="consentSignature" style="width:auto;margin-top:3px;" ${data.consent.authorizeSignature?'checked':''}>
+        <span style="margin:0;">I authorize Olcorp Immigration Consulting Corporation to use my digital signature below to sign IRCC forms on my behalf. If you did not authorize, you will be asked to manually sign all the forms and send it to us.</span>
+      </label>
+      <label class="field"><span>Sign below</span></label>
+      <canvas id="sigPad" width="600" height="180" style="border:1px solid #ccc;border-radius:6px;width:100%;max-width:600px;height:180px;touch-action:none;background:#fff;"></canvas>
+      <div style="margin-top:8px;">
+        <button class="btn btn-ghost" id="clearSigBtn" type="button">Clear Signature</button>
+        <span id="sigStatus" style="margin-left:10px;color:#8a3a26;font-size:0.9em;"></span>
+      </div>
     </div>
-    <p class="note">This form does not submit anywhere automatically. Generating a record creates a file naming it <strong>${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json</strong>, matching Olcorp's file naming convention. Once downloaded, please email that file as an attachment to <strong>consulting@olcorp.ca</strong> so your consultant can begin preparing your documents.</p>
+    <div class="final-actions">
+      <button class="btn btn-primary" id="driveBtn" disabled>Send to Olcorp Shared Folder</button>
+      <button class="btn btn-ghost" id="emailBtn" disabled>Email to Consultant</button>
+    </div>
+    <div class="modal-overlay" id="driveModal" style="display:none;">
+      <div class="modal-box">
+        <h4>Olcorp Shared Folder Link</h4>
+        <p>Paste the shared folder link your consultant sent you. Your record will be uploaded there once you sign into your Google account.</p>
+        <label class="field"><input type="text" id="driveFolderLinkInput" placeholder="https://drive.google.com/drive/folders/..." value="${data.consent.driveFolderLink||''}"></label>
+        <p class="note" id="driveModalError" style="display:none;color:#8a3a26;"></p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost btn-sm" id="driveModalCancel" type="button">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="driveModalContinue" type="button">Continue</button>
+        </div>
+      </div>
+    </div>
+    <p class="note" id="driveStatus" style="display:none;"></p>
+    <p class="note" id="consentNote" style="color:#8a3a26;">Please confirm the information is accurate and provide your signature above to enable these buttons.</p>
+    <p class="note">This form does not submit anywhere automatically. "Send to Olcorp Shared Folder" signs you into your own Google account for one click and uploads your record (named <strong>${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json</strong>) directly into the shared folder linked above. If you don't use Google, "Email to Consultant" downloads that same file and opens a pre-addressed email to <strong>consulting@olcorp.ca</strong> — most browsers won't attach the file automatically, so you'll still need to drag it in before sending.</p>
   `;
   const start = requiredHistoryStart(), end = new Date();
   const addrGaps = data.addressHistory.some(e=>e.from) ? computeGaps(data.addressHistory, start, end) : null;
@@ -1114,19 +1270,18 @@ function renderReview(card){
   if(actGaps && actGaps.length) gapLines.push(`Employment/Education history: ${actGaps.length} gap${actGaps.length>1?'s':''} totalling ~${actGaps.reduce((s,g)=>s+monthsBetween(g[0],g[1]),0)} months`);
   const gapEl = card.querySelector('#gapSummary');
   if(gapLines.length){
-    gapEl.innerHTML = `<div class="autofill-banner" style="background:#faeae5;border-color:#f0c3b8;color:#8a3a26;">⚠ Unaccounted time found — ${gapLines.join(' · ')}. Go back to those steps to fill in the missing periods before submitting.</div>`;
+    gapEl.innerHTML = `<div class="autofill-banner" style="background:#faeae5;border-color:#f0c3b8;color:#8a3a26;">Unaccounted time found — ${gapLines.join(' · ')}. Go back to those steps to fill in the missing periods before submitting.</div>`;
   } else if(addrGaps || actGaps){
-    gapEl.innerHTML = `<div class="autofill-banner" style="background:#e6f2ea;border-color:#b9dcc4;color:#1f5c3a;">✓ No gaps detected in address or employment/education history for the required period.</div>`;
+    gapEl.innerHTML = `<div class="autofill-banner" style="background:#e6f2ea;border-color:#b9dcc4;color:#1f5c3a;">No gaps detected in address or employment/education history for the required period.</div>`;
   }
   const body = card.querySelector('#reviewBody');
   const blocks = [
-    ['Identity', [['Name',fullName],['UCI',data.identity.uci],['DOB',data.identity.dob],['Place of Birth',data.identity.pob],['Sex',data.identity.sex],['Citizenship',data.identity.citizenship]]],
-    ['Contact', [['Mailing',data.contact.mailing],['Phone',data.contact.phone],['Email',data.contact.email]]],
+    ['Identity', [['Name',fullName],['DOB',data.identity.dob]]],
+    ['Contact', [['Mailing',formatAddress(data.contact.mailing)],['Phone',data.contact.phone],['Email',data.contact.email]]],
     ['Marital', [['Status',data.marital.status],['Spouse',`${data.spouse.givenNames} ${data.spouse.lastName}`.trim()]]],
-    ['Children', [[`# Entries`, data.children.length]]],
-    ['Parents & Siblings', [['Mother',data.parents.motherName],['Father',data.parents.fatherName],['# Siblings',data.siblings.length]]],
+    ['Children', [[`# Entries`, data.childrenNone ? 'None declared' : data.children.length]]],
+    ['Parents & Siblings', [['Mother',data.parents.motherName],['Father',data.parents.fatherName],['# Siblings',data.siblingsNone ? 'None declared' : data.siblings.length]]],
     ['History', [['Address entries',data.addressHistory.length],['Travel entries',data.travelHistoryNone?'None declared':data.travelHistory.length],['Education entries',data.education.length],['Employment entries',data.employment.length]]],
-    ['Status', [['Current Status',data.status.currentStatus],['Extension Type',data.status.extensionType]]],
   ];
   blocks.forEach(([title,rows])=>{
     const b = document.createElement('div'); b.className='review-block';
@@ -1136,13 +1291,62 @@ function renderReview(card){
     body.appendChild(b);
   });
 
-  card.querySelector('#genBtn').addEventListener('click', ()=>{
-    document.getElementById('successBanner').style.display='block';
-    card.querySelector('#downloadBtn').disabled=false;
-    card.querySelector('#copyBtn').disabled=false;
+  // --- Signature pad ---
+  const sigCanvas = card.querySelector('#sigPad');
+  const sigCtx = sigCanvas.getContext('2d');
+  sigCtx.lineWidth = 2; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#1a1a1a';
+  let sigHasStroke = false, sigDrawing = false, sigLastX = 0, sigLastY = 0;
+  function sigPos(e){
+    const rect = sigCanvas.getBoundingClientRect();
+    const scaleX = sigCanvas.width / rect.width, scaleY = sigCanvas.height / rect.height;
+    const point = e.touches ? e.touches[0] : e;
+    return { x: (point.clientX - rect.left) * scaleX, y: (point.clientY - rect.top) * scaleY };
+  }
+  function sigStart(e){ e.preventDefault(); sigDrawing = true; const p = sigPos(e); sigLastX = p.x; sigLastY = p.y; }
+  function sigMove(e){
+    if(!sigDrawing) return;
+    e.preventDefault();
+    const p = sigPos(e);
+    sigCtx.beginPath(); sigCtx.moveTo(sigLastX, sigLastY); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+    sigLastX = p.x; sigLastY = p.y; sigHasStroke = true;
+    updateConsentGate();
+  }
+  function sigEnd(){ sigDrawing = false; }
+  sigCanvas.addEventListener('mousedown', sigStart);
+  sigCanvas.addEventListener('mousemove', sigMove);
+  window.addEventListener('mouseup', sigEnd);
+  sigCanvas.addEventListener('touchstart', sigStart);
+  sigCanvas.addEventListener('touchmove', sigMove);
+  sigCanvas.addEventListener('touchend', sigEnd);
+  card.querySelector('#clearSigBtn').addEventListener('click', ()=>{
+    sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+    sigHasStroke = false;
+    data.consent.signatureDataUrl = '';
+    updateConsentGate();
+  });
+
+  // --- Consent checkboxes ---
+  card.querySelector('#consentAccurate').addEventListener('change', e=>{
+    data.consent.accurate = e.target.checked; updateConsentGate();
+  });
+  card.querySelector('#consentSignature').addEventListener('change', e=>{
+    data.consent.authorizeSignature = e.target.checked; updateConsentGate();
+  });
+
+  function updateConsentGate(){
+    const ready = data.consent.accurate && sigHasStroke;
+    card.querySelector('#emailBtn').disabled = !ready;
+    card.querySelector('#driveBtn').disabled = !ready;
+    const note = card.querySelector('#consentNote');
+    if(note) note.style.display = ready ? 'none' : 'block';
+  }
+  updateConsentGate();
+
+  function stampRecord(){
+    data.consent.signatureDataUrl = sigCanvas.toDataURL('image/png');
     data._recordId = recordId;
     data._generatedAt = new Date().toISOString();
-  });
+  }
   function downloadIntakeRecord(){
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
     const url = URL.createObjectURL(blob);
@@ -1152,62 +1356,236 @@ function renderReview(card){
     URL.revokeObjectURL(url);
     return fname;
   }
-  card.querySelector('#downloadBtn').addEventListener('click', downloadIntakeRecord);
-  card.querySelector('#copyBtn').addEventListener('click', ()=>{
-    navigator.clipboard.writeText(JSON.stringify(data,null,2));
-    const btn = card.querySelector('#copyBtn');
-    const orig = btn.textContent; btn.textContent='Copied ✓';
-    setTimeout(()=>btn.textContent=orig, 1500);
+  card.querySelector('#emailBtn').addEventListener('click', ()=>{
+    stampRecord();
+    document.getElementById('successBanner').style.display='block';
+    const fname = downloadIntakeRecord();
+    const subject = encodeURIComponent(`Intake Record — ${fullName}`);
+    const body = encodeURIComponent(`Hi,\n\nAttached is my completed intake record (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
+    window.location.href = `mailto:consulting@olcorp.ca?subject=${subject}&body=${body}`;
+  });
+
+  // --- Save to Google Drive ---
+  let driveTokenClient = null;
+  function setDriveStatus(msg, isError){
+    const el = card.querySelector('#driveStatus');
+    if(!el) return;
+    el.textContent = msg;
+    el.style.color = isError ? '#8a3a26' : '#1f5c3a';
+    el.style.display = msg ? 'block' : 'none';
+  }
+  function uploadToDrive(accessToken){
+    stampRecord();
+    const fname = `${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json`;
+    const metadata = { name: fname, mimeType: 'application/json' };
+    const folderId = extractDriveFolderId(data.consent.driveFolderLink);
+    if(folderId) metadata.parents = [folderId];
+    const boundary = '-------olcorpintake' + Math.random().toString(36).slice(2);
+    const delimiter = `\r\n--${boundary}\r\n`;
+    const closeDelim = `\r\n--${boundary}--`;
+    const body =
+      delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) +
+      delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(data, null, 2) +
+      closeDelim;
+    setDriveStatus('Uploading to Google Drive…', false);
+    fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + accessToken,
+        'Content-Type': `multipart/related; boundary="${boundary}"`
+      },
+      body
+    }).then(r=>{
+      if(!r.ok) throw new Error('Upload failed (' + r.status + ')');
+      return r.json();
+    }).then(()=>{
+      document.getElementById('successBanner').style.display='block';
+      setDriveStatus('Saved to Google Drive.', false);
+    }).catch(err=>{
+      setDriveStatus('Could not upload to Google Drive: ' + err.message, true);
+    });
+  }
+  function startGoogleSignInAndUpload(){
+    if(!window.google || !google.accounts || !google.accounts.oauth2){
+      setDriveStatus('Google sign-in is still loading — please try again in a moment.', true);
+      return;
+    }
+    if(!driveTokenClient){
+      driveTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.file',
+        callback: (tokenResponse)=>{
+          if(tokenResponse.error){ setDriveStatus('Google sign-in was cancelled or failed.', true); return; }
+          uploadToDrive(tokenResponse.access_token);
+        }
+      });
+    }
+    driveTokenClient.requestAccessToken();
+  }
+  const driveModal = card.querySelector('#driveModal');
+  const driveModalInput = card.querySelector('#driveFolderLinkInput');
+  const driveModalError = card.querySelector('#driveModalError');
+  function openDriveModal(){
+    driveModalInput.value = data.consent.driveFolderLink || '';
+    driveModalError.style.display = 'none';
+    driveModal.style.display = 'flex';
+    driveModalInput.focus();
+  }
+  function closeDriveModal(){ driveModal.style.display = 'none'; }
+  card.querySelector('#driveBtn').addEventListener('click', ()=>{
+    if(!GOOGLE_CLIENT_ID){
+      setDriveStatus('Google Drive upload is not configured yet. Please use Email instead.', true);
+      return;
+    }
+    openDriveModal();
+  });
+  card.querySelector('#driveModalCancel').addEventListener('click', closeDriveModal);
+  card.querySelector('#driveModal').addEventListener('click', e=>{ if(e.target.id==='driveModal') closeDriveModal(); });
+  card.querySelector('#driveModalContinue').addEventListener('click', ()=>{
+    const raw = driveModalInput.value.trim();
+    const folderId = extractDriveFolderId(raw);
+    if(!folderId){
+      driveModalError.textContent = 'That doesn\'t look like a valid Google Drive folder link. Please paste the link your consultant shared with you.';
+      driveModalError.style.display = 'block';
+      return;
+    }
+    data.consent.driveFolderLink = raw;
+    closeDriveModal();
+    startGoogleSignInAndUpload();
   });
 }
 
-// ---------- Sidebar ----------
+// ---------- Sidebar (removed — Live Record Preview no longer shown) ----------
 function refreshSidebar(){
-  const {total, filled} = fieldsFilled(data);
-  const pct = total ? Math.round((filled/total)*100) : 0;
-  document.getElementById('bar').style.width = pct+'%';
-  document.getElementById('pctText').textContent = pct+'% of intake complete';
-  const rows = [
-    ['Applicant', `${data.identity.givenNames||'—'} ${data.identity.lastName||''}`.trim()],
-    ['DOB', data.identity.dob || '—'],
-    ['Marital Status', data.marital.status || '—'],
-    ['Children on file', data.children.length],
-    ['Siblings on file', data.siblings.length],
-    ['Address entries', data.addressHistory.length],
-    ['Employment entries', data.employment.length],
-    ['Record ID', recordId],
-  ];
-  document.getElementById('sbRows').innerHTML = rows.map(([k,v])=>`<div class="sb-row"><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+  // no-op: retained so existing call sites throughout the form don't need changes
+}
+
+// ---------- Step validation ----------
+function isFilled(v){ return !!(v && v.toString().trim()); }
+function addressHasContent(addr){ return !!(addr && (addr.streetName || addr.city) && addr.country); }
+
+function validateStep(key){
+  switch(key){
+    case 'identity':
+      if(!isFilled(data.identity.lastName) || !isFilled(data.identity.givenNames) || !isFilled(data.identity.dob))
+        return 'Please fill in Last Name, Given Name(s), and Date of Birth before continuing.';
+      return null;
+    case 'contact':
+      if(!addressHasContent(data.contact.mailing))
+        return 'Please complete your mailing address before continuing.';
+      if(!isFilled(data.contact.phone) || !isFilled(data.contact.email))
+        return 'Please provide a phone number and email address before continuing.';
+      return null;
+    case 'marital':
+      if(!isFilled(data.marital.status))
+        return 'Please select a marital status before continuing.';
+      return null;
+    case 'children':
+      if(!data.childrenNone && data.children.length===0)
+        return 'Please add at least one child, or check "I have no children" before continuing.';
+      if(!data.childrenNone && data.children.some(r=>!isFilled(r.name) || !isFilled(r.dob)))
+        return 'Please fill in each child\'s Full Name and Date of Birth before continuing.';
+      return null;
+    case 'parents':
+      if(!isFilled(data.parents.motherName) || !isFilled(data.parents.fatherName))
+        return 'Please provide both your mother\'s and father\'s full names before continuing.';
+      if(!data.siblingsNone && data.siblings.length===0)
+        return 'Please add at least one sibling, or check "I have no siblings" before continuing.';
+      if(!data.siblingsNone && data.siblings.some(r=>!isFilled(r.name) || !isFilled(r.dob)))
+        return 'Please fill in each sibling\'s Full Name and Date of Birth before continuing.';
+      return null;
+    case 'entry':
+      if(!isFilled(data.entry.originalDate) || !isFilled(data.entry.originalPort))
+        return 'Please provide your original entry date and port of entry before continuing.';
+      return null;
+    case 'education':
+      if(data.education.length===0)
+        return 'Please add at least one education entry before continuing.';
+      if(data.education.some(r=>!isFilled(r.from) || !isFilled(r.institution)))
+        return 'Please fill in the From date and Institution for each education entry before continuing.';
+      return null;
+    case 'address':
+      if(data.addressHistory.length===0)
+        return 'Please add at least one address entry before continuing.';
+      if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address)))
+        return 'Please fill in the From date and address (at least street/city and country) for each entry before continuing.';
+      return null;
+    case 'employment':
+      if(data.employment.length===0)
+        return 'Please add at least one employment/activity entry before continuing.';
+      if(data.employment.some(r=>!isFilled(r.from) || (!r.unemployed && !isFilled(r.employer))))
+        return 'Please fill in the From date and Employer/Activity (or check "Unemployed") for each entry before continuing.';
+      return null;
+    case 'travel':
+      if(!data.travelHistoryNone && data.travelHistory.length===0)
+        return 'Please add at least one trip, or check "I did not travel outside my country of residence" before continuing.';
+      if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.destination) || !isFilled(r.from)))
+        return 'Please fill in the City/Country Visited and Departure Date for each trip before continuing.';
+      return null;
+    case 'background':
+      const bgKeys = ['militaryPoliceGovt','criminal','medical','refusalsRemovals'];
+      if(bgKeys.some(k=>!isFilled(data.background[k])))
+        return 'Please answer all background questions before continuing.';
+      return null;
+    default:
+      return null;
+  }
 }
 
 // ---------- Navigation ----------
 let gapAcknowledged = false;
+function showStepValidationMsg(msg){
+  const el = document.getElementById('stepValidationMsg');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
 function renderStep(){
   buildRail();
   gapAcknowledged = false;
+  showStepValidationMsg('');
   const card = document.getElementById('stepCard');
   steps[stepIndex].render(card);
   const lbl = card.querySelector('.step-label');
   if(lbl) lbl.textContent = `Step ${stepIndex+1} of ${steps.length}`;
   document.getElementById('backBtn').style.visibility = stepIndex===0 ? 'hidden':'visible';
-  document.getElementById('nextBtn').textContent = stepIndex===steps.length-1 ? 'Done' : 'Continue →';
+  document.getElementById('nextBtn').textContent = stepIndex===steps.length-1 ? 'Done' : 'Continue';
   refreshSidebar();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 document.getElementById('backBtn').addEventListener('click', ()=>{ if(stepIndex>0){ stepIndex--; renderStep(); } });
 document.getElementById('nextBtn').addEventListener('click', ()=>{
   const key = steps[stepIndex].key;
+  const validationMsg = validateStep(key);
+  if(validationMsg){
+    showStepValidationMsg(validationMsg);
+    return;
+  }
+  showStepValidationMsg('');
   if((key==='address' || key==='employment') && !gapAcknowledged){
     const start = requiredHistoryStart(), end = new Date();
     const entries = key==='address' ? data.addressHistory : [...data.employment, ...data.education];
     const gaps = entries.some(e=>e.from) ? computeGaps(entries, start, end) : [];
     if(gaps.length){
       gapAcknowledged = true;
-      document.getElementById('nextBtn').textContent = 'Continue anyway →';
+      document.getElementById('nextBtn').textContent = 'Continue anyway';
       return;
     }
   }
-  if(stepIndex<steps.length-1){ stepIndex++; renderStep(); }
+  if(stepIndex<steps.length-1){
+    stepIndex++; renderStep();
+  } else {
+    document.getElementById('doneModal').style.display = 'flex';
+  }
+});
+document.getElementById('doneModalNo').addEventListener('click', ()=>{
+  document.getElementById('doneModal').style.display = 'none';
+});
+document.getElementById('doneModalYes').addEventListener('click', ()=>{
+  window.location.href = window.location.pathname + window.location.search;
+});
+document.getElementById('doneModal').addEventListener('click', e=>{
+  if(e.target.id==='doneModal') document.getElementById('doneModal').style.display = 'none';
 });
 
 renderStep();
