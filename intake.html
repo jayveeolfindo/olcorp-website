@@ -96,7 +96,10 @@
   }
   .add-btn:hover{background:#f2f8f0;}
 
-  .nav-row{display:flex; justify-content:space-between; margin-top:26px;}
+  .nav-row{display:grid; grid-template-columns:1fr 1fr 1fr; align-items:center; margin-top:26px;}
+  .nav-row-left{display:flex; gap:8px; align-items:center; justify-self:start;}
+  .nav-row-center{display:flex; justify-self:center;}
+  .nav-row-right{display:flex; justify-self:end;}
   .btn{border:none; padding:12px 24px; border-radius:999px; font-weight:600; font-size:13.5px; cursor:pointer; font-family:var(--body);}
   .btn-primary{background:var(--navy); color:#fff;}
   .btn-primary:hover{background:var(--navy-deep);}
@@ -151,7 +154,11 @@
     .record-id{align-self:flex-start;}
     .card{padding:18px;}
     .step-title{font-size:18px;}
-    .nav-row{flex-direction:column-reverse; gap:10px;}
+    .nav-row{grid-template-columns:1fr; gap:10px;}
+    .nav-row-left, .nav-row-center, .nav-row-right{justify-self:stretch;}
+    .nav-row-left{flex-direction:column; order:3;}
+    .nav-row-center{order:2;}
+    .nav-row-right{order:1;}
     .nav-row .btn{width:100%;}
     .kv{grid-template-columns:1fr;}
     .final-actions .btn{width:100%;}
@@ -160,7 +167,7 @@
     .choice-row{grid-template-columns:1fr;}
   }
 </style>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -185,8 +192,6 @@
       <div class="record-id">Record ID: <strong id="recordId">—</strong></div>
       <div style="display:flex; gap:8px;">
         <button class="btn btn-ghost btn-sm" id="saveProgressBtn">Save & Continue Later</button>
-        <button class="btn btn-ghost btn-sm" id="resumeProgressBtn">Resume Saved Intake</button>
-        <input type="file" id="resumeFileInput" accept="application/json" style="display:none;">
       </div>
     </div>
   </div>
@@ -198,9 +203,17 @@
       <div class="card" id="stepCard"></div>
       <p class="note" id="stepValidationMsg" style="display:none;color:#8a3a26;"></p>
       <div class="nav-row">
-        <button class="btn btn-ghost" id="backBtn">Back</button>
-        <button class="btn btn-ghost btn-sm" id="saveProgressBtn2" style="align-self:center;">Save & Continue Later</button>
-        <button class="btn btn-primary" id="nextBtn">Continue</button>
+        <div class="nav-row-left">
+          <button class="btn btn-ghost" id="backBtn" tabindex="-1">Back</button>
+          <button class="btn btn-ghost btn-sm" id="resumeProgressBtn" tabindex="-1">Resume Encoding</button>
+          <input type="file" id="resumeFileInput" accept="application/json" style="display:none;">
+        </div>
+        <div class="nav-row-center">
+          <button class="btn btn-ghost btn-sm" id="saveProgressBtn2" tabindex="-1">Save & Continue Later</button>
+        </div>
+        <div class="nav-row-right">
+          <button class="btn btn-primary" id="nextBtn">Continue</button>
+        </div>
       </div>
     </div>
   </div>
@@ -209,36 +222,16 @@
 <div class="modal-overlay" id="doneModal" style="display:none;">
   <div class="modal-box">
     <h4>Thank you!</h4>
-    <p>Thank you for completing your intake form. Your consultant will contact you if there are any questions about your responses.</p>
-    <p>Would you like to fill out a new form for another applicant?</p>
+    <p>Thank you for completing your client form. Please verify that the generated PDF, including the attached file, has been successfully emailed to us by checking your Sent folder. Your immigration consultant will carefully review your responses and contact you if any clarification or additional information is required.</p>
+    <p>Would you like to complete another client form for a different applicant?</p>
     <div class="modal-actions">
-      <button class="btn btn-ghost btn-sm" id="doneModalNo" type="button">No, I'm done</button>
-      <button class="btn btn-primary btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
+      <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
+      <button class="btn btn-primary btn-sm" id="doneModalNo" type="button">Done</button>
     </div>
   </div>
 </div>
 
 <script>
-// ---------- Google Drive upload config ----------
-// Fill this in once you've created the OAuth Client ID. Each client pastes their own
-// shared-folder link into the form itself, so no folder ID needs to be hardcoded here.
-const GOOGLE_CLIENT_ID = ''; // e.g. '1234567890-abc.apps.googleusercontent.com'
-
-function extractDriveFolderId(url){
-  if(!url) return '';
-  const patterns = [
-    /\/folders\/([a-zA-Z0-9_-]+)/,
-    /[?&]id=([a-zA-Z0-9_-]+)/,
-  ];
-  for(const re of patterns){
-    const m = re.exec(url);
-    if(m) return m[1];
-  }
-  // if they pasted just the bare ID instead of a full link
-  if(/^[a-zA-Z0-9_-]{10,}$/.test(url.trim())) return url.trim();
-  return '';
-}
-
 // ---------- Data model ----------
 const data = {
   identity:{uci:'',lastName:'',givenNames:'',dob:'',pob:'',sex:'',citizenship:''},
@@ -268,7 +261,7 @@ const data = {
   employment:[],
   background:{militaryPoliceGovt:'', criminal:'', medical:'', refusalsRemovals:'', details:''},
   status:{currentStatus:'',expiryDate:'',extensionType:'',reason:''},
-  consent:{accurate:false,authorizeSignature:false,signatureDataUrl:'',driveFolderLink:''}
+  consent:{accurate:false,authorizeRepresentative:false,authorizeSignature:false,signatureDataUrl:''}
 };
 
 const autofillNotice = {identity:false, contact:false, status:false};
@@ -292,7 +285,7 @@ const steps = [
   {key:'employment', label:'09 · Employment', title:'Employment / Activity History', sub:'Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity.', render: renderEmployment},
   {key:'travel', label:'10 · Travel History', title:'Travel History (10 years)', sub:'Required for IMM 5562. All trips outside your country of residence in the same 10-year / since-18 window.', render: renderTravelHistory},
   {key:'background', label:'11 · Background', title:'Background Declarations', sub:'Sensitive questions required on IMM 5669e. Answer honestly — these are reviewed by your RCIC before submission, not sent anywhere automatically.', render: renderBackground},
-  {key:'review', label:'12 · Review', title:'Review & Generate Record', sub:'Confirm everything below, then generate your intake record.', render: renderReview},
+  {key:'review', label:'12 · Review', title:'Review & Generate Record', sub:'Confirm everything below, then generate your Client Information.', render: renderReview},
 ];
 
 function buildRail(){
@@ -467,7 +460,7 @@ function downloadSaveFile(){
   const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  const fname = `${(data.identity.lastName||'Applicant')} - ${(data.identity.givenNames||'Untitled')} - Intake Progress.json`;
+  const fname = `${(data.identity.lastName||'Applicant')} - ${(data.identity.givenNames||'Untitled')} - Client Information Progress.json`;
   a.href = url; a.download = fname; a.click();
   URL.revokeObjectURL(url);
   showToast('Progress saved. Keep this file — upload it later to continue where you left off.');
@@ -1220,21 +1213,26 @@ function renderReview(card){
   const fullName = `${data.identity.givenNames} ${data.identity.lastName}`.trim() || '—';
   card.innerHTML = `
     <div class="step-title">Review & Generate Record</div>
-    <p class="step-sub">Confirm everything below, then generate your intake record for your consultant.</p>
-    <div class="success-banner" id="successBanner">Record generated. Use the download button to save your file, or the copy button to paste it into an email to your consultant.</div>
+    <p class="step-sub">Confirm everything below, then generate your Client Information for your consultant.</p>
+    <div class="success-banner" id="successBanner">Record generated and sent.</div>
     <div id="gapSummary"></div>
     <div id="reviewBody"></div>
     <div class="review-block" style="margin-top:18px;">
       <h4>Consent & Signature</h4>
+      <p class="note" style="margin:-4px 0 10px;">Fields marked <strong>*</strong> are mandatory.</p>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
         <input type="checkbox" id="consentAccurate" style="width:auto;margin-top:3px;" ${data.consent.accurate?'checked':''}>
-        <span style="margin:0;">I confirm that the information provided in this form is accurate and complete to the best of my knowledge. <strong>(Mandatory)</strong></span>
+        <span style="margin:0;">I confirm that the information provided in this form is accurate and complete to the best of my knowledge. <strong>*</strong></span>
+      </label>
+      <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
+        <input type="checkbox" id="consentRepresentative" style="width:auto;margin-top:3px;" ${data.consent.authorizeRepresentative?'checked':''}>
+        <span style="margin:0;">I authorize the following individual to serve as my representative, as the primary point of contact on my application, and to conduct business on my behalf with Immigration, Refugees and Citizenship Canada and Canada Border Services Agency: Jayvee Olfindo, RCIC (CICC# R711813), Olcorp Immigration Consulting Corporation. <strong>*</strong></span>
       </label>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
         <input type="checkbox" id="consentSignature" style="width:auto;margin-top:3px;" ${data.consent.authorizeSignature?'checked':''}>
         <span style="margin:0;">I authorize Olcorp Immigration Consulting Corporation to use my digital signature below to sign IRCC forms on my behalf. If you did not authorize, you will be asked to manually sign all the forms and send it to us.</span>
       </label>
-      <label class="field"><span>Sign below</span></label>
+      <label class="field"><span>Please sign below.</span></label>
       <canvas id="sigPad" width="600" height="180" style="border:1px solid #ccc;border-radius:6px;width:100%;max-width:600px;height:180px;touch-action:none;background:#fff;"></canvas>
       <div style="margin-top:8px;">
         <button class="btn btn-ghost" id="clearSigBtn" type="button">Clear Signature</button>
@@ -1242,24 +1240,10 @@ function renderReview(card){
       </div>
     </div>
     <div class="final-actions">
-      <button class="btn btn-primary" id="driveBtn" disabled>Send to Olcorp Shared Folder</button>
-      <button class="btn btn-ghost" id="emailBtn" disabled>Email to Consultant</button>
+      <button class="btn btn-primary" id="emailBtn" disabled>Email to Consultant</button>
     </div>
-    <div class="modal-overlay" id="driveModal" style="display:none;">
-      <div class="modal-box">
-        <h4>Olcorp Shared Folder Link</h4>
-        <p>Paste the shared folder link your consultant sent you. Your record will be uploaded there once you sign into your Google account.</p>
-        <label class="field"><input type="text" id="driveFolderLinkInput" placeholder="https://drive.google.com/drive/folders/..." value="${data.consent.driveFolderLink||''}"></label>
-        <p class="note" id="driveModalError" style="display:none;color:#8a3a26;"></p>
-        <div class="modal-actions">
-          <button class="btn btn-ghost btn-sm" id="driveModalCancel" type="button">Cancel</button>
-          <button class="btn btn-primary btn-sm" id="driveModalContinue" type="button">Continue</button>
-        </div>
-      </div>
-    </div>
-    <p class="note" id="driveStatus" style="display:none;"></p>
-    <p class="note" id="consentNote" style="color:#8a3a26;">Please confirm the information is accurate and provide your signature above to enable these buttons.</p>
-    <p class="note">This form does not submit anywhere automatically. "Send to Olcorp Shared Folder" signs you into your own Google account for one click and uploads your record (named <strong>${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json</strong>) directly into the shared folder linked above. If you don't use Google, "Email to Consultant" downloads that same file and opens a pre-addressed email to <strong>consulting@olcorp.ca</strong> — most browsers won't attach the file automatically, so you'll still need to drag it in before sending.</p>
+    <p class="note" id="consentNote" style="color:#8a3a26;">Please confirm the information is accurate and provide your signature above to enable this button.</p>
+    <p class="note">This form does not submit anywhere automatically. "Email to Consultant" downloads your record as a formatted PDF (named <strong>${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Client Information.pdf</strong>) and opens a pre-addressed email to <strong>consulting@olcorp.ca</strong> — most browsers won't attach the file automatically, so you'll still need to drag it in before sending.</p>
   `;
   const start = requiredHistoryStart(), end = new Date();
   const addrGaps = data.addressHistory.some(e=>e.from) ? computeGaps(data.addressHistory, start, end) : null;
@@ -1278,7 +1262,7 @@ function renderReview(card){
   const blocks = [
     ['Identity', [['Name',fullName],['DOB',data.identity.dob]]],
     ['Contact', [['Mailing',formatAddress(data.contact.mailing)],['Phone',data.contact.phone],['Email',data.contact.email]]],
-    ['Marital', [['Status',data.marital.status],['Spouse',`${data.spouse.givenNames} ${data.spouse.lastName}`.trim()]]],
+    ['Marital', [['Status',titleCase(data.marital.status)],['Spouse',`${data.spouse.givenNames} ${data.spouse.lastName}`.trim()]]],
     ['Children', [[`# Entries`, data.childrenNone ? 'None declared' : data.children.length]]],
     ['Parents & Siblings', [['Mother',data.parents.motherName],['Father',data.parents.fatherName],['# Siblings',data.siblingsNone ? 'None declared' : data.siblings.length]]],
     ['History', [['Address entries',data.addressHistory.length],['Travel entries',data.travelHistoryNone?'None declared':data.travelHistory.length],['Education entries',data.education.length],['Employment entries',data.employment.length]]],
@@ -1329,14 +1313,16 @@ function renderReview(card){
   card.querySelector('#consentAccurate').addEventListener('change', e=>{
     data.consent.accurate = e.target.checked; updateConsentGate();
   });
+  card.querySelector('#consentRepresentative').addEventListener('change', e=>{
+    data.consent.authorizeRepresentative = e.target.checked; updateConsentGate();
+  });
   card.querySelector('#consentSignature').addEventListener('change', e=>{
     data.consent.authorizeSignature = e.target.checked; updateConsentGate();
   });
 
   function updateConsentGate(){
-    const ready = data.consent.accurate && sigHasStroke;
+    const ready = data.consent.accurate && data.consent.authorizeRepresentative && sigHasStroke;
     card.querySelector('#emailBtn').disabled = !ready;
-    card.querySelector('#driveBtn').disabled = !ready;
     const note = card.querySelector('#consentNote');
     if(note) note.style.display = ready ? 'none' : 'block';
   }
@@ -1347,111 +1333,222 @@ function renderReview(card){
     data._recordId = recordId;
     data._generatedAt = new Date().toISOString();
   }
+  function pdfFileName(){
+    return `${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Client Information.pdf`;
+  }
+  function buildIntakePdfDoc(){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({unit:'pt', format:'letter'});
+    const marginX = 44, pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
+    let y = 50;
+    function ensureRoom(lines){
+      if(y + lines*14 > pageH - 40){ doc.addPage(); y = 50; }
+    }
+    function heading(text){
+      ensureRoom(3);
+      doc.setFont(undefined,'bold'); doc.setFontSize(13);
+      doc.text(text, marginX, y); y += 18;
+      doc.setDrawColor(200); doc.line(marginX, y-10, pageW-marginX, y-10);
+    }
+    function row(label, value){
+      const text = `${label}: ${value || '—'}`;
+      const wrapped = doc.splitTextToSize(text, pageW - marginX*2);
+      ensureRoom(wrapped.length);
+      doc.setFont(undefined,'normal'); doc.setFontSize(10);
+      doc.text(wrapped, marginX, y);
+      y += wrapped.length * 13 + 3;
+    }
+    function subheading(text){
+      ensureRoom(2);
+      doc.setFont(undefined,'bold'); doc.setFontSize(11);
+      doc.text(text, marginX, y); y += 14;
+    }
+    function spacer(){ y += 8; }
+
+    const logoImg = document.querySelector('.logo-box img');
+    if(logoImg && logoImg.naturalWidth){
+      const logoH = 71.4; // downsized to 70% of previous 102pt size
+      const logoW = logoH * (logoImg.naturalWidth / logoImg.naturalHeight);
+      try{
+        const imgY = y - 20;
+        const logoX = (pageW - logoW) / 2; // centered horizontally
+        doc.addImage(logoImg.src, 'PNG', logoX, imgY, logoW, logoH);
+        y = imgY + logoH + 36; // ~half inch space before title
+      }
+      catch(e){ doc.setFont(undefined,'bold'); doc.setFontSize(17); doc.text('Olcorp Immigration Consulting', marginX, y); y += 22; }
+    } else {
+      doc.setFont(undefined,'bold'); doc.setFontSize(17);
+      doc.text('Olcorp Immigration Consulting', marginX, y); y += 22;
+    }
+    doc.setFont(undefined,'bold'); doc.setFontSize(20);
+    doc.text('Client Information Form', marginX, y); y += 22;
+    doc.setFont(undefined,'normal');
+    doc.setFontSize(9); doc.setTextColor(100);
+    doc.text(`Record ID: ${data._recordId || recordId}   ·   Generated: ${new Date(data._generatedAt || Date.now()).toLocaleString('en-CA')}`, marginX, y);
+    doc.setTextColor(0);
+    y += 22;
+
+    heading('Identity');
+    row('Full Name', fullName);
+    row('Date of Birth', data.identity.dob);
+    spacer();
+
+    heading('Entry to Canada');
+    row('Original Entry Date', data.entry.originalDate);
+    row('Original Port of Entry', data.entry.originalPort);
+    row('Latest Entry Date', data.entry.latestDate);
+    row('Latest Port of Entry', data.entry.latestPort);
+    spacer();
+
+    heading('Contact Information');
+    row('Mailing Address', formatAddress(data.contact.mailing));
+    row('Residential Address', data.contact.sameAsMailing ? 'Same as mailing address' : formatAddress(data.contact.residential));
+    row('Phone', data.contact.phone);
+    row('Email', data.contact.email);
+    spacer();
+
+    heading('Marital Status & Spouse');
+    row('Status', titleCase(data.marital.status));
+    row('Marriage Date', data.marital.marriageDate);
+    row('Marriage Place', data.marital.marriagePlace);
+    row('Previous Marriages', data.marital.prevMarriages);
+    if(isFilled(data.spouse.lastName) || isFilled(data.spouse.givenNames)){
+      row('Spouse Name', `${data.spouse.givenNames||''} ${data.spouse.lastName||''}`.trim());
+      row('Spouse Date of Birth', data.spouse.dob);
+      row('Spouse Place of Birth', [data.spouse.pobCity, data.spouse.pobCountry].filter(Boolean).join(', '));
+    }
+    spacer();
+
+    heading('Children');
+    if(data.childrenNone || data.children.length===0){
+      row('Children', 'None declared');
+    } else {
+      data.children.forEach((ch,i)=>{
+        subheading(`Child ${i+1}`);
+        row('Full Name', ch.name);
+        row('Date of Birth', ch.dob);
+        row('Relationship', ch.relationship);
+        row('Current Address', ch.address);
+        row('Eye Color', ch.eyeColor);
+        row('Height', `${ch.heightCm||'—'} cm (${ch.heightFtIn||'—'})`);
+      });
+    }
+    spacer();
+
+    heading('Parents & Siblings');
+    subheading('Mother');
+    row('Full Name', data.parents.motherName);
+    row('Date of Birth', data.parents.motherDob);
+    row('Place of Birth', [data.parents.motherPobCity, data.parents.motherPobCountry].filter(Boolean).join(', '));
+    row('Occupation', data.parents.motherOccupation);
+    row('Address', formatAddress(data.parents.motherAddress));
+    row('Deceased', data.parents.motherDeceased ? `Yes (${data.parents.motherDeceasedDate||'date not provided'})` : 'No');
+    subheading('Father');
+    row('Full Name', data.parents.fatherName);
+    row('Date of Birth', data.parents.fatherDob);
+    row('Place of Birth', [data.parents.fatherPobCity, data.parents.fatherPobCountry].filter(Boolean).join(', '));
+    row('Occupation', data.parents.fatherOccupation);
+    row('Address', formatAddress(data.parents.fatherAddress));
+    row('Deceased', data.parents.fatherDeceased ? `Yes (${data.parents.fatherDeceasedDate||'date not provided'})` : 'No');
+    subheading('Siblings');
+    if(data.siblingsNone || data.siblings.length===0){
+      row('Siblings', 'None declared');
+    } else {
+      data.siblings.forEach((s,i)=>{
+        row(`Sibling ${i+1}`, `${s.name||'—'} · DOB ${s.dob||'—'} · ${s.occupation||'—'} · ${s.address||'—'}${s.deceased? ' · Deceased ('+(s.deceasedDate||'date not provided')+')':''}`);
+      });
+    }
+    spacer();
+
+    heading('Education History');
+    if(data.education.length===0){
+      row('Education', 'None declared');
+    } else {
+      data.education.forEach((e,i)=>{
+        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.level||'—'} · ${e.institution||'—'} (${e.location||'—'}) · ${e.credential||'No credential listed'}`);
+      });
+    }
+    spacer();
+
+    heading('Address History (10 years)');
+    if(data.addressHistory.length===0){
+      row('Address History', 'None declared');
+    } else {
+      data.addressHistory.forEach((a,i)=>{
+        row(`Entry ${i+1}`, `${a.from||'—'} to ${a.to||'Present'} · ${formatAddress(a.address)}`);
+      });
+    }
+    spacer();
+
+    heading('Employment / Activity History');
+    if(data.employment.length===0){
+      row('Employment', 'None declared');
+    } else {
+      data.employment.forEach((e,i)=>{
+        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.unemployed ? 'Unemployed' : (e.employer||'—')} · ${e.position||'—'} · ${e.location||'—'}`);
+      });
+    }
+    spacer();
+
+    heading('Travel History (10 years)');
+    if(data.travelHistoryNone){
+      row('Travel History', 'None declared');
+    } else if(data.travelHistory.length===0){
+      row('Travel History', 'None declared');
+    } else {
+      data.travelHistory.forEach((t,i)=>{
+        row(`Trip ${i+1}`, `${t.destination||'—'} · ${t.purpose||'—'} · ${t.from||'—'} to ${t.to||'—'} (${tripDuration(t.from,t.to)||'—'})`);
+      });
+    }
+    spacer();
+
+    heading('Background Declarations');
+    const bgQs = [
+      ['militaryPoliceGovt','Served in military, police, or a government/security agency?'],
+      ['criminal','Committed, arrested for, charged with, or convicted of a criminal offence?'],
+      ['medical','Medical condition that may require significant social or health services?'],
+      ['refusalsRemovals','Ever refused a visa, denied entry, or ordered to leave any country?'],
+    ];
+    bgQs.forEach(([k,label])=>{ row(label, (data.background[k]||'—').toUpperCase()); });
+    if(isFilled(data.background.details)) row('Additional Details', data.background.details);
+    spacer();
+
+    heading('Consent & Signature');
+    row('Information confirmed accurate', data.consent.accurate ? 'Yes' : 'No');
+    row('Authorized Jayvee Olfindo, RCIC (CICC# R711813) as representative', data.consent.authorizeRepresentative ? 'Yes' : 'No');
+    row('Authorized Olcorp to sign IRCC forms on their behalf', data.consent.authorizeSignature ? 'Yes' : 'No — client will sign all forms manually');
+    if(data.consent.signatureDataUrl){
+      ensureRoom(9);
+      doc.setFont(undefined,'normal'); doc.setFontSize(10);
+      doc.text('Signature:', marginX, y); y += 6;
+      try{ doc.addImage(data.consent.signatureDataUrl, 'PNG', marginX, y, 200, 60); }catch(e){}
+      y += 70;
+    }
+
+    const totalPages = doc.internal.getNumberOfPages();
+    for(let p=1; p<=totalPages; p++){
+      doc.setPage(p);
+      doc.setFont(undefined,'italic'); doc.setFontSize(8); doc.setTextColor(140);
+      doc.text('Olcorp.ca Highly Confidential', marginX, pageH - 20);
+      doc.setTextColor(0);
+    }
+
+    return doc;
+  }
   function downloadIntakeRecord(){
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const fname = `${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json`;
-    a.href=url; a.download=fname; a.click();
-    URL.revokeObjectURL(url);
+    const doc = buildIntakePdfDoc();
+    const fname = pdfFileName();
+    doc.save(fname);
     return fname;
   }
   card.querySelector('#emailBtn').addEventListener('click', ()=>{
     stampRecord();
     document.getElementById('successBanner').style.display='block';
     const fname = downloadIntakeRecord();
-    const subject = encodeURIComponent(`Intake Record — ${fullName}`);
-    const body = encodeURIComponent(`Hi,\n\nAttached is my completed intake record (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
+    const subject = encodeURIComponent(`Client Information — ${fullName}`);
+    const body = encodeURIComponent(`Hi,\n\nAttached is my completed Client Information (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
     window.location.href = `mailto:consulting@olcorp.ca?subject=${subject}&body=${body}`;
-  });
-
-  // --- Save to Google Drive ---
-  let driveTokenClient = null;
-  function setDriveStatus(msg, isError){
-    const el = card.querySelector('#driveStatus');
-    if(!el) return;
-    el.textContent = msg;
-    el.style.color = isError ? '#8a3a26' : '#1f5c3a';
-    el.style.display = msg ? 'block' : 'none';
-  }
-  function uploadToDrive(accessToken){
-    stampRecord();
-    const fname = `${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Intake Record.json`;
-    const metadata = { name: fname, mimeType: 'application/json' };
-    const folderId = extractDriveFolderId(data.consent.driveFolderLink);
-    if(folderId) metadata.parents = [folderId];
-    const boundary = '-------olcorpintake' + Math.random().toString(36).slice(2);
-    const delimiter = `\r\n--${boundary}\r\n`;
-    const closeDelim = `\r\n--${boundary}--`;
-    const body =
-      delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(metadata) +
-      delimiter + 'Content-Type: application/json\r\n\r\n' + JSON.stringify(data, null, 2) +
-      closeDelim;
-    setDriveStatus('Uploading to Google Drive…', false);
-    fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + accessToken,
-        'Content-Type': `multipart/related; boundary="${boundary}"`
-      },
-      body
-    }).then(r=>{
-      if(!r.ok) throw new Error('Upload failed (' + r.status + ')');
-      return r.json();
-    }).then(()=>{
-      document.getElementById('successBanner').style.display='block';
-      setDriveStatus('Saved to Google Drive.', false);
-    }).catch(err=>{
-      setDriveStatus('Could not upload to Google Drive: ' + err.message, true);
-    });
-  }
-  function startGoogleSignInAndUpload(){
-    if(!window.google || !google.accounts || !google.accounts.oauth2){
-      setDriveStatus('Google sign-in is still loading — please try again in a moment.', true);
-      return;
-    }
-    if(!driveTokenClient){
-      driveTokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/drive.file',
-        callback: (tokenResponse)=>{
-          if(tokenResponse.error){ setDriveStatus('Google sign-in was cancelled or failed.', true); return; }
-          uploadToDrive(tokenResponse.access_token);
-        }
-      });
-    }
-    driveTokenClient.requestAccessToken();
-  }
-  const driveModal = card.querySelector('#driveModal');
-  const driveModalInput = card.querySelector('#driveFolderLinkInput');
-  const driveModalError = card.querySelector('#driveModalError');
-  function openDriveModal(){
-    driveModalInput.value = data.consent.driveFolderLink || '';
-    driveModalError.style.display = 'none';
-    driveModal.style.display = 'flex';
-    driveModalInput.focus();
-  }
-  function closeDriveModal(){ driveModal.style.display = 'none'; }
-  card.querySelector('#driveBtn').addEventListener('click', ()=>{
-    if(!GOOGLE_CLIENT_ID){
-      setDriveStatus('Google Drive upload is not configured yet. Please use Email instead.', true);
-      return;
-    }
-    openDriveModal();
-  });
-  card.querySelector('#driveModalCancel').addEventListener('click', closeDriveModal);
-  card.querySelector('#driveModal').addEventListener('click', e=>{ if(e.target.id==='driveModal') closeDriveModal(); });
-  card.querySelector('#driveModalContinue').addEventListener('click', ()=>{
-    const raw = driveModalInput.value.trim();
-    const folderId = extractDriveFolderId(raw);
-    if(!folderId){
-      driveModalError.textContent = 'That doesn\'t look like a valid Google Drive folder link. Please paste the link your consultant shared with you.';
-      driveModalError.style.display = 'block';
-      return;
-    }
-    data.consent.driveFolderLink = raw;
-    closeDriveModal();
-    startGoogleSignInAndUpload();
+    document.getElementById('doneModal').style.display = 'flex';
   });
 }
 
@@ -1462,6 +1559,10 @@ function refreshSidebar(){
 
 // ---------- Step validation ----------
 function isFilled(v){ return !!(v && v.toString().trim()); }
+function titleCase(str){
+  if(!str) return str;
+  return str.toString().replace(/(^|[\s-])\S/g, ch => ch.toUpperCase());
+}
 function addressHasContent(addr){ return !!(addr && (addr.streetName || addr.city) && addr.country); }
 
 function validateStep(key){
@@ -1548,8 +1649,10 @@ function renderStep(){
   steps[stepIndex].render(card);
   const lbl = card.querySelector('.step-label');
   if(lbl) lbl.textContent = `Step ${stepIndex+1} of ${steps.length}`;
-  document.getElementById('backBtn').style.visibility = stepIndex===0 ? 'hidden':'visible';
-  document.getElementById('nextBtn').textContent = stepIndex===steps.length-1 ? 'Done' : 'Continue';
+  document.getElementById('backBtn').style.display = stepIndex===0 ? 'none':'inline-block';
+  document.getElementById('resumeProgressBtn').style.display = stepIndex===0 ? 'inline-block':'none';
+  document.getElementById('nextBtn').textContent = 'Continue';
+  document.getElementById('nextBtn').style.display = stepIndex===steps.length-1 ? 'none' : 'inline-block';
   refreshSidebar();
   window.scrollTo({top:0, behavior:'smooth'});
 }
@@ -1574,12 +1677,10 @@ document.getElementById('nextBtn').addEventListener('click', ()=>{
   }
   if(stepIndex<steps.length-1){
     stepIndex++; renderStep();
-  } else {
-    document.getElementById('doneModal').style.display = 'flex';
   }
 });
 document.getElementById('doneModalNo').addEventListener('click', ()=>{
-  document.getElementById('doneModal').style.display = 'none';
+  window.location.href = 'https://olcorp.ca';
 });
 document.getElementById('doneModalYes').addEventListener('click', ()=>{
   window.location.href = window.location.pathname + window.location.search;
