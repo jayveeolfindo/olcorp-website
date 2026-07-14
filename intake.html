@@ -162,6 +162,7 @@
     .nav-row .btn{width:100%;}
     .kv{grid-template-columns:1fr;}
     .final-actions .btn{width:100%;}
+    input[type=checkbox]{width:24px !important; height:24px !important;}
   }
   @media(max-width:420px){
     .choice-row{grid-template-columns:1fr;}
@@ -222,7 +223,8 @@
 <div class="modal-overlay" id="doneModal" style="display:none;">
   <div class="modal-box">
     <h4>Thank you!</h4>
-    <p>Thank you for completing your client form. Please verify that the generated PDF, including the attached file, has been successfully emailed to us by checking your Sent folder. Your immigration consultant will carefully review your responses and contact you if any clarification or additional information is required.</p>
+    <p>Thank you for completing your client form.</p>
+    <p>Please make sure that the generated PDF will be emailed to us. Your immigration consultant will carefully review your form and contact you if any clarification or additional information is required.</p>
     <p>Would you like to complete another client form for a different applicant?</p>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
@@ -637,7 +639,7 @@ function renderContact(card){
     <label class="field"><span>Current mailing address</span></label>
     ${renderAddressBlock('c_mail', data.contact.mailing, false)}
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;">
-      <input type="checkbox" id="c_sameAddr" style="width:auto;" ${data.contact.sameAsMailing?'checked':''}>
+      <input type="checkbox" id="c_sameAddr" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.contact.sameAsMailing?'checked':''}>
       <span style="margin:0;">Residential address is the same as mailing address</span>
     </label>
     <label class="field"><span>Residential address</span></label>
@@ -802,7 +804,7 @@ function renderChildren(card){
     <div class="step-title">Children</div>
     <p class="step-sub">Add one entry per child, of any age.</p>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="noChildren" style="width:auto;" ${data.childrenNone?'checked':''}>
+      <input type="checkbox" id="noChildren" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.childrenNone?'checked':''}>
       <span style="margin:0;">I have no children</span>
     </label>
     <div id="repWrap"></div>
@@ -830,7 +832,7 @@ function renderChildren(card){
         <label class="field"><span>Relationship</span><input type="text" data-k="relationship" data-idx="${idx}" value="${(row.relationship||'').replace(/"/g,'&quot;')}"></label>
         <div></div>
         <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <input type="checkbox" data-k="sameAsMyAddress" data-idx="${idx}" style="width:auto;" ${row.sameAsMyAddress?'checked':''}>
+          <input type="checkbox" data-k="sameAsMyAddress" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.sameAsMyAddress?'checked':''}>
           <span style="margin:0;">Same as your address</span>
         </label>
         <label class="field" style="grid-column:1/-1;"><span>Current Address</span><input type="text" data-k="address" data-idx="${idx}" ${row.sameAsMyAddress?'disabled':''} value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
@@ -889,26 +891,26 @@ function renderParents(card){
     <label class="field"><span>Current Address</span></label>
     <div id="motherAddrBlock"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
-      <input type="checkbox" id="p_motherDeceased" style="width:auto;" ${data.parents.motherDeceased?'checked':''}>
+      <input type="checkbox" id="p_motherDeceased" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.motherDeceased?'checked':''}>
       <span style="margin:0;">Deceased</span>
     </label>
     <div id="motherDeceasedWrap" style="max-width:260px;"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Father</h4>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-      <input type="checkbox" id="p_fatherSameAddr" style="width:auto;" ${data.parents.fatherSameAddrAsMother?'checked':''}>
+      <input type="checkbox" id="p_fatherSameAddr" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.fatherSameAddrAsMother?'checked':''}>
       <span style="margin:0;">Same address as Mother above</span>
     </label>
     <div class="grid2" id="fatherGrid"></div>
     <label class="field"><span>Current Address</span></label>
     <div id="fatherAddrBlock"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
-      <input type="checkbox" id="p_fatherDeceased" style="width:auto;" ${data.parents.fatherDeceased?'checked':''}>
+      <input type="checkbox" id="p_fatherDeceased" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.fatherDeceased?'checked':''}>
       <span style="margin:0;">Deceased</span>
     </label>
     <div id="fatherDeceasedWrap" style="max-width:260px;"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Siblings</h4>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="noSiblings" style="width:auto;" ${data.siblingsNone?'checked':''}>
+      <input type="checkbox" id="noSiblings" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.siblingsNone?'checked':''}>
       <span style="margin:0;">I have no siblings</span>
     </label>
     <div id="sibWrap"></div>
@@ -986,7 +988,7 @@ function renderParents(card){
         <label class="field"><span>Address</span><input type="text" data-k="address" data-idx="${idx}" value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
         <label class="field"><span>Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
         <label class="field" style="display:flex;align-items:center;gap:8px;">
-          <input type="checkbox" data-k="deceased" data-idx="${idx}" style="width:auto;" ${row.deceased?'checked':''}>
+          <input type="checkbox" data-k="deceased" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.deceased?'checked':''}>
           <span style="margin:0;">Deceased</span>
         </label>
         ${row.deceased ? `<label class="field"><span>Date of Death <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="deceasedDate" data-type="date" data-idx="${idx}" value="${row.deceasedDate||''}"></label>` : '<div></div>'}
@@ -1031,7 +1033,7 @@ function renderTravelHistory(card){
     <div class="step-title">Travel History (10 years)</div>
     <p class="step-sub">Required for IMM 5562. List every trip outside your country of residence in the past 10 years (or since your 18th birthday, whichever is shorter). Unlike address and employment history, empty stretches between trips are expected and not flagged — you don't need to explain time when you simply didn't travel.</p>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="noTravel" style="width:auto;" ${data.travelHistoryNone?'checked':''}>
+      <input type="checkbox" id="noTravel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.travelHistoryNone?'checked':''}>
       <span style="margin:0;">I did not travel outside my country of residence during this period</span>
     </label>
     <div id="travelWrap"></div>
@@ -1136,7 +1138,7 @@ function renderEmployment(card){
         <label class="field"><span>From <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
         <label class="field"><span>To (leave blank if current) <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
         <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <input type="checkbox" data-k="unemployed" data-idx="${idx}" style="width:auto;" ${row.unemployed?'checked':''}>
+          <input type="checkbox" data-k="unemployed" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.unemployed?'checked':''}>
           <span style="margin:0;">I was not employed during this period (unemployed)</span>
         </label>
         <label class="field"><span>City, Country</span><input type="text" data-k="location" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.location||'').replace(/"/g,'&quot;')}"></label>
@@ -1221,15 +1223,15 @@ function renderReview(card){
       <h4>Consent & Signature</h4>
       <p class="note" style="margin:-4px 0 10px;">Fields marked <strong>*</strong> are mandatory.</p>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
-        <input type="checkbox" id="consentAccurate" style="width:auto;margin-top:3px;" ${data.consent.accurate?'checked':''}>
+        <input type="checkbox" id="consentAccurate" style="width:20px;height:20px;margin-top:2px;flex-shrink:0;cursor:pointer;" ${data.consent.accurate?'checked':''}>
         <span style="margin:0;">I confirm that the information provided in this form is accurate and complete to the best of my knowledge. <strong>*</strong></span>
       </label>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
-        <input type="checkbox" id="consentRepresentative" style="width:auto;margin-top:3px;" ${data.consent.authorizeRepresentative?'checked':''}>
+        <input type="checkbox" id="consentRepresentative" style="width:20px;height:20px;margin-top:2px;flex-shrink:0;cursor:pointer;" ${data.consent.authorizeRepresentative?'checked':''}>
         <span style="margin:0;">I authorize the following individual to serve as my representative, as the primary point of contact on my application, and to conduct business on my behalf with Immigration, Refugees and Citizenship Canada and Canada Border Services Agency: Jayvee Olfindo, RCIC (CICC# R711813), Olcorp Immigration Consulting Corporation. <strong>*</strong></span>
       </label>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
-        <input type="checkbox" id="consentSignature" style="width:auto;margin-top:3px;" ${data.consent.authorizeSignature?'checked':''}>
+        <input type="checkbox" id="consentSignature" style="width:20px;height:20px;margin-top:2px;flex-shrink:0;cursor:pointer;" ${data.consent.authorizeSignature?'checked':''}>
         <span style="margin:0;">I authorize Olcorp Immigration Consulting Corporation to use my digital signature below to sign IRCC forms on my behalf. If you did not authorize, you will be asked to manually sign all the forms and send it to us.</span>
       </label>
       <label class="field"><span>Please sign below.</span></label>
@@ -1548,7 +1550,9 @@ function renderReview(card){
     const subject = encodeURIComponent(`Client Information — ${fullName}`);
     const body = encodeURIComponent(`Hi,\n\nAttached is my completed Client Information (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
     window.location.href = `mailto:consulting@olcorp.ca?subject=${subject}&body=${body}`;
-    document.getElementById('doneModal').style.display = 'flex';
+    setTimeout(()=>{
+      document.getElementById('doneModal').style.display = 'flex';
+    }, 900);
   });
 }
 
