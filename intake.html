@@ -224,7 +224,7 @@
   <div class="modal-box">
     <h4>Thank you!</h4>
     <p>Thank you for completing your client form.</p>
-    <p>Please make sure that the generated PDF will be emailed to us. Your immigration consultant will carefully review your form and contact you if any clarification or additional information is required.</p>
+    <p>Please make sure that the generated PDF will be emailed to us or uploaded to your shared drive with Olcorp. Your immigration consultant will carefully review your form and contact you if any clarification or additional information is required.</p>
     <p>Would you like to complete another client form for a different applicant?</p>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
@@ -1550,9 +1550,7 @@ function renderReview(card){
     const subject = encodeURIComponent(`Client Information — ${fullName}`);
     const body = encodeURIComponent(`Hi,\n\nAttached is my completed Client Information (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
     window.location.href = `mailto:consulting@olcorp.ca?subject=${subject}&body=${body}`;
-    setTimeout(()=>{
-      document.getElementById('doneModal').style.display = 'flex';
-    }, 900);
+    document.getElementById('doneModal').style.display = 'flex';
   });
 }
 
