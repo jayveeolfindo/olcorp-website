@@ -73,7 +73,8 @@
   #pwGate .pw-box{background:#fff; border:1px solid var(--line); border-radius:14px; padding:32px; max-width:360px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.12); text-align:center;}
   #pwGate .pw-box h2{margin:0 0 8px; font-family:var(--display); font-size:20px; color:var(--navy-deep);}
   #pwGate .pw-box p{margin:0 0 18px; font-size:13px; color:#5b6b78;}
-  #pwGate input[type=password]{width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:10px; font-family:var(--body);}
+  #pwGate input[type=password], #pwGate input[type=text]#pwInput{width:100%; padding:11px 12px; border:1.5px solid var(--line); border-radius:8px; font-size:14px; margin-bottom:10px; font-family:var(--body); box-sizing:border-box;}
+  #pwGate input#pwInput::placeholder{text-transform:none;}
   #pwGate .pw-error{color:#b3432b; font-size:12.5px; margin:10px 0 0; display:none;}
   input[type=text]::placeholder{text-transform:uppercase;}
   textarea{resize:vertical; min-height:70px;}
