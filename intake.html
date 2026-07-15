@@ -51,7 +51,7 @@
 
   .card{background:#fff; border:1px solid var(--line); border-radius:20px; padding:26px; box-shadow:0 1px 2px rgba(20,20,20,.03);}
   .step-label{font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--gold); font-weight:500;}
-  .step-title{font-family:var(--display); font-weight:800; font-size:21px; margin:6px 0 4px; color:var(--navy-deep);}
+  .step-title{font-family:var(--display); font-weight:800; font-size:21px; margin:6px 0 0.75cm; color:var(--navy-deep);}
   .step-sub{font-size:13px; color:#5b6b78; margin:0 0 20px;}
 
   .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
@@ -68,6 +68,7 @@
     font-family:var(--body); background:#fbfcfd; color:var(--navy-deep); transition:border-color .15s;
   }
   input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
+  input[type=text]::placeholder{text-transform:uppercase;}
   textarea{resize:vertical; min-height:70px;}
 
   .choice-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:8px;}
@@ -179,7 +180,7 @@
   </div>
   <div class="topbar-actions">
     <a class="topbar-link" href="https://olcorp.ca" target="_blank" rel="noopener">Back to Olcorp.ca</a>
-    <button class="topbar-link" id="newApplicantBtn">New Client</button>
+    <button class="topbar-link" id="newApplicantBtn">New Form</button>
   </div>
 </div>
 
@@ -188,12 +189,6 @@
     <div>
       <h1>Client Information Form</h1>
       <p>Your responses will be used to prepare all the required immigration forms, making the application process faster and more accurate. Estimated completion time: 30–45 minutes, depending on your personal circumstances.</p>
-    </div>
-    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-      <div class="record-id">Record ID: <strong id="recordId">—</strong></div>
-      <div style="display:flex; gap:8px;">
-        <button class="btn btn-ghost btn-sm" id="saveProgressBtn">Save & Continue Later</button>
-      </div>
     </div>
   </div>
 
@@ -224,7 +219,7 @@
   <div class="modal-box">
     <h4>Thank you!</h4>
     <p>Thank you for completing your client form.</p>
-    <p>Please make sure that the generated PDF will be emailed to us or uploaded to your shared drive with Olcorp. Your immigration consultant will carefully review your form and contact you if any clarification or additional information is required.</p>
+    <p>Your form has been downloaded, please upload this file to the shared drive you shared with Olcorp. We will carefully review your form and contact you if any clarification or additional information is required.</p>
     <p>Would you like to complete another client form for a different applicant?</p>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
@@ -269,7 +264,6 @@ const data = {
 const autofillNotice = {identity:false, contact:false, status:false};
 
 let recordId = 'OLC-' + Math.random().toString(36).slice(2,8).toUpperCase();
-document.getElementById('recordId').textContent = recordId;
 
 
 // ---------- Steps ----------
@@ -341,6 +335,7 @@ function setAddressBlockValues(card, prefix, addr){
   if(provEl) provEl.value = addr.province||'';
 }
 
+function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''}; }
 function formatAddress(addr){
   if(!addr) return '—';
   const line1 = [addr.streetNo, addr.streetName].filter(Boolean).join(' ');
@@ -353,8 +348,7 @@ function fieldText(labelText, obj, key, opts={}){
   const id = opts.id || ('f_'+Math.random().toString(36).slice(2,9));
   const isDate = opts.type==='date', isMonth = opts.type==='month';
   const inputType = (isDate||isMonth) ? 'text' : (opts.type||'text');
-  const defaultHint = isDate ? 'yyyy-mm-dd' : isMonth ? 'yyyy-mm' : '';
-  const hintText = opts.hint || defaultHint;
+  const hintText = opts.hint || '';
   const placeholder = isDate ? 'yyyy-mm-dd' : isMonth ? 'yyyy-mm' : (opts.placeholder||'');
   const inputMode = (isDate||isMonth) ? ' inputmode="numeric"' : '';
   return `<label class="field"><span>${labelText}${hintText?`<small>${hintText}</small>`:''}</span>
@@ -478,8 +472,7 @@ function loadSaveFile(file){
         if(parsed.data[k] !== undefined) data[k] = parsed.data[k];
       });
       recordId = parsed.recordId || recordId;
-      document.getElementById('recordId').textContent = recordId;
-      stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length-1);
+            stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length-1);
       renderStep();
       showToast('Welcome back — picking up where you left off.');
     }catch(err){
@@ -489,7 +482,6 @@ function loadSaveFile(file){
   reader.readAsText(file);
 }
 
-document.getElementById('saveProgressBtn').addEventListener('click', downloadSaveFile);
 document.getElementById('saveProgressBtn2').addEventListener('click', downloadSaveFile);
 document.getElementById('resumeProgressBtn').addEventListener('click', ()=>{
   document.getElementById('resumeFileInput').click();
@@ -597,7 +589,6 @@ function renderIdentity(card){
   card.innerHTML = `
     <div class="step-label">Step 1 of 12</div>
     <div class="step-title">Client Identity</div>
-    <p class="step-sub">Core biographical details used across every form.</p>
     <div class="grid2">
       ${fieldText('Last / Family Name', data.identity, 'lastName', {id:'i_ln'})}
       ${fieldText('Given Name(s)', data.identity, 'givenNames', {id:'i_gn'})}
@@ -616,7 +607,6 @@ function renderEntry(card){
   card.innerHTML = `
     <div class="step-label">Step 2 of 12</div>
     <div class="step-title">Entry to Canada</div>
-    <p class="step-sub">Details of your original and most recent entry into Canada.</p>
     <div class="grid2">
       ${fieldText('Original Entry Date in Canada', data.entry, 'originalDate', {id:'e_origDate', type:'date'})}
       ${fieldText('Port of Entry (Original Entry)', data.entry, 'originalPort', {id:'e_origPort'})}
@@ -634,7 +624,6 @@ function renderContact(card){
   card.innerHTML = `
     <div class="step-label">Step 2 of 12</div>
     <div class="step-title">Contact Information</div>
-    <p class="step-sub">Where IRCC and your representative can reach you.</p>
     ${autofillNotice.contact ? `<div class="autofill-banner">Some fields below were inserted from a scanned document. Please verify.</div>` : ''}
     <label class="field"><span>Current mailing address</span></label>
     ${renderAddressBlock('c_mail', data.contact.mailing, false)}
@@ -672,7 +661,6 @@ function renderMarital(card){
   card.innerHTML = `
     <div class="step-label">Step 3 of 12</div>
     <div class="step-title">Marital Status & Spouse</div>
-    <p class="step-sub">Feeds IMM 0008, IMM 5406, and IMM 5710.</p>
     <div id="maritalChoices" style="margin-bottom:16px;"></div>
     <div id="spouseFields"></div>
     <label class="field"><span>Previous Marriages <small>dates and how they ended, if any</small></span><textarea id="m_prev">${data.marital.prevMarriages}</textarea></label>
@@ -709,7 +697,6 @@ function renderMarital(card){
 function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
   card.innerHTML = `
     <div class="step-title">${title}</div>
-    <p class="step-sub">${sub}</p>
     ${opts.panelId ? `<div id="${opts.panelId}"></div>` : ''}
     <div id="repWrap"></div>
     <button class="add-btn" id="addRow">+ Add entry</button>
@@ -736,8 +723,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
         const inputType = isDateLike ? 'text' : (f.type||'text');
         const placeholder = f.type==='date' ? 'yyyy-mm-dd' : f.type==='month' ? 'yyyy-mm' : '';
         const inputMode = isDateLike ? ' inputmode="numeric"' : '';
-        const defaultHint = f.type==='date' ? 'yyyy-mm-dd' : f.type==='month' ? 'yyyy-mm' : '';
-        const hintText = f.hint || defaultHint;
+        const hintText = f.hint || '';
         inner += `<label class="field"><span>${f.label}${hintText?`<small>${hintText}</small>`:''}</span><input type="${inputType}"${inputMode} placeholder="${placeholder}" data-k="${f.key}" data-type="${f.type||'text'}" data-idx="${idx}" value="${(row[f.key]||'').toString().replace(/"/g,'&quot;')}"></label>`;
       });
       inner += `</div>`;
@@ -802,7 +788,6 @@ function heightFtInToCm(str){
 function renderChildren(card){
   card.innerHTML = `
     <div class="step-title">Children</div>
-    <p class="step-sub">Add one entry per child, of any age.</p>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noChildren" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.childrenNone?'checked':''}>
       <span style="margin:0;">I have no children</span>
@@ -824,30 +809,43 @@ function renderChildren(card){
   function draw(){
     wrap.innerHTML='';
     data.children.forEach((row,idx)=>{
-      if(row.sameAsMyAddress) row.address = formatAddress(data.contact.mailing);
+      if(!row.address || typeof row.address !== 'object') row.address = blankAddr();
+      if(row.sameAsMyAddress) Object.assign(row.address, data.contact.mailing);
       const block = document.createElement('div'); block.className='repeat-block';
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
         <label class="field"><span>Full Name</span><input type="text" data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Date of Birth <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
-        <label class="field"><span>Relationship</span><input type="text" data-k="relationship" data-idx="${idx}" value="${(row.relationship||'').replace(/"/g,'&quot;')}"></label>
-        <div></div>
+        <label class="field"><span>Date of Birth</span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
+        <label class="field" style="grid-column:1/-1;"><span>Relationship</span><div class="rel-choice"></div></label>
         <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <input type="checkbox" data-k="sameAsMyAddress" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.sameAsMyAddress?'checked':''}>
           <span style="margin:0;">Same as your address</span>
         </label>
-        <label class="field" style="grid-column:1/-1;"><span>Current Address</span><input type="text" data-k="address" data-idx="${idx}" ${row.sameAsMyAddress?'disabled':''} value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Eye Color</span><input type="text" data-k="eyeColor" data-idx="${idx}" value="${(row.eyeColor||'').replace(/"/g,'&quot;')}"></label>
-        <div></div>
+        <label class="field" style="grid-column:1/-1;"><span>Complete Address (up to the country)</span></label>
+        <div style="grid-column:1/-1;" class="addr-block"></div>
+        <label class="field" style="grid-column:1/-1;"><span>Eye Color</span><div class="eye-choice"></div></label>
         <label class="field"><span>Height (cm)</span><input type="text" data-k="heightCm" data-idx="${idx}" value="${(row.heightCm||'').toString().replace(/"/g,'&quot;')}"></label>
         <label class="field"><span>Height (ft &amp; in) <small>e.g. 5'7"</small></span><input type="text" data-k="heightFtIn" data-idx="${idx}" value="${(row.heightFtIn||'').replace(/"/g,'&quot;')}"></label>
       </div>`;
+      const relWrap = block.querySelector('.rel-choice');
+      relWrap.appendChild(choiceRow(
+        [{value:'Son',label:'Son'},{value:'Daughter',label:'Daughter'},{value:'Son-in-law',label:'Son-in-law'},{value:'Daughter-in-law',label:'Daughter-in-law'}],
+        row.relationship, v=>{ row.relationship=v; draw(); refreshSidebar(); }
+      ));
+      const eyeWrap = block.querySelector('.eye-choice');
+      eyeWrap.appendChild(choiceRow(
+        [{value:'Black',label:'Black'},{value:'Brown',label:'Brown'},{value:'Blue',label:'Blue'},{value:'Others',label:'Others'}],
+        row.eyeColor, v=>{ row.eyeColor=v; draw(); refreshSidebar(); }
+      ));
+      const addrWrap = block.querySelector('.addr-block');
+      addrWrap.innerHTML = renderAddressBlock('child_'+idx+'_address', row.address, row.sameAsMyAddress);
+      bindAddressBlock(block, 'child_'+idx+'_address', row.address, ()=> refreshSidebar());
       wrap.appendChild(block);
     });
     wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
       cb.addEventListener('change', e=>{
         const idx = +e.target.dataset.idx;
         data.children[idx].sameAsMyAddress = e.target.checked;
-        if(e.target.checked) data.children[idx].address = formatAddress(data.contact.mailing);
+        if(e.target.checked) Object.assign(data.children[idx].address, data.contact.mailing);
         draw(); refreshSidebar();
       });
     });
@@ -876,7 +874,7 @@ function renderChildren(card){
     });
   }
   card.querySelector('#addRow').addEventListener('click', ()=>{
-    data.children.push({name:'',dob:'',relationship:'',address:'',sameAsMyAddress:false,eyeColor:'',heightCm:'',heightFtIn:''});
+    data.children.push({name:'',dob:'',relationship:'',address:blankAddr(),sameAsMyAddress:false,eyeColor:'',heightCm:'',heightFtIn:''});
     draw(); refreshSidebar();
   });
   draw();
@@ -885,29 +883,30 @@ function renderChildren(card){
 function renderParents(card){
   card.innerHTML = `
     <div class="step-title">Parents & Siblings</div>
-    <p class="step-sub">Required for IMM 5406 — Additional Family Information.</p>
     <h4 style="font-family:var(--display);font-size:14px;margin:14px 0 8px;">Mother</h4>
     <div class="grid2" id="motherGrid"></div>
-    <label class="field"><span>Current Address</span></label>
-    <div id="motherAddrBlock"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
       <input type="checkbox" id="p_motherDeceased" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.motherDeceased?'checked':''}>
       <span style="margin:0;">Deceased</span>
     </label>
     <div id="motherDeceasedWrap" style="max-width:260px;"></div>
+    <div class="grid2" id="motherOccGrid"></div>
+    <label class="field"><span>Complete Address (up to the country)</span></label>
+    <div id="motherAddrBlock"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Father</h4>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
       <input type="checkbox" id="p_fatherSameAddr" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.fatherSameAddrAsMother?'checked':''}>
       <span style="margin:0;">Same address as Mother above</span>
     </label>
     <div class="grid2" id="fatherGrid"></div>
-    <label class="field"><span>Current Address</span></label>
-    <div id="fatherAddrBlock"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
       <input type="checkbox" id="p_fatherDeceased" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.parents.fatherDeceased?'checked':''}>
       <span style="margin:0;">Deceased</span>
     </label>
     <div id="fatherDeceasedWrap" style="max-width:260px;"></div>
+    <div class="grid2" id="fatherOccGrid"></div>
+    <label class="field"><span>Complete Address (up to the country)</span></label>
+    <div id="fatherAddrBlock"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Siblings</h4>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noSiblings" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.siblingsNone?'checked':''}>
@@ -917,14 +916,17 @@ function renderParents(card){
     <button class="add-btn" id="addSib">+ Add sibling</button>
   `;
   const mGrid = card.querySelector('#motherGrid');
+  const motherOccGrid = card.querySelector('#motherOccGrid');
   const motherAddrWrap = card.querySelector('#motherAddrBlock');
   function drawMother(){
-    mGrid.innerHTML = ['motherName:Full Name','motherDob:Date of Birth:date','motherPobCity:Place of Birth — City','motherPobCountry:Place of Birth — Country','motherOccupation:Occupation']
+    mGrid.innerHTML = ['motherName:Full Name','motherDob:Date of Birth:date','motherPobCity:Place of Birth — City','motherPobCountry:Place of Birth — Country']
       .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
-    ['motherName','motherPobCity','motherPobCountry','motherOccupation'].forEach(k=>{
+    ['motherName','motherPobCity','motherPobCountry'].forEach(k=>{
       mGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
     });
     bindDate(mGrid.querySelector('#p_motherDob'), data.parents, 'motherDob', 'full');
+    motherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'motherOccupation', {id:'p_motherOccupation'});
+    motherOccGrid.querySelector('#p_motherOccupation').addEventListener('input', e=>{ data.parents.motherOccupation=e.target.value; refreshSidebar(); });
     motherAddrWrap.innerHTML = renderAddressBlock('p_motherAddress', data.parents.motherAddress, false);
     bindAddressBlock(card, 'p_motherAddress', data.parents.motherAddress, ()=>{
       if(data.parents.fatherSameAddrAsMother){
@@ -935,15 +937,18 @@ function renderParents(card){
     });
   }
   const fGrid = card.querySelector('#fatherGrid');
+  const fatherOccGrid = card.querySelector('#fatherOccGrid');
   const fatherAddrWrap = card.querySelector('#fatherAddrBlock');
   function drawFather(){
     if(data.parents.fatherSameAddrAsMother) Object.assign(data.parents.fatherAddress, data.parents.motherAddress);
-    fGrid.innerHTML = ['fatherName:Full Name','fatherDob:Date of Birth:date','fatherPobCity:Place of Birth — City','fatherPobCountry:Place of Birth — Country','fatherOccupation:Occupation']
+    fGrid.innerHTML = ['fatherName:Full Name','fatherDob:Date of Birth:date','fatherPobCity:Place of Birth — City','fatherPobCountry:Place of Birth — Country']
       .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
-    ['fatherName','fatherPobCity','fatherPobCountry','fatherOccupation'].forEach(k=>{
+    ['fatherName','fatherPobCity','fatherPobCountry'].forEach(k=>{
       fGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
     });
     bindDate(fGrid.querySelector('#p_fatherDob'), data.parents, 'fatherDob', 'full');
+    fatherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'fatherOccupation', {id:'p_fatherOccupation'});
+    fatherOccGrid.querySelector('#p_fatherOccupation').addEventListener('input', e=>{ data.parents.fatherOccupation=e.target.value; refreshSidebar(); });
     fatherAddrWrap.innerHTML = renderAddressBlock('p_fatherAddress', data.parents.fatherAddress, data.parents.fatherSameAddrAsMother);
     bindAddressBlock(card, 'p_fatherAddress', data.parents.fatherAddress, ()=> refreshSidebar());
   }
@@ -957,11 +962,13 @@ function renderParents(card){
   drawDeceasedDate('mother'); drawDeceasedDate('father');
   card.querySelector('#p_motherDeceased').addEventListener('change', e=>{
     data.parents.motherDeceased = e.target.checked;
-    drawDeceasedDate('mother'); refreshSidebar();
+    if(e.target.checked) data.parents.motherOccupation = 'N/A';
+    drawMother(); drawDeceasedDate('mother'); refreshSidebar();
   });
   card.querySelector('#p_fatherDeceased').addEventListener('change', e=>{
     data.parents.fatherDeceased = e.target.checked;
-    drawDeceasedDate('father'); refreshSidebar();
+    if(e.target.checked) data.parents.fatherOccupation = 'N/A';
+    drawFather(); drawDeceasedDate('father'); refreshSidebar();
   });
   card.querySelector('#p_fatherSameAddr').addEventListener('change', e=>{
     data.parents.fatherSameAddrAsMother = e.target.checked;
@@ -981,23 +988,37 @@ function renderParents(card){
   function drawSibs(){
     sibWrap.innerHTML='';
     data.siblings.forEach((row,idx)=>{
+      if(!row.address || typeof row.address !== 'object') row.address = blankAddr();
       const block = document.createElement('div'); block.className='repeat-block';
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
         <label class="field"><span>Full Name</span><input type="text" data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Date of Birth <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
-        <label class="field"><span>Address</span><input type="text" data-k="address" data-idx="${idx}" value="${(row.address||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Date of Birth</span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
+        <label class="field" style="grid-column:1/-1;"><span>Relationship</span><div class="rel-choice"></div></label>
         <label class="field" style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" data-k="deceased" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.deceased?'checked':''}>
           <span style="margin:0;">Deceased</span>
         </label>
-        ${row.deceased ? `<label class="field"><span>Date of Death <small>yyyy-mm-dd</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="deceasedDate" data-type="date" data-idx="${idx}" value="${row.deceasedDate||''}"></label>` : '<div></div>'}
+        ${row.deceased ? `<label class="field"><span>Date of Death</span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="deceasedDate" data-type="date" data-idx="${idx}" value="${row.deceasedDate||''}"></label>` : '<div></div>'}
+        <label class="field"><span>Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
+        <div></div>
+        <label class="field" style="grid-column:1/-1;"><span>Complete Address (up to the country)</span></label>
+        <div style="grid-column:1/-1;" class="addr-block"></div>
       </div>`;
+      const sibRelWrap = block.querySelector('.rel-choice');
+      sibRelWrap.appendChild(choiceRow(
+        [{value:'Brother',label:'Brother'},{value:'Sister',label:'Sister'},{value:'Half-Brother',label:'Half-Brother'},{value:'Half-Sister',label:'Half-Sister'}],
+        row.relationship, v=>{ row.relationship=v; drawSibs(); refreshSidebar(); }
+      ));
+      const sibAddrWrap = block.querySelector('.addr-block');
+      sibAddrWrap.innerHTML = renderAddressBlock('sib_'+idx+'_address', row.address, false);
+      bindAddressBlock(block, 'sib_'+idx+'_address', row.address, ()=> refreshSidebar());
       sibWrap.appendChild(block);
     });
     sibWrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
       cb.addEventListener('change', e=>{
-        data.siblings[+e.target.dataset.idx].deceased = e.target.checked;
+        const idx = +e.target.dataset.idx;
+        data.siblings[idx].deceased = e.target.checked;
+        if(e.target.checked) data.siblings[idx].occupation = 'N/A';
         drawSibs(); refreshSidebar();
       });
     });
@@ -1014,7 +1035,7 @@ function renderParents(card){
       btn.addEventListener('click', e=>{ data.siblings.splice(+e.target.dataset.idx,1); drawSibs(); refreshSidebar(); });
     });
   }
-  card.querySelector('#addSib').addEventListener('click', ()=>{ data.siblings.push({name:'',dob:'',address:'',occupation:'',deceased:false,deceasedDate:''}); drawSibs(); refreshSidebar(); });
+  card.querySelector('#addSib').addEventListener('click', ()=>{ data.siblings.push({name:'',dob:'',relationship:'',address:blankAddr(),occupation:'',deceased:false,deceasedDate:''}); drawSibs(); refreshSidebar(); });
   drawSibs();
 }
 
@@ -1031,7 +1052,6 @@ function renderAddressHistory(card){
 function renderTravelHistory(card){
   card.innerHTML = `
     <div class="step-title">Travel History (10 years)</div>
-    <p class="step-sub">Required for IMM 5562. List every trip outside your country of residence in the past 10 years (or since your 18th birthday, whichever is shorter). Unlike address and employment history, empty stretches between trips are expected and not flagged — you don't need to explain time when you simply didn't travel.</p>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noTravel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.travelHistoryNone?'checked':''}>
       <span style="margin:0;">I did not travel outside my country of residence during this period</span>
@@ -1054,8 +1074,8 @@ function renderTravelHistory(card){
         <div class="pill-row" style="grid-column:2/3;">
           ${purposeOpts.map(p=>`<div class="pill${row.purpose===p?' sel':''}" data-purpose-idx="${idx}" data-purpose-val="${p}">${p}</div>`).join('')}
         </div>
-        <label class="field"><span>Departure Date <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
-        <label class="field"><span>Return Date <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
+        <label class="field"><span>Departure Date</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
+        <label class="field"><span>Return Date</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
         <label class="field"><span>Duration</span><input type="text" disabled data-duration-idx="${idx}" value="${tripDuration(row.from,row.to)}" style="background:#f4f6f7;color:#5b6b75;"></label>
         <div></div>
       </div>`;
@@ -1123,7 +1143,6 @@ function currentAddressFromHistory(){
 function renderEmployment(card){
   card.innerHTML = `
     <div class="step-title">Employment / Activity History</div>
-    <p class="step-sub">Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity. Combined with your Education entries, the panel below flags any unaccounted stretches of time (IMM 5669e requires none).</p>
     <div id="activityCoverage"></div>
     <div id="repWrap"></div>
     <button class="add-btn" id="addRow">+ Add entry</button>
@@ -1135,8 +1154,8 @@ function renderEmployment(card){
     data.employment.forEach((row,idx)=>{
       const block = document.createElement('div'); block.className='repeat-block';
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
-        <label class="field"><span>From <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
-        <label class="field"><span>To (leave blank if current) <small>yyyy-mm</small></span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
+        <label class="field"><span>From</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
+        <label class="field"><span>To (leave blank if current)</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
         <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <input type="checkbox" data-k="unemployed" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.unemployed?'checked':''}>
           <span style="margin:0;">I was not employed during this period (unemployed)</span>
@@ -1191,7 +1210,6 @@ function renderEmployment(card){
 function renderBackground(card){
   card.innerHTML = `
     <div class="step-title">Background Declarations</div>
-    <p class="step-sub">Sensitive questions required on IMM 5669e. Answer honestly — these are reviewed by your RCIC before submission, not sent anywhere automatically.</p>
     <div id="bgQs"></div>
     <label class="field" style="margin-top:10px;"><span>Additional details, if any answer above is yes</span><textarea id="bg_details">${data.background.details}</textarea></label>
   `;
@@ -1215,7 +1233,6 @@ function renderReview(card){
   const fullName = `${data.identity.givenNames} ${data.identity.lastName}`.trim() || '—';
   card.innerHTML = `
     <div class="step-title">Review & Generate Record</div>
-    <p class="step-sub">Confirm everything below, then generate your Client Information for your consultant.</p>
     <div class="success-banner" id="successBanner">Record generated and sent.</div>
     <div id="gapSummary"></div>
     <div id="reviewBody"></div>
@@ -1242,10 +1259,9 @@ function renderReview(card){
       </div>
     </div>
     <div class="final-actions">
-      <button class="btn btn-primary" id="emailBtn" disabled>Email to Consultant</button>
+      <button class="btn btn-primary" id="emailBtn" disabled>Download Completed Form</button>
     </div>
     <p class="note" id="consentNote" style="color:#8a3a26;">Please confirm the information is accurate and provide your signature above to enable this button.</p>
-    <p class="note">This form does not submit anywhere automatically. "Email to Consultant" downloads your record as a formatted PDF (named <strong>${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Client Information.pdf</strong>) and opens a pre-addressed email to <strong>consulting@olcorp.ca</strong> — most browsers won't attach the file automatically, so you'll still need to drag it in before sending.</p>
   `;
   const start = requiredHistoryStart(), end = new Date();
   const addrGaps = data.addressHistory.some(e=>e.from) ? computeGaps(data.addressHistory, start, end) : null;
@@ -1430,7 +1446,7 @@ function renderReview(card){
         row('Full Name', ch.name);
         row('Date of Birth', ch.dob);
         row('Relationship', ch.relationship);
-        row('Current Address', ch.address);
+        row('Current Address', formatAddress(ch.address));
         row('Eye Color', ch.eyeColor);
         row('Height', `${ch.heightCm||'—'} cm (${ch.heightFtIn||'—'})`);
       });
@@ -1457,7 +1473,7 @@ function renderReview(card){
       row('Siblings', 'None declared');
     } else {
       data.siblings.forEach((s,i)=>{
-        row(`Sibling ${i+1}`, `${s.name||'—'} · DOB ${s.dob||'—'} · ${s.occupation||'—'} · ${s.address||'—'}${s.deceased? ' · Deceased ('+(s.deceasedDate||'date not provided')+')':''}`);
+        row(`Sibling ${i+1}`, `${s.relationship||'—'} · ${s.name||'—'} · DOB ${s.dob||'—'} · ${s.occupation||'—'} · ${formatAddress(s.address)}${s.deceased? ' · Deceased ('+(s.deceasedDate||'date not provided')+')':''}`);
       });
     }
     spacer();
@@ -1546,10 +1562,7 @@ function renderReview(card){
   card.querySelector('#emailBtn').addEventListener('click', ()=>{
     stampRecord();
     document.getElementById('successBanner').style.display='block';
-    const fname = downloadIntakeRecord();
-    const subject = encodeURIComponent(`Client Information — ${fullName}`);
-    const body = encodeURIComponent(`Hi,\n\nAttached is my completed Client Information (${fname}), just downloaded to my device.\n\n(Please note: I need to manually attach the downloaded file below before sending — browsers can't attach it automatically.)\n\nThank you,\n${fullName}`);
-    window.location.href = `mailto:consulting@olcorp.ca?subject=${subject}&body=${body}`;
+    downloadIntakeRecord();
     document.getElementById('doneModal').style.display = 'flex';
   });
 }
@@ -1653,6 +1666,7 @@ function renderStep(){
   if(lbl) lbl.textContent = `Step ${stepIndex+1} of ${steps.length}`;
   document.getElementById('backBtn').style.display = stepIndex===0 ? 'none':'inline-block';
   document.getElementById('resumeProgressBtn').style.display = stepIndex===0 ? 'inline-block':'none';
+  document.getElementById('saveProgressBtn2').style.display = stepIndex===0 ? 'none':'inline-block';
   document.getElementById('nextBtn').textContent = 'Continue';
   document.getElementById('nextBtn').style.display = stepIndex===steps.length-1 ? 'none' : 'inline-block';
   refreshSidebar();
