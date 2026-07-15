@@ -187,6 +187,10 @@
     <p>Please enter the password provided by your consultant to continue.</p>
     <form id="pwForm">
       <input type="password" id="pwInput" placeholder="Password" autocomplete="off" required>
+      <label style="display:flex;align-items:center;gap:6px;justify-content:center;margin:-4px 0 14px;font-size:12.5px;color:#5b6b78;cursor:pointer;">
+        <input type="checkbox" id="pwShowToggle" style="width:16px;height:16px;cursor:pointer;">
+        Show password
+      </label>
       <button type="submit" class="btn btn-primary" style="width:100%;">Continue</button>
       <p class="pw-error" id="pwError">Incorrect password. Please try again.</p>
     </form>
@@ -201,11 +205,17 @@
   var form = document.getElementById('pwForm');
   var input = document.getElementById('pwInput');
   var err = document.getElementById('pwError');
+  var gate = document.getElementById('pwGate');
+  var showToggle = document.getElementById('pwShowToggle');
+  showToggle.addEventListener('change', function(){
+    input.type = showToggle.checked ? 'text' : 'password';
+  });
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(input.value === PASSWORD){
       sessionStorage.setItem('olcorp_form_unlocked', '1');
       body.classList.remove('pw-locked');
+      gate.style.display = 'none';
       err.style.display = 'none';
     } else {
       err.style.display = 'block';
@@ -214,6 +224,7 @@
     }
   });
   if(!already){ setTimeout(function(){ input.focus(); }, 100); }
+  else { gate.style.display = 'none'; }
 })();
 </script>
 
