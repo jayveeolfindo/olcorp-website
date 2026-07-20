@@ -505,6 +505,20 @@
     .payment-label { display: block; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #c7c7cc; margin-bottom: 9px; }
     .payment-icons { display: flex; gap: 8px; justify-content: center; align-items: center; }
     .pay-logo { height: 26px; width: auto; border-radius: 5px; display: block; opacity: 0.85; }
+  
+    /* ── Service Contract Modal ── */
+    .cta-contract { background: #fff; color: #1d1d1f; border: 1.5px solid #1d1d1f !important; margin-top: 10px; }
+    .cta-contract:hover { background: #f5f5f7; }
+    .sc-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:900; }
+    .sc-overlay.open { display:flex; align-items:center; justify-content:center; }
+    .sc-box { background:#fff; border-radius:16px; padding:28px 28px 24px; width:min(480px,92vw); box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    .sc-box h3 { font-size:17px; font-weight:600; margin-bottom:18px; }
+    .sc-field { margin-bottom:12px; }
+    .sc-field label { display:block; font-size:12px; font-weight:500; color:#6e6e73; margin-bottom:4px; }
+    .sc-field input { width:100%; padding:9px 12px; border:1px solid #d1d1d6; border-radius:8px; font-size:14px; font-family:inherit; }
+    .sc-actions { display:flex; gap:10px; margin-top:18px; }
+    .sc-cancel { flex:1; padding:11px; border:1px solid #d1d1d6; border-radius:8px; background:#fff; font-size:14px; cursor:pointer; }
+    .sc-generate { flex:2; padding:11px; background:#1d1d1f; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; }
   </style>
 </head>
 <body>
@@ -576,7 +590,6 @@
         <div class="step-q">Which temporary residence service?</div>
         <div class="svc-cards">
           <button class="svc-card" onclick="selectService('work_permit', this)">Work Permit</button>
-          <button class="svc-card" onclick="selectService('pgwp', this)">Post-Graduate Work Permit (PGWP)</button>
           <button class="svc-card" onclick="selectService('francophone_wp', this)">Francophone Mobility Work Permit</button>
           <button class="svc-card" onclick="selectService('study_permit', this)">International Student (Study Permit)</button>
           <button class="svc-card" onclick="selectService('stay_extension', this)">Stay Extension (Visitor Record)</button>
@@ -663,6 +676,13 @@
             <div class="oc-desc">+$100 holder fee</div>
           </button>
         </div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e5e7">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="pgwpCheck" onchange="state.isPgwp=this.checked;recalc()">
+            <strong style="font-size:14px">Post-Graduate Work Permit (PGWP)</strong>
+          </label>
+          <div style="font-size:12px;color:#6e6e73;margin-top:4px">PGWP applicants get an Open WP Holder Fee ($100) added to the primary applicant</div>
+        </div>
       </div>
 
       <!-- Family Composition (sinp_pr, study_permit) -->
@@ -696,11 +716,17 @@
 
       <!-- Children Count -->
       <div class="field-group" id="childrenGroup">
-        <div class="step-q">Number of dependent children</div>
+        <div class="step-q">Children <strong>age 5 &amp; under</strong> <span style="font-size:12px;color:#6e6e73;font-weight:400">(Visitor Record &middot; $100 gov fee each)</span></div>
         <div class="stepper">
-          <button class="step-btn" onclick="adjustCount('children', -1)">−</button>
-          <span class="step-val" id="childrenVal">1</span>
-          <button class="step-btn" onclick="adjustCount('children', 1)">+</button>
+          <button class="step-btn" onclick="adjustCount('childrenYoung', -1)">−</button>
+          <span class="step-val" id="childrenYoungVal">0</span>
+          <button class="step-btn" onclick="adjustCount('childrenYoung', 1)">+</button>
+        </div>
+        <div class="step-q" style="margin-top:16px">Children <strong>age 6 to 18</strong> <span style="font-size:12px;color:#6e6e73;font-weight:400">(Study Permit &middot; $150 gov fee each)</span></div>
+        <div class="stepper">
+          <button class="step-btn" onclick="adjustCount('childrenOlder', -1)">−</button>
+          <span class="step-val" id="childrenOlderVal">0</span>
+          <button class="step-btn" onclick="adjustCount('childrenOlder', 1)">+</button>
         </div>
       </div>
 
@@ -891,6 +917,7 @@
             <button class="tt-dismiss" onclick="document.getElementById('bookTooltip').style.display='none'">Dismiss</button>
           </div>
           <button class="cta-btn" onclick="handleStartProcess()">Start the Process</button>
+          <button class="cta-btn cta-contract" onclick="openContractModal()">Create Service Contract</button>
         </div>
         <p class="cta-note">All representation begins with a consultation for initial assessment. Consultation fees are deducted towards the representation fees.</p>
 
@@ -950,7 +977,10 @@ const state = {
   consultationType: 35,
   family: 'single',
   sponsorFamily: 'couple',
-  children: 1,
+  children: 0,
+  childrenYoung: 0,
+  childrenOlder: 0,
+  isPgwp: false,
   numApplicants: 1,
   wpType: 'employer',
   statusType: 'worker',
@@ -1247,8 +1277,11 @@ function toggleOpt(field, btn) {
 }
 
 function adjustCount(field, delta) {
-  const min = 1, max = field === 'sinpCandidates' ? 20 : 10;
-  state[field] = Math.max(min, Math.min(max, (state[field] || 1) + delta));
+  const isChild = field === 'childrenYoung' || field === 'childrenOlder';
+  const min = isChild ? 0 : 1;
+  const max = field === 'sinpCandidates' ? 20 : 10;
+  state[field] = Math.max(min, Math.min(max, (state[field] === undefined ? min : state[field]) + delta));
+  if (isChild) { state.children = (state.childrenYoung || 0) + (state.childrenOlder || 0); }
   const displayId = field === 'numApplicants' ? 'numApplicantsVal' : field + 'Val';
   const el = g(displayId);
   if (el) el.textContent = state[field];
@@ -1374,6 +1407,9 @@ function calculate() {
   const returning = state.clientStatus === 'returning';
   const needChildren = (family === 'family') || (sponFam === 'couple_children');
   const children = needChildren ? numChild : 0;
+  const childrenYoung = needChildren ? (state.childrenYoung || 0) : 0;
+  const childrenOlder = needChildren ? (state.childrenOlder || 0) : 0;
+  const isPgwp = state.isPgwp || false;
 
   if (!svc) {
     g('placeholder').style.display = 'flex';
@@ -1486,22 +1522,23 @@ function calculate() {
     }
   } else if (svc === 'work_permit') {
     addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
-    if (wpType === 'open') { addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
+    if (wpType === 'open' || isPgwp) { addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
+    if (hasSpouse) { addLine(govDiv, 'Open WP Holder Fee (Spouse)', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
     if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
-    if (hasChildren) { addLine(govDiv, `Dependent SP/VR × ${children}`, IRCC.study_permit * children); govTotal += IRCC.study_permit * children; }
-  } else if (svc === 'pgwp') {
-    addLine(govDiv, 'Work Permit (PGWP)', IRCC.work_permit); govTotal += IRCC.work_permit;
-    addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder;
-    if (hasChildren) { addLine(govDiv, `Dependent SP/VR × ${children}`, IRCC.study_permit * children); govTotal += IRCC.study_permit * children; }
+    if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
+    if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
   } else if (svc === 'francophone_wp') {
     addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
     addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder;
+    if (hasSpouse) { addLine(govDiv, 'Open WP Holder Fee (Spouse)', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
     if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
-    if (hasChildren) { addLine(govDiv, `Dependent SP/VR × ${children}`, IRCC.study_permit * children); govTotal += IRCC.study_permit * children; }
+    if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
+    if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
   } else if (svc === 'study_permit') {
     addLine(govDiv, 'Study Permit – Principal', IRCC.study_permit); govTotal += IRCC.study_permit;
     if (hasSpouse) { addLine(govDiv, 'Spouse Open Work Permit', IRCC.work_permit + IRCC.open_wp_holder); govTotal += IRCC.work_permit + IRCC.open_wp_holder; }
-    if (hasChildren) { addLine(govDiv, `Children Study Permit × ${children}`, IRCC.study_permit * children); govTotal += IRCC.study_permit * children; }
+    if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
+    if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
     if (trBioReq) { const p = 1 + (hasSpouse ? 1 : 0) + children; const b = p >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (p >= 2 ? ' (family rate)' : ''), b); govTotal += b; }
   } else if (svc === 'stay_extension') {
     addLine(govDiv, `Visitor Record × ${numApp}`, IRCC.visitor_record * numApp); govTotal += IRCC.visitor_record * numApp;
@@ -1576,6 +1613,49 @@ function updateSocialProof(svc) {
   g('socialProof').style.display = 'flex';
   g('socialProofText').innerHTML = `<strong>${data.n}</strong> ${data.label}`;
 }
+
+  function openContractModal() {
+    if (!state.service) { alert('Please select a service first.'); return; }
+    document.getElementById('scModal').classList.add('open');
+  }
+  function closeContractModal() {
+    document.getElementById('scModal').classList.remove('open');
+  }
+  function openContract() {
+    const fn = document.getElementById('scFn').value.trim();
+    const ln = document.getElementById('scLn').value.trim();
+    const addr = document.getElementById('scAddr').value.trim();
+    const phone = document.getElementById('scPhone').value.trim();
+    const em = document.getElementById('scEm').value.trim();
+    if (!fn || !ln) { alert('Please enter at least the client name.'); return; }
+    const p = new URLSearchParams({
+      svc: state.service,
+      fn, ln, addr, phone, em,
+      family: state.family,
+      childrenYoung: state.childrenYoung || 0,
+      childrenOlder: state.childrenOlder || 0,
+      isPgwp: state.isPgwp ? '1' : '0',
+      wpType: state.wpType || 'employer',
+    });
+    window.open('/service-contract.html?' + p, '_blank');
+    closeContractModal();
+  }
 </script>
+
+  <!-- Service Contract Modal -->
+  <div class="sc-overlay" id="scModal">
+    <div class="sc-box">
+      <h3>Create Service Contract</h3>
+      <div class="sc-field"><label>Last Name</label><input id="scLn" placeholder="Client last name"></div>
+      <div class="sc-field"><label>First Name</label><input id="scFn" placeholder="Client first name"></div>
+      <div class="sc-field"><label>Mailing Address</label><input id="scAddr" placeholder="Full mailing address"></div>
+      <div class="sc-field"><label>Phone Number</label><input id="scPhone" placeholder="+1 (xxx) xxx-xxxx"></div>
+      <div class="sc-field"><label>Email Address</label><input id="scEm" placeholder="client@email.com"></div>
+      <div class="sc-actions">
+        <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
+        <button class="sc-generate" onclick="openContract()">Generate Contract</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
