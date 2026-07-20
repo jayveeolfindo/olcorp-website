@@ -65,7 +65,7 @@
       border-bottom: 1px solid #e5e5ea;
     }
     .est-header img.logo {
-      height: 128px;
+      height: 256px;
       width: auto;
       margin: 0 auto 20px;
       display: block;
@@ -672,16 +672,9 @@
             <div class="oc-desc">LMIA / SINP / LMIA-Exempt</div>
           </button>
           <button class="opt-card" onclick="selectOpt('wpType', 'open', this); revealAfter('wpTypeGroup')">
-            <div class="oc-title">Open Work Permit</div>
+            <div class="oc-title">Open Work Permit / PGWP</div>
             <div class="oc-desc">+$100 holder fee</div>
           </button>
-        </div>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e5e7">
-          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="pgwpCheck" onchange="state.isPgwp=this.checked;calculate()">
-            <strong style="font-size:14px">Post-Graduate Work Permit (PGWP)</strong>
-          </label>
-          <div style="font-size:12px;color:#6e6e73;margin-top:4px">PGWP applicants get an Open WP Holder Fee ($100) added to the primary applicant</div>
         </div>
       </div>
 
@@ -980,7 +973,6 @@ const state = {
   children: 0,
   childrenYoung: 0,
   childrenOlder: 0,
-  isPgwp: false,
   numApplicants: 1,
   wpType: 'employer',
   statusType: 'worker',
@@ -1410,7 +1402,6 @@ function calculate() {
   const children = needChildren ? numChild : 0;
   const childrenYoung = needChildren ? (state.childrenYoung || 0) : 0;
   const childrenOlder = needChildren ? (state.childrenOlder || 0) : 0;
-  const isPgwp = state.isPgwp || false;
 
   if (!svc) {
     g('placeholder').style.display = 'flex';
@@ -1523,7 +1514,7 @@ function calculate() {
     }
   } else if (svc === 'work_permit') {
     addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
-    if (wpType === 'open' || isPgwp) { addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
+    if (wpType === 'open') { addLine(govDiv, 'Open WP Holder Fee', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
     if (hasSpouse) { addLine(govDiv, 'Open WP Holder Fee (Spouse)', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
     if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
     if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
@@ -1635,7 +1626,6 @@ function updateSocialProof(svc) {
       family: state.family,
       childrenYoung: state.childrenYoung || 0,
       childrenOlder: state.childrenOlder || 0,
-      isPgwp: state.isPgwp ? '1' : '0',
       wpType: state.wpType || 'employer',
     });
     window.open('/service-contract.html?' + p, '_blank');
