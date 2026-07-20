@@ -678,7 +678,7 @@
         </div>
         <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e5e5e7">
           <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="pgwpCheck" onchange="state.isPgwp=this.checked;recalc()">
+            <input type="checkbox" id="pgwpCheck" onchange="state.isPgwp=this.checked;calculate()">
             <strong style="font-size:14px">Post-Graduate Work Permit (PGWP)</strong>
           </label>
           <div style="font-size:12px;color:#6e6e73;margin-top:4px">PGWP applicants get an Open WP Holder Fee ($100) added to the primary applicant</div>
@@ -1123,7 +1123,7 @@ function hideAllConditional() {
   // Reset defaults
   state.family = 'single';
   state.sponsorFamily = 'couple';
-  state.children = 1;
+  state.children = 0; state.childrenYoung = 0; state.childrenOlder = 0;
   state.numApplicants = 1;
   state.wpType = 'employer';
   state.statusType = 'worker';
@@ -1141,7 +1141,8 @@ function hideAllConditional() {
   // Reset card selections to defaults
   resetCardSelections();
   // Reset stepper displays
-  g('childrenVal').textContent = 1;
+  g('childrenYoungVal').textContent = 0;
+  g('childrenOlderVal').textContent = 0;
   g('numApplicantsVal').textContent = 1;
   g('sinpCandidatesVal').textContent = 1;
   // Reset toggles
