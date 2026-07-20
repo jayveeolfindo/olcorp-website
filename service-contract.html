@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Service Agreement — Olcorp.ca</title>
   <style>
@@ -58,7 +59,7 @@
       border-bottom: 2px solid #000;
       padding-bottom: 16px;
     }
-    .doc-header img { height: 224px; width: auto; }
+    .doc-header img { height: 100px; width: auto; }
     .doc-header .contact-info { text-align: right; font-size: 9pt; line-height: 1.6; }
 
     /* Title */
@@ -94,6 +95,30 @@
     .client-row .val { flex: 1; border-bottom: 1px solid #999; min-width: 120px; padding-left: 6px; }
     .initials-line { margin-top:14px; font-size:9.5pt; font-style:italic; border-top:1px solid #ccc; padding-top:8px; }
     .initials-blank { display:inline-block; width:120px; border-bottom:1px solid #000; margin-left:4px; }
+    /* ── E-signature ── */
+    .init-field { display:inline-block; min-width:80px; height:28px; border-bottom:1.5px dashed #0071e3; vertical-align:bottom; cursor:pointer; font-family:'Dancing Script',cursive; font-size:20px; color:#1a3e6e; text-align:center; line-height:28px; margin-left:4px; }
+    .init-field:not(.done)::after { content:'tap'; font-family:-apple-system,sans-serif; font-size:8pt; color:#0071e3; font-style:italic; }
+    .init-field.done { border-bottom:1.5px solid #000; }
+    .init-field.done::after { content:''; }
+    .sig-canvas-wrap { border:1.5px solid #aaa; border-radius:4px; background:#fafafa; display:inline-block; position:relative; }
+    .sig-canvas-wrap canvas { display:block; cursor:crosshair; }
+    .clear-sig-btn { position:absolute; top:4px; right:6px; background:none; border:1px solid #ccc; border-radius:4px; font-size:10px; padding:2px 7px; cursor:pointer; color:#777; }
+    .sig-hint-text { display:block; text-align:center; font-size:9pt; color:#bbb; padding:2px 0 4px; }
+    @media screen {
+      .sign-bar { position:fixed; top:0; left:0; right:0; background:#1d3461; color:#fff; padding:10px 24px; display:flex; align-items:center; justify-content:space-between; z-index:9999; font-family:-apple-system,sans-serif; font-size:13px; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+      .sign-bar-status { opacity:.85; }
+      .sign-bar-btn { background:#fff; color:#1d3461; border:none; border-radius:6px; padding:7px 22px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; }
+      .sign-bar-btn:disabled { opacity:.35; cursor:not-allowed; }
+      .page { margin-top:72px; }
+    }
+    @media print {
+      .sign-bar { display:none !important; }
+      .page { margin-top:40px !important; }
+      .init-field { cursor:default !important; border-bottom:1px solid #000 !important; }
+      .init-field::after { display:none !important; }
+      .clear-sig-btn,.sig-hint-text { display:none !important; }
+      .sig-canvas-wrap { border:none !important; background:transparent !important; }
+    }
 
     .party-label {
       font-style: italic;
@@ -201,15 +226,16 @@
   <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
 </div>
 
+<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Initial 3 locations + draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="window.print()">Generate PDF</button></div>
 <div class="page">
 
   <!-- Header -->
   <div class="doc-header">
     <img src="logo.png" alt="Olcorp.ca">
     <div class="contact-info">
-      consulting@olcorp.ca<br>
-      7th Floor, 2010 11th Ave<br>
-      Regina, SK S4P 0J3, Canada<br>
+      <strong>consulting@olcorp.ca</strong><br>
+      7th Floor, 2010 11th Ave, Regina, SK S4P 0J3<br>
+      111 2 Ave S Unit 400, Saskatoon, SK S7K 1K6<br>
       +1 639 554 9791
     </div>
   </div>
@@ -233,7 +259,7 @@
     <div class="client-row"><span class="lbl">E-mail Address:</span><span class="val" id="cEm"></span></div>
     <div class="client-row" style="margin-top:12px;border-top:1px solid #ccc;padding-top:8px;">
       <span class="lbl">Client Initials:</span>
-      <span class="val" style="max-width:140px;">_______________</span>
+      <span class="val" style="max-width:140px;border-bottom:none;"><span class="init-field" id="init1" onclick="doInitial('init1')"></span></span>
     </div>
   </div>
 
@@ -322,7 +348,7 @@
       no holding of funds on account.</p>
       <p>The details of this billing method are as payment prior to every milestone based on Section 2
       and as stated in Payment Schedule under Section 6.</p>
-      <div class="initials-line">Client Initials: <span class="initials-blank"></span></div>
+      <div class="initials-line">Client Initials: <span class="init-field" id="init2" onclick="doInitial('init2')"></span></div>
     </div>
   </div>
 
@@ -347,7 +373,7 @@
         <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (not to be collected by the Firm — paid directly by the client)</span>
       </p>
       <table class="gov-table" id="govTable"></table>
-      <div class="initials-line">Client Initials: <span class="initials-blank"></span></div>
+      <div class="initials-line">Client Initials: <span class="init-field" id="init3" onclick="doInitial('init3')"></span></div>
     </div>
   </div>
 
@@ -588,7 +614,8 @@
   <!-- Signature -->
   <div class="signature-section" style="margin-top:50px;">
     <div class="sig-block">
-      <div class="sig-line"></div>
+      <div class="sig-canvas-wrap"><canvas id="sigCanvas" width="380" height="110"></canvas><button class="clear-sig-btn" onclick="clearSig()">Clear</button></div>
+      <span class="sig-hint-text">Draw signature above with mouse or touch</span>
       <div class="sig-label"><strong>Signature of Client – Principal Applicant</strong></div>
       <div class="sig-label" style="margin-top:4px;">Date: ___________________________</div>
     </div>
@@ -980,6 +1007,63 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
   rows.push(`<tr class="subtotal-row"><td><strong>Estimated Government Total</strong></td><td class="amt"><strong>$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></td></tr>`);
   return rows.join('');
 }
+
+// ── Electronic Signature ──────────────────────────────────────────────────────
+const _initDone = new Set();
+const _REQUIRED = 3;
+
+function doInitial(id) {
+  if (_initDone.has(id)) {
+    if (!confirm('Replace this initial?')) return;
+    _initDone.delete(id);
+    const el = document.getElementById(id);
+    el.textContent = '';
+    el.classList.remove('done');
+    _updateSign();
+    return;
+  }
+  const val = prompt('Type your initials:');
+  if (!val || !val.trim()) return;
+  const el = document.getElementById(id);
+  el.textContent = val.trim().toUpperCase().substring(0, 4);
+  el.classList.add('done');
+  _initDone.add(id);
+  _updateSign();
+}
+
+let _sigDrawn = false, _pen = false;
+(function () {
+  const c = document.getElementById('sigCanvas');
+  if (!c) return;
+  const x = c.getContext('2d');
+  x.strokeStyle = '#1a3e6e'; x.lineWidth = 2.5; x.lineCap = 'round'; x.lineJoin = 'round';
+  function pt(e) { const r = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top]; }
+  c.addEventListener('mousedown', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
+  c.addEventListener('mousemove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
+  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _updateSign(); });
+  c.addEventListener('mouseleave', () => { _pen = false; });
+  c.addEventListener('touchstart', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
+  c.addEventListener('touchmove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
+  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _updateSign(); });
+})();
+
+function clearSig() {
+  const c = document.getElementById('sigCanvas');
+  c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  _sigDrawn = false; _updateSign();
+}
+
+function _updateSign() {
+  const n = _initDone.size, ok = n >= _REQUIRED && _sigDrawn;
+  const btn = document.getElementById('pdfBtn');
+  const st = document.getElementById('signStatus');
+  if (btn) btn.disabled = !ok;
+  if (st) st.textContent = ok
+    ? '\u2713 Document ready \u2014 click Generate PDF'
+    : 'Initials: ' + n + '/' + _REQUIRED + ' \u00b7 Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending');
+}
+_updateSign();
+
 </script>
 </body>
 </html>
