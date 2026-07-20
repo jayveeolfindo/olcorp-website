@@ -58,7 +58,7 @@
       border-bottom: 2px solid #000;
       padding-bottom: 16px;
     }
-    .doc-header img { height: 112px; width: auto; }
+    .doc-header img { height: 224px; width: auto; }
     .doc-header .contact-info { text-align: right; font-size: 9pt; line-height: 1.6; }
 
     /* Title */
@@ -92,6 +92,8 @@
     .client-row { display: flex; margin-bottom: 4px; }
     .client-row .lbl { width: 210px; flex-shrink: 0; }
     .client-row .val { flex: 1; border-bottom: 1px solid #999; min-width: 120px; padding-left: 6px; }
+    .initials-line { margin-top:14px; font-size:9.5pt; font-style:italic; border-top:1px solid #ccc; padding-top:8px; }
+    .initials-blank { display:inline-block; width:120px; border-bottom:1px solid #000; margin-left:4px; }
 
     .party-label {
       font-style: italic;
@@ -229,6 +231,10 @@
     <div class="client-row"><span class="lbl">Mailing Address:</span><span class="val" id="cAddr"></span></div>
     <div class="client-row"><span class="lbl">Phone Number:</span><span class="val" id="cPhone"></span></div>
     <div class="client-row"><span class="lbl">E-mail Address:</span><span class="val" id="cEm"></span></div>
+    <div class="client-row" style="margin-top:12px;border-top:1px solid #ccc;padding-top:8px;">
+      <span class="lbl">Client Initials:</span>
+      <span class="val" style="max-width:140px;">_______________</span>
+    </div>
   </div>
 
   <p class="party-label">(the "CLIENT")</p>
@@ -316,6 +322,7 @@
       no holding of funds on account.</p>
       <p>The details of this billing method are as payment prior to every milestone based on Section 2
       and as stated in Payment Schedule under Section 6.</p>
+      <div class="initials-line">Client Initials: <span class="initials-blank"></span></div>
     </div>
   </div>
 
@@ -340,6 +347,7 @@
         <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (not to be collected by the Firm — paid directly by the client)</span>
       </p>
       <table class="gov-table" id="govTable"></table>
+      <div class="initials-line">Client Initials: <span class="initials-blank"></span></div>
     </div>
   </div>
 
@@ -798,8 +806,9 @@ function fmtDate(d) {
   const family  = p.get('family') || 'single';
   const cyoung  = parseInt(p.get('childrenYoung') || '0', 10);
   const colder  = parseInt(p.get('childrenOlder') || '0', 10);
-  const isPgwp  = p.get('isPgwp') === '1';
-  const wpType  = p.get('wpType') || 'employer';
+  const isPgwp     = p.get('isPgwp') === '1';
+  const wpType     = p.get('wpType') || 'employer';
+  const fullPayment = p.get('fullPayment') === '1';
 
   const effSvc  = svc; // 'work_permit' used for both WP and PGWP
   const repKey  = (svc === 'work_permit' && isPgwp) ? 'pgwp' : svc;
@@ -814,7 +823,24 @@ function fmtDate(d) {
   const profTotal         = professionalBase + spouseFee + childrenFee;
   const gst               = profTotal * 0.05;
   const grandTotal        = profTotal + gst;
-  const installment       = grandTotal / 3;
+
+  const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
+  const isTR2 = TR_2INST.includes(svc);
+  let installMilestones, installAmt;
+  if (isTR2) {
+    installMilestones = [
+      'Upon signing of the Service Agreement',
+      'Upon Completion of the Requirements and Prior to Submission of the Application',
+    ];
+    installAmt = grandTotal / 2;
+  } else {
+    installMilestones = MILESTONES[svc] || [
+      'Signing of Retainer Agreement',
+      'Upon preparation and review of the application',
+      'Upon submission of the application',
+    ];
+    installAmt = grandTotal / installMilestones.length;
+  }
 
   // Subtitle
   let subtitle = SUBTITLES[svc] || 'Immigration Services';
@@ -846,20 +872,30 @@ function fmtDate(d) {
   }
   payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(profTotal)}</td></tr>`);
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
-  payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+  if (fullPayment) {
+    const discount = grandTotal * 0.05;
+    payRows.push(`<tr class="grand-row"><td>Subtotal (incl. GST):</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+    payRows.push(`<tr><td style="color:#2e8b57;">Full Payment Discount (5%)</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discount)}</td></tr>`);
+    payRows.push(`<tr class="grand-row"><td>Total Contract Payable (Full Payment):</td><td class="amt">${fmt(grandTotal * 0.95)}</td></tr>`);
+  } else {
+    payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+  }
   document.getElementById('paymentTable').innerHTML = payRows.join('');
 
   // Section 6 — Payment Schedule
-  const milestones = MILESTONES[svc] || [
-    'Signing of Retainer Agreement',
-    'Upon preparation and review of the application',
-    'Upon submission of the application',
-  ];
-  let schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
-  milestones.forEach(m => {
-    schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installment)} <span class="note">incl. 5% GST</span></td></tr>`;
-  });
-  schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
+  let schedRows;
+  if (fullPayment) {
+    const discTotal = grandTotal * 0.95;
+    schedRows = `<tr><th>Payment</th><th class="amt">Amount</th></tr>`;
+    schedRows += `<tr><td>Full Payment (5% discount applied)</td><td class="amt">${fmt(discTotal)} <span class="note">incl. 5% GST</span></td></tr>`;
+    schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(discTotal)} Tax Inclusive</td></tr>`;
+  } else {
+    schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
+    installMilestones.forEach(m => {
+      schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installAmt)} <span class="note">incl. 5% GST</span></td></tr>`;
+    });
+    schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
+  }
   document.getElementById('scheduleTable').innerHTML = schedRows;
 
   // Section 6 — Government Fees
@@ -897,13 +933,19 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
   } else if (svc === 'work_permit') {
     rows.push(line('Work Permit Application Fee', IRCC.work_permit));
     if (wpType === 'open' || isPgwp) rows.push(line('Open Work Permit Holder Fee (Primary)', IRCC.open_wp_holder));
-    if (hasSpouse) rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    if (hasSpouse) {
+      rows.push(line('Spousal Open Work Permit Application Fee', IRCC.work_permit));
+      rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    }
     if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
     if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
   } else if (svc === 'francophone_wp') {
     rows.push(line('Work Permit Application Fee', IRCC.work_permit));
     rows.push(line('Open Work Permit Holder Fee (Primary)', IRCC.open_wp_holder));
-    if (hasSpouse) rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    if (hasSpouse) {
+      rows.push(line('Spousal Open Work Permit Application Fee', IRCC.work_permit));
+      rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    }
     if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
     if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
   } else if (svc === 'study_permit') {
