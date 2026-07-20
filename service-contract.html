@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Service Agreement — Olcorp.ca</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Times New Roman', Times, serif;
+      font-size: 11pt;
+      line-height: 1.55;
+      color: #000;
+      background: #e8e8e8;
+    }
+
+    /* Action bar (hidden on print) */
+    .action-bar {
+      background: #1d1d1f;
+      padding: 14px 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .action-bar button {
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      font-family: -apple-system, sans-serif;
+    }
+    .btn-print { background: #0066cc; color: #fff; }
+    .btn-close { background: #3a3a3c; color: #fff; }
+    .action-bar span { color: #aeaeb2; font-size: 13px; font-family: -apple-system, sans-serif; }
+
+    /* Document page */
+    .page {
+      width: 8.5in;
+      min-height: 11in;
+      background: #fff;
+      margin: 24px auto;
+      padding: 1in 1in 1in 1in;
+      box-shadow: 0 4px 24px rgba(0,0,0,.18);
+    }
+
+    /* Header */
+    .doc-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      border-bottom: 2px solid #000;
+      padding-bottom: 16px;
+    }
+    .doc-header img { height: 112px; width: auto; }
+    .doc-header .contact-info { text-align: right; font-size: 9pt; line-height: 1.6; }
+
+    /* Title */
+    .doc-title {
+      text-align: center;
+      margin: 20px 0 6px;
+      font-size: 15pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .doc-subtitle {
+      text-align: center;
+      font-size: 10.5pt;
+      font-weight: bold;
+      margin-bottom: 22px;
+      line-height: 1.4;
+    }
+
+    /* Parties */
+    .parties { margin-bottom: 16px; }
+    .parties p { margin-bottom: 6px; }
+
+    .client-block {
+      border: 1px solid #888;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 10.5pt;
+    }
+    .client-block .client-label { font-weight: bold; margin-bottom: 8px; }
+    .client-row { display: flex; margin-bottom: 4px; }
+    .client-row .lbl { width: 210px; flex-shrink: 0; }
+    .client-row .val { flex: 1; border-bottom: 1px solid #999; min-width: 120px; padding-left: 6px; }
+
+    .party-label {
+      font-style: italic;
+      font-weight: bold;
+      margin: 10px 0 12px;
+    }
+    .firm-name { font-weight: bold; }
+
+    /* Whereas */
+    .whereas { margin: 16px 0; font-size: 10.5pt; }
+    .whereas p { margin-bottom: 8px; }
+
+    /* Sections */
+    .section { margin: 16px 0; }
+    .section-title {
+      font-weight: bold;
+      margin-bottom: 6px;
+      font-size: 11pt;
+    }
+    .section-body { font-size: 10.5pt; }
+    .section-body p { margin-bottom: 6px; }
+    .section-body ul, .section-body ol { margin-left: 24px; margin-bottom: 6px; }
+    .section-body li { margin-bottom: 3px; }
+
+    /* Section 5 payment table */
+    .payment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 10.5pt;
+    }
+    .payment-table td { padding: 3px 8px; }
+    .payment-table .amt { text-align: right; width: 160px; }
+    .payment-table .total-row td { border-top: 1px solid #000; font-weight: bold; padding-top: 5px; }
+    .payment-table .grand-row td { border-top: 2px solid #000; font-weight: bold; font-size: 11pt; padding-top: 6px; }
+
+    /* Section 6 schedule table */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 10pt;
+    }
+    .schedule-table th {
+      background: #1d1d1f;
+      color: #fff;
+      padding: 6px 10px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .schedule-table th.amt { text-align: right; }
+    .schedule-table td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+    .schedule-table td.amt { text-align: right; font-weight: 500; white-space: nowrap; }
+    .schedule-table .total-row td { font-weight: bold; border-top: 2px solid #000; border-bottom: none; background: #f5f5f5; }
+    .schedule-table .note { font-size: 9pt; color: #555; font-style: italic; }
+
+    .gov-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0;
+      font-size: 10pt;
+    }
+    .gov-table td { padding: 4px 8px; }
+    .gov-table td.amt { text-align: right; width: 100px; }
+    .gov-table .subtotal-row td { border-top: 1px solid #999; font-weight: bold; }
+    .gov-table .note { font-size: 9pt; color: #555; font-style: italic; }
+
+    /* Signature */
+    .signature-section {
+      margin-top: 40px;
+      display: flex;
+      gap: 60px;
+    }
+    .sig-block { flex: 1; }
+    .sig-line {
+      border-bottom: 1px solid #000;
+      height: 40px;
+      margin-bottom: 6px;
+    }
+    .sig-label { font-size: 10pt; }
+
+    /* Page break hints */
+    .page-break { page-break-before: always; }
+
+    /* Print */
+    @media print {
+      body { background: #fff; }
+      .action-bar { display: none !important; }
+      .page {
+        margin: 0;
+        box-shadow: none;
+        padding: 0.8in 0.9in;
+        width: 100%;
+        min-height: auto;
+      }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="action-bar no-print">
+  <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+  <button class="btn-close" onclick="window.close()">Close</button>
+  <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
+</div>
+
+<div class="page">
+
+  <!-- Header -->
+  <div class="doc-header">
+    <img src="logo.png" alt="Olcorp.ca">
+    <div class="contact-info">
+      consulting@olcorp.ca<br>
+      7th Floor, 2010 11th Ave<br>
+      Regina, SK S4P 0J3, Canada<br>
+      +1 639 554 9791
+    </div>
+  </div>
+
+  <div class="doc-title">SERVICE AGREEMENT</div>
+  <div class="doc-subtitle" id="svcSubtitle"></div>
+
+  <!-- Parties -->
+  <div class="parties">
+    <p><strong>BY AND BETWEEN:</strong></p>
+    <p>Principal Applicant</p>
+  </div>
+
+  <div class="client-block">
+    <div class="client-label">Client Information</div>
+    <div class="client-row"><span class="lbl">Date:</span><span class="val" id="cDate"></span></div>
+    <div class="client-row"><span class="lbl">Last Name (Family Name):</span><span class="val" id="cLn"></span></div>
+    <div class="client-row"><span class="lbl">First Name (Given Name):</span><span class="val" id="cFn"></span></div>
+    <div class="client-row"><span class="lbl">Mailing Address:</span><span class="val" id="cAddr"></span></div>
+    <div class="client-row"><span class="lbl">Phone Number:</span><span class="val" id="cPhone"></span></div>
+    <div class="client-row"><span class="lbl">E-mail Address:</span><span class="val" id="cEm"></span></div>
+  </div>
+
+  <p class="party-label">(the "CLIENT")</p>
+
+  <div class="parties">
+    <p><strong>AND:</strong></p>
+    <p><span class="firm-name">OLFINDO IMMIGRATION CONSULTING CORPORATION</span>, an immigration consulting
+    and legal representation firm with its business address at 7th Floor, 2010 11th Ave, Regina, SK
+    S4P 0J3, Canada, herein represented by a duly authorized signatory.</p>
+  </div>
+
+  <p class="party-label">(the "FIRM")</p>
+
+  <div class="whereas">
+    <p>WHEREAS the Firm and the Client wish to enter into a written agreement which contains the
+    agreed upon terms and conditions upon which the Firm will provide his/her services to the Client.</p>
+    <p>AND WHEREAS the Regulated Canadian Immigration Consultant (RCIC) of the Firm is a member
+    of the College of Immigration and Citizenship Consultants (the "Council"), the regulator in Canada
+    for immigration consultants;</p>
+    <p>IN CONSIDERATION of the mutual covenants contained in this Agreement, the parties agree as follows:</p>
+  </div>
+
+  <!-- Section 1 -->
+  <div class="section">
+    <div class="section-title">1. Definitions</div>
+    <div class="section-body">
+      <p>The terms set out in this Retainer Agreement have the meaning given to such terms in the
+      Retainer Agreement Regulation and By-law of the Council, as amended from time to time.</p>
+    </div>
+  </div>
+
+  <!-- Section 2 — service specific -->
+  <div class="section">
+    <div class="section-title">2. Firm Responsibilities and Commitments</div>
+    <div class="section-body">
+      <p>The Client asked the Firm, and the Firm has agreed, to act for the Client in the matter of
+      representing and acting on behalf, providing guidance with regards to the immigration process,
+      reviewing and submitting required documents to the government agencies for the purpose of
+      <span id="svc2Purpose"></span>.</p>
+      <p>In consideration of the fees paid and the matter stated above, the Firm agrees to do the following:</p>
+      <div id="svc2Points"></div>
+      <p>The Firm shall provide the Client with a finalized, signed copy of this Retainer Agreement.
+      In accordance with the College of Immigration and Citizenship Consultants, the RCIC has
+      responsibility to provide the copy of the Code of Professional Conduct which can be downloaded
+      from: <em>https://college-ic.ca/protecting-the-public/code-of-professional-conduct</em>.</p>
+    </div>
+  </div>
+
+  <!-- Section 3 -->
+  <div class="section">
+    <div class="section-title">3. Client Responsibilities and Commitments</div>
+    <div class="section-body">
+      <p>3.1 The Client must provide, upon request by Firm:</p>
+      <ul>
+        <li>All necessary documentations to prepare the client's profile.</li>
+        <li>All documentation in English or French, or with an English or French translation.</li>
+      </ul>
+      <p>3.2 The Client understands that he/she must be accurate and honest in the information he/she
+      provides and that any misrepresentations or omissions may void this Agreement, or seriously affect
+      the outcome of the application or the retention of any immigration status he/she may obtain.
+      The Firm's obligations under the Retainer Agreement are null and void if the Client knowingly
+      provides any inaccurate, misleading or false material information. The Client's financial
+      obligations remain.</p>
+      <p>3.3 In the event Immigration, Refugees and Citizenship Canada (IRCC) or Employment and
+      Social Development Canada (ESDC) or Provincial Government Administrator or processing Visa
+      Office should contact the Client directly, the Client is instructed to notify the Firm immediately.</p>
+      <p>3.4 The Client is to immediately advise the Firm of any change in the marital, family, or civil
+      status or change of physical address or contact information for any person included in the
+      application.</p>
+      <p>3.5 In the event of a Joint Retainer Agreement, the Clients agree that the Firm must share
+      information among all clients, as required. Furthermore, if a conflict develops that cannot be
+      resolved, the Firm cannot continue to act for both or all of the Clients and may have to withdraw
+      completely from representation.</p>
+    </div>
+  </div>
+
+  <!-- Section 4 -->
+  <div class="section">
+    <div class="section-title">4. Billing Method</div>
+    <div class="section-body">
+      <p>The Client will be billed by flat fee with payment by installment inclusive of predetermined
+      dates and frequency of invoices. An hourly rate of $100 CAD per hour will be charged beyond
+      the coverage of the retainer agreement in Section 2. All of the participating community fee and
+      Canada government application fees shall be paid directly by the Client; therefore, there will be
+      no holding of funds on account.</p>
+      <p>The details of this billing method are as payment prior to every milestone based on Section 2
+      and as stated in Payment Schedule under Section 6.</p>
+    </div>
+  </div>
+
+  <!-- Section 5 — dynamic -->
+  <div class="section">
+    <div class="section-title">5. Payment Terms and Conditions</div>
+    <div class="section-body">
+      <table class="payment-table" id="paymentTable"></table>
+      <p style="font-size:9pt;margin-top:8px;color:#555;font-style:italic;">
+        (Note: No disbursement as the Firm will not collect government application fees and any other
+        related fees as these will be paid out directly by the client's credit card on file)
+      </p>
+    </div>
+  </div>
+
+  <!-- Section 6 — dynamic -->
+  <div class="section">
+    <div class="section-title">6. Payment Schedule</div>
+    <div class="section-body">
+      <table class="schedule-table" id="scheduleTable"></table>
+      <p style="margin-top:14px;font-weight:bold;font-size:10.5pt;">Government Fees to be prepared:
+        <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (not to be collected by the Firm — paid directly by the client)</span>
+      </p>
+      <table class="gov-table" id="govTable"></table>
+    </div>
+  </div>
+
+  <!-- Section 7 -->
+  <div class="section">
+    <div class="section-title">7. Invoicing</div>
+    <div class="section-body">
+      <p>The Firm will provide invoices, which include:</p>
+      <ul>
+        <li>the name and address of the Client,</li>
+        <li>a list of services rendered,</li>
+        <li>the date(s) the services were rendered, and</li>
+        <li>the total fees payable to the Member for the services rendered.</li>
+      </ul>
+      <p>Invoices must be provided to the Client in accordance with the payment terms and conditions,
+      found in section 5 of this Retainer Agreement. Upon the Firm withdrawing or being discharged
+      from representation, the Firm must provide the Client with a Statement of Account detailing all
+      services that have been rendered.</p>
+    </div>
+  </div>
+
+  <!-- Section 8 -->
+  <div class="section">
+    <div class="section-title">8. Refund Policy</div>
+    <div class="section-body">
+      <p>The Client acknowledges that the granting of a visa, nomination, permit or status, and the time
+      required for processing this application is at the sole discretion of the participating community and
+      the government of Canada (or Government Authorities) and not the Firm. Furthermore, the Client
+      acknowledges that fees are not refundable in the event of an application refusal, or the Client has
+      voluntarily withdrawn and discharged the Firm from representation as stated in Section 18.1.</p>
+      <p>If, however, the Firm or professional staff has voluntarily withdrawn and discharged the
+      representation, the Firm will refund up to 100% of the fees collected from the Client, in accordance
+      with the Client File Management Regulation, the Client Account Regulation and the Retainer
+      Agreement Regulation, by transferring the fund to the Client's bank account within 2 weeks of
+      notice from either party.</p>
+    </div>
+  </div>
+
+  <!-- Section 9 -->
+  <div class="section">
+    <div class="section-title">9. Dispute Resolution Related to the Code of Professional Ethics</div>
+    <div class="section-body">
+      <p>In the event of a dispute related to the Professional Services provided by the Firm, the Client
+      and Firm are to make every reasonable effort to resolve the matter between the two parties. In
+      the event a resolution cannot be reached, the Client is to present the complaint in writing to the
+      Firm and allow the Firm 3 days to respond. If the dispute remains unresolved, the Client may
+      follow the complaint and discipline procedure outlined by the Council on their website: <em>www.college-ic.ca</em>.</p>
+      <p>CICC Contact Information: The College of Immigration and Citizenship Consultants (CICC),
+      5500 North Service Rd., Suite 1002, Burlington, ON, L7L 6W6. Toll-free: 1-877-836-7543.</p>
+    </div>
+  </div>
+
+  <!-- Section 10 -->
+  <div class="section">
+    <div class="section-title">10. Confidentiality</div>
+    <div class="section-body">
+      <p>All information and documentation reviewed by the Firm, required by IRCC and all other
+      governing bodies, and used for the preparation of the application will not be divulged to any
+      third party, other than agents and employees of the Firm, without prior consent, except as
+      demanded by the Council or required under law.</p>
+      <p>The Client agrees to the use of electronic communication and storage of confidential information.
+      The Firm will use his/her best efforts to maintain a high degree of security for electronic
+      communication and information storage.</p>
+    </div>
+  </div>
+
+  <!-- Section 11 -->
+  <div class="section">
+    <div class="section-title">11. Agent/Admin Assistance</div>
+    <div class="section-body">
+      <p>The Client agrees that the RCIC may require assistance from his authorized agents and/or admin
+      to assist with administrative tasks and as assigned point of contact of the client. A delegation
+      email will be sent to the client introducing the agent or employee. Each agent and/or admin has
+      a contract with the Firm not to share any personal information outside of the Firm.</p>
+    </div>
+  </div>
+
+  <!-- Section 12 -->
+  <div class="section">
+    <div class="section-title">12. Meeting Appointments with the RCIC</div>
+    <div class="section-body">
+      <p>The Client agrees that the RCIC limits the number of face-to-face or virtual meetings to the
+      purposes below:</p>
+      <ul>
+        <li>12.1 Initial Consultation</li>
+        <li>12.2 Briefing Prior to the Submission of Application</li>
+        <li>12.3 Meeting to Debrief and Plan after the Decision of IRCC</li>
+      </ul>
+      <p>The RCIC may request additional meetings at no charge. The Client may request additional
+      meetings beyond those stated above; however, the Client is responsible for the regular
+      consultation fee.</p>
+    </div>
+  </div>
+
+  <!-- Section 13 -->
+  <div class="section">
+    <div class="section-title">13. Status of Application and Follow Ups</div>
+    <div class="section-body">
+      <p>13.1 The Firm has no control once the application has been submitted to the IRCC Portal and
+      cannot check any information beyond what is in the Application Status of the Client's account.
+      The Firm cannot follow up an application if the processing time does not exceed the regular
+      processing time posted on the IRCC website.</p>
+      <p>13.2 Follow up of application through IRCC Webform shall be free of charge for up to 2 follow
+      ups if it is beyond the processing timeline. If the Client insists to follow up within the processing
+      time or after the two free follow ups, a fee of $100 CAD per IRCC Webform will be charged.</p>
+      <p>13.3 If the Client requests for ATIP/GCMS notes, a fee of $50 CAD will be charged. However,
+      if the Firm recommends requesting ATIP/GCMS notes, a Client consent will be required and there
+      is no charge by the Firm.</p>
+      <p>13.4 The Client's application is fully monitored 7 days a week. If there is no email from the
+      Firm, there are no updates. The Client may follow up through consulting@olcorp.ca. Target
+      response time is within 48 hours.</p>
+    </div>
+  </div>
+
+  <!-- Section 14 -->
+  <div class="section">
+    <div class="section-title">14. Force Majeure</div>
+    <div class="section-body">
+      <p>The Firm's failure to perform any term of this Retainer Agreement, as a result of conditions
+      beyond his/her control such as, but not limited to, governmental restrictions or subsequent
+      legislation, war, strikes, or acts of God, shall not be deemed a breach of this Agreement.</p>
+    </div>
+  </div>
+
+  <!-- Section 15 -->
+  <div class="section">
+    <div class="section-title">15. Unplanned Firm Absence</div>
+    <div class="section-body">
+      <p>In the event the Client is unable to contact the Firm and has reason to believe the Firm may
+      be dead, incapacitated, or otherwise unable to fulfill his/her duties, the Client should contact
+      CICC as detailed in Section 9.</p>
+    </div>
+  </div>
+
+  <!-- Section 16 -->
+  <div class="section">
+    <div class="section-title">16. Change Policy</div>
+    <div class="section-body">
+      <p>The Client acknowledges that if the Firm is asked to act on the Client's behalf on matters other
+      than those outlined in Section 2, or because of a material change in the Client's circumstances,
+      or because of material facts not disclosed at the outset, or because of a change in government
+      legislation, the Agreement can be modified accordingly. This Agreement may only be altered or
+      amended when such changes are made in writing and executed by the parties hereto. All changes
+      and/or edits must be initialled and dated by both the Member and the Client.</p>
+    </div>
+  </div>
+
+  <!-- Section 17 -->
+  <div class="section">
+    <div class="section-title">17. Termination</div>
+    <div class="section-body">
+      <p>17.1 This Agreement is considered terminated upon completion of tasks identified under
+      Section 2 of this agreement.</p>
+      <p>17.2 This Agreement is considered terminated if material changes occur to the Client's
+      application or eligibility, which make it impossible to proceed with services detailed in
+      Section 2 of this Agreement.</p>
+    </div>
+  </div>
+
+  <!-- Section 18 -->
+  <div class="section">
+    <div class="section-title">18. Discharge or Withdrawal of Representation</div>
+    <div class="section-body">
+      <p>18.1 The Client may voluntarily discharge the representation of the Firm and terminate this
+      Agreement, upon writing, at which time any uncollected fees will no longer be collected and
+      will be considered loss of the Firm. There is no refund for the collected fees as these were all
+      worked on already.</p>
+      <p>18.2 Pursuant to Article 11 of the Code of Professional Ethics, the Firm may withdraw
+      representation and terminate this Agreement, upon writing, provided withdrawal does not cause
+      prejudice to the Client, at which time any outstanding or unearned fees or Disbursements will
+      be refunded by the Firm to the Client and/or any outstanding fees or Disbursements will be paid
+      by the Client to the Firm.</p>
+      <p>18.3 At the time of withdrawal or discharge, the Firm must provide the Client with an invoice
+      detailing all services that have been rendered or accounting for the time that has been spent on
+      the Client's file.</p>
+    </div>
+  </div>
+
+  <!-- Section 19 -->
+  <div class="section">
+    <div class="section-title">19. Governing Law</div>
+    <div class="section-body">
+      <p>This Agreement shall be governed by the laws in effect in the Province of Ontario, and the
+      federal laws of Canada applicable therein, and except for disputes pursuant to Section 9 hereof,
+      any dispute with respect to the terms of this Agreement shall be decided by a court of competent
+      jurisdiction within the Province of Ontario.</p>
+    </div>
+  </div>
+
+  <!-- Section 20 -->
+  <div class="section">
+    <div class="section-title">20. Miscellaneous</div>
+    <div class="section-body">
+      <p>20.1 The Client expressly authorizes the Firm to act on his/her behalf to the extent of the
+      specific functions which the Firm was retained to perform, as per Section 2 hereof.</p>
+      <p>20.2 This Agreement constitutes the entire agreement between the parties with respect to the
+      subject matter hereof and supersedes all prior agreements, understandings, warranties,
+      representations, negotiations and discussions, whether oral or written.</p>
+      <p>20.3 This Agreement shall be binding upon the parties hereto and their respective heirs,
+      administrators, successors and permitted assigns.</p>
+      <p>20.4 The Costs enumerated in this Agreement are to be paid by the Client.</p>
+      <p>20.5 This Agreement may only be altered or amended when such changes are made in writing
+      and executed by the parties hereto. All changes and/or edits must be initialled and dated by
+      both the Member and the Client. Any substantial changes may require a new Retainer Agreement.</p>
+      <p>20.6 The Client may, after a Retainer Agreement is signed, appoint a Designate to act on their
+      behalf when dealing with the Firm. A Designate must not be compensated by the Client or the
+      Firm for acting in this capacity.</p>
+      <p>20.7 The provisions of this Agreement shall be deemed severable. If any provision shall be
+      held unenforceable by any court of competent jurisdiction, such provision shall be severed, and
+      the remaining provisions shall remain in full force and effect.</p>
+      <p>20.8 The headings in this Agreement are for convenience only and are not to be construed as
+      additions to or limitations of the covenants and agreements contained herein.</p>
+      <p>20.9 Each of the parties must do and execute, or cause to be done or executed, all such further
+      things, acts, deeds, documents and assurances as may be necessary to carry out the intent and
+      purpose of this Agreement fully and effectively.</p>
+      <p>20.10 The Client acknowledges that he/she has had sufficient time to review this Agreement
+      and has been given an opportunity to obtain independent legal advice and translation prior to
+      execution. In the event the Client did not seek independent legal advice, he/she did so
+      voluntarily without undue pressure and agrees that the failure to obtain independent legal advice
+      must not be used as a defence to the enforcement of obligations created by this Agreement.</p>
+      <p>20.11 The Client acknowledges that he/she has received a copy of this Agreement and agrees
+      to be bound by its terms.</p>
+      <p>20.12 The Client acknowledges that he/she has requested that the Agreement be written in the
+      English language and that English is the binding language thereof.</p>
+    </div>
+  </div>
+
+  <!-- Section 21 -->
+  <div class="section">
+    <div class="section-title">21. Attachments</div>
+    <div class="section-body">
+      <ul>
+        <li>Proof of Identification of the Client (Passport)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Signature -->
+  <div class="signature-section" style="margin-top:50px;">
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label"><strong>Signature of Client – Principal Applicant</strong></div>
+      <div class="sig-label" style="margin-top:4px;">Date: ___________________________</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-line"></div>
+      <div class="sig-label"><strong>Jayvee Olfindo, RCIC R711813 | SK 000996</strong></div>
+      <div class="sig-label" style="margin-top:4px;">Signature of Firm's RCIC &amp; License No.</div>
+    </div>
+  </div>
+
+  <p style="text-align:center;margin-top:32px;font-size:9pt;color:#777;">
+    IN WITNESS THEREOF this Agreement has been duly executed by the parties hereto on the date first above written.
+  </p>
+
+</div><!-- /.page -->
+
+<script>
+// ── Fee tables (mirrors fee-estimator.html) ──────────────────────────────────
+const REP = {
+  sinp_pr:           { base: 2690, spouse: 500, child: 300 },
+  family_sponsorship:{ base: 2690, spouse: 0,   child: 300 },
+  work_permit:       { base: 990,  spouse: 300, child: 150 },
+  pgwp:              { base: 990,  spouse: 300, child: 150 },
+  francophone_wp:    { base: 1290, spouse: 300, child: 150 },
+  study_permit:      { base: 2690, spouse: 500, child: 300 },
+  stay_extension:    { base: 890,  spouse: 0,   child: 0   },
+  visitor_visa:      { base: 990,  spouse: 0,   child: 0   },
+  super_visa:        { base: 990,  spouse: 0,   child: 0   },
+  eta:               { base: 150,  spouse: 0,   child: 0   },
+  status_restoration:{ base: 990,  spouse: 0,   child: 0   },
+  citizenship:       { base: 890,  spouse: 0,   child: 0   },
+  school_enrollment: { base: 890,  spouse: 0,   child: 0   },
+  sinp_employer:     { base: 2590, spouse: 0,   child: 0   },
+};
+
+const IRCC = {
+  sinp_app: 500, sinp_employer: 230,
+  pr_pa: 990, pr_spouse: 990, pr_child: 270, rprf: 600,
+  bio_single: 85, bio_fam: 170,
+  work_permit: 155, open_wp_holder: 100,
+  study_permit: 150, visitor_record: 100, visitor_visa: 100,
+  eta_fee: 7, super_visa_fee: 100,
+  citizenship_adult: 630, citizenship_minor: 100,
+  status_restore: 229,
+};
+
+const SUBTITLES = {
+  sinp_pr:           'Saskatchewan Immigrant Nominee Program for Applicant with Employer Position Assessment (EPA)',
+  family_sponsorship:'Family Sponsorship — Permanent Residence Application',
+  work_permit:       'Work Permit — Temporary Residence Application',
+  francophone_wp:    'Francophone Mobility Work Permit — Temporary Residence Application',
+  study_permit:      'Study Permit — Temporary Residence Application',
+  stay_extension:    'Status Extension — Temporary Residence Application',
+  visitor_visa:      'Visitor Visa — Temporary Resident Application',
+  super_visa:        'Super Visa — Temporary Resident Application',
+  eta:               'Electronic Travel Authorization (eTA) Application',
+  status_restoration:'Status Restoration — Temporary Residence Application',
+  citizenship:       'Canadian Citizenship Application',
+  school_enrollment: 'School Enrollment Support',
+  sinp_employer:     'Saskatchewan Immigrant Nominee Program — Employer Position Assessment (EPA)',
+};
+
+const MILESTONES = {
+  sinp_pr: [
+    'Signing of Retainer Agreement and Profile Set-up',
+    'Upon receiving of SINP Nomination',
+    'Upon completion of the requirements of the Work Permit Extension, PR Applications prior to its submissions (This last billing can be paid in 6 equal monthly installments with Admin Fee of $150)',
+  ],
+  family_sponsorship: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Sponsorship Application',
+    'Upon submission of the Permanent Residence Application to IRCC',
+  ],
+  work_permit: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Work Permit Application package',
+    'Upon submission of the Work Permit Application to IRCC',
+  ],
+  francophone_wp: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Francophone Mobility Work Permit Application',
+    'Upon submission of the Work Permit Application to IRCC',
+  ],
+  study_permit: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Study Permit Application package',
+    'Upon submission of the Study Permit Application to IRCC',
+  ],
+  stay_extension: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Status Extension Application',
+    'Upon submission of the Status Extension Application to IRCC',
+  ],
+  visitor_visa: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Visitor Visa Application',
+    'Upon submission of the Visitor Visa Application to IRCC',
+  ],
+  super_visa: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Super Visa Application',
+    'Upon submission of the Super Visa Application to IRCC',
+  ],
+  eta: [
+    'Signing of Retainer Agreement',
+    'Upon preparation of the eTA Application',
+    'Upon confirmation of eTA submission and approval',
+  ],
+  status_restoration: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Status Restoration Application',
+    'Upon submission of the Status Restoration Application to IRCC',
+  ],
+  citizenship: [
+    'Signing of Retainer Agreement and Document Collection',
+    'Upon preparation and review of the Citizenship Application',
+    'Upon submission of the Citizenship Application to IRCC',
+  ],
+  school_enrollment: [
+    'Signing of Retainer Agreement',
+    'Upon completion of school selection and application preparation',
+    'Upon completion of school enrollment',
+  ],
+  sinp_employer: [
+    'Signing of Retainer Agreement and initial SINP assessment',
+    'Upon preparation of the SINP Employer Position Assessment (EPA) Application',
+    'Upon submission of the EPA Application to SINP',
+  ],
+};
+
+const SEC2 = {
+  sinp_pr: {
+    purpose: 'applying the permanent residence status under the Saskatchewan Immigrant Nominee Program (SINP) for the client and dependents',
+    points: [
+      'To review the Client\'s profile and dependents (work experience, education, health and security background, and overall credentials) and advise the Client of requirements to meet the SINP and IRCC eligibility requirements for the program;',
+      'To create and apply the Client\'s candidate profile and dependents in the Expression of Interest in Saskatchewan Immigration website for the SINP Nomination;',
+      'Upon receiving SINP Nomination, to process the Client\'s requirements in submitting the application for Permit (to remain in legal status in Canada) and/or Permanent Resident Application with the family to IRCC;',
+      'To represent Client and dependents (spouse and minor dependents) in SINP and federal application in order to obtain temporary residents permits and permanent resident status in Canada.',
+    ],
+  },
+  family_sponsorship: {
+    purpose: 'processing a family sponsorship application and permanent residence for the sponsored family member',
+    points: [
+      'To review the Client\'s eligibility to sponsor a family member for permanent residence in Canada;',
+      'To prepare and compile all required documentation for the sponsorship and permanent residence application;',
+      'To submit the sponsorship application and sponsored person\'s permanent residence application to IRCC;',
+      'To represent the Client and sponsored person in all matters related to the sponsorship and permanent residence application.',
+    ],
+  },
+  work_permit: {
+    purpose: 'obtaining a work permit authorization for the client to work legally in Canada',
+    points: [
+      'To review the Client\'s profile and advise on eligibility requirements for the applicable work permit stream;',
+      'To prepare and compile all required documentation for the work permit application including, where applicable, supporting employer documentation;',
+      'To submit the work permit application to IRCC on behalf of the Client;',
+      'To represent the Client in the work permit application process and respond to any IRCC correspondence.',
+    ],
+  },
+  francophone_wp: {
+    purpose: 'obtaining a Francophone Mobility Work Permit for the client to work legally in Canada',
+    points: [
+      'To review the Client\'s profile and language qualifications for the Francophone Mobility Work Permit stream;',
+      'To prepare and compile all required documentation for the Francophone Mobility Work Permit application;',
+      'To submit the work permit application to IRCC on behalf of the Client;',
+      'To represent the Client in the work permit application process and respond to any IRCC correspondence.',
+    ],
+  },
+  study_permit: {
+    purpose: 'obtaining a study permit authorization for the client to study at a designated learning institution in Canada',
+    points: [
+      'To review the Client\'s profile and advise on eligibility requirements for the study permit application;',
+      'To prepare and compile all required documentation including proof of acceptance and financial documentation;',
+      'To submit the study permit application to IRCC on behalf of the Client;',
+      'To represent the Client in the study permit application process and respond to any IRCC correspondence.',
+    ],
+  },
+  sinp_employer: {
+    purpose: 'obtaining a Saskatchewan Immigrant Nominee Program Employer Position Assessment (EPA) for the employer client',
+    points: [
+      'To review the employer\'s job offer and assess eligibility under the SINP employer-driven stream;',
+      'To prepare and compile all required documentation for the SINP Employer Position Assessment (EPA) application;',
+      'To submit the EPA application to the Saskatchewan Immigrant Nominee Program on behalf of the Client;',
+      'To represent the Client in the EPA application process and respond to any SINP correspondence.',
+    ],
+  },
+  default: {
+    purpose: 'processing the immigration application for the client',
+    points: [
+      'To review the Client\'s profile and advise on eligibility requirements for the applicable immigration program;',
+      'To prepare and compile all required documentation for the application;',
+      'To submit the application to the appropriate government authority on behalf of the Client;',
+      'To represent the Client in the application process and respond to any government correspondence.',
+    ],
+  },
+};
+
+// ── Helper functions ─────────────────────────────────────────────────────────
+function fmt(n) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' CAD';
+}
+function fmtDate(d) {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+}
+
+// ── Main render ──────────────────────────────────────────────────────────────
+(function () {
+  const p = new URLSearchParams(location.search);
+  const svc     = p.get('svc') || '';
+  const fn      = p.get('fn') || '';
+  const ln      = p.get('ln') || '';
+  const addr    = p.get('addr') || '';
+  const phone   = p.get('phone') || '';
+  const em      = p.get('em') || '';
+  const family  = p.get('family') || 'single';
+  const cyoung  = parseInt(p.get('childrenYoung') || '0', 10);
+  const colder  = parseInt(p.get('childrenOlder') || '0', 10);
+  const isPgwp  = p.get('isPgwp') === '1';
+  const wpType  = p.get('wpType') || 'employer';
+
+  const effSvc  = svc; // 'work_permit' used for both WP and PGWP
+  const repKey  = (svc === 'work_permit' && isPgwp) ? 'pgwp' : svc;
+  const fees    = REP[repKey] || REP[svc] || { base: 0, spouse: 0, child: 0 };
+
+  const hasSpouse   = family !== 'single';
+  const totalChildren = cyoung + colder;
+
+  const professionalBase  = fees.base;
+  const spouseFee         = hasSpouse ? fees.spouse : 0;
+  const childrenFee       = totalChildren * fees.child;
+  const profTotal         = professionalBase + spouseFee + childrenFee;
+  const gst               = profTotal * 0.05;
+  const grandTotal        = profTotal + gst;
+  const installment       = grandTotal / 3;
+
+  // Subtitle
+  let subtitle = SUBTITLES[svc] || 'Immigration Services';
+  if (svc === 'work_permit' && isPgwp) subtitle = 'Post-Graduate Work Permit (PGWP) — Temporary Residence Application';
+  document.getElementById('svcSubtitle').textContent = subtitle;
+
+  // Client block
+  document.getElementById('cDate').textContent  = fmtDate(new Date());
+  document.getElementById('cLn').textContent    = ln;
+  document.getElementById('cFn').textContent    = fn;
+  document.getElementById('cAddr').textContent  = addr;
+  document.getElementById('cPhone').textContent = phone;
+  document.getElementById('cEm').textContent    = em;
+
+  // Section 2
+  const s2 = SEC2[svc] || SEC2.default;
+  document.getElementById('svc2Purpose').textContent = s2.purpose;
+  const pts = s2.points.map((pt, i) => `<p>${i + 2}.${i + 1} &nbsp; ${pt}</p>`).join('');
+  document.getElementById('svc2Points').innerHTML = pts;
+
+  // Section 5 — Payment Terms
+  const payRows = [];
+  payRows.push(`<tr><td>Professional Fees:</td><td class="amt">${fmt(professionalBase)}</td></tr>`);
+  if (hasSpouse && fees.spouse > 0) {
+    payRows.push(`<tr><td style="padding-left:24px">Add: Spouse Fee</td><td class="amt">${fmt(spouseFee)}</td></tr>`);
+  }
+  if (totalChildren > 0 && fees.child > 0) {
+    payRows.push(`<tr><td style="padding-left:24px">Add: Dependent Children (${totalChildren} × ${fmt(fees.child).replace(' CAD','')})</td><td class="amt">${fmt(childrenFee)}</td></tr>`);
+  }
+  payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(profTotal)}</td></tr>`);
+  payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
+  payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+  document.getElementById('paymentTable').innerHTML = payRows.join('');
+
+  // Section 6 — Payment Schedule
+  const milestones = MILESTONES[svc] || [
+    'Signing of Retainer Agreement',
+    'Upon preparation and review of the application',
+    'Upon submission of the application',
+  ];
+  let schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
+  milestones.forEach(m => {
+    schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installment)} <span class="note">incl. 5% GST</span></td></tr>`;
+  });
+  schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
+  document.getElementById('scheduleTable').innerHTML = schedRows;
+
+  // Section 6 — Government Fees
+  const govLines = buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp });
+  document.getElementById('govTable').innerHTML = govLines;
+
+  // Page title
+  document.title = `Service Agreement — ${ln}, ${fn} — Olcorp.ca`;
+})();
+
+function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
+  let rows = [];
+  let total = 0;
+
+  function line(label, amt, indent) {
+    total += amt;
+    return `<tr><td${indent?' style="padding-left:20px"':''}>${label}</td><td class="amt">${'$' + amt.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td></tr>`;
+  }
+
+  if (svc === 'sinp_pr') {
+    rows.push(`<tr><td colspan="2" style="font-style:italic;font-size:9pt;padding:4px 8px;">For SINP Nomination and Permanent Residence Application:</td></tr>`);
+    rows.push(line('SINP Application Fee', IRCC.sinp_app));
+    rows.push(line('Principal Applicant Work Permit', IRCC.work_permit));
+    if (hasSpouse) rows.push(line('Spousal Open Work Permit (with $100 holder fee)', IRCC.work_permit + IRCC.open_wp_holder));
+    if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
+    if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
+    const wpSubtotal = total;
+    rows.push(`<tr><td style="font-style:italic;font-size:9pt;padding:6px 8px 2px;">For Permanent Residence Application:</td><td></td></tr>`);
+    total = 0;
+    rows.push(line('Principal Applicant PR Fee + RPRF', IRCC.pr_pa + IRCC.rprf));
+    if (hasSpouse) rows.push(line('Spouse PR Fee + RPRF', IRCC.pr_spouse + IRCC.rprf));
+    if (cyoung + colder > 0) rows.push(line(`PR Child Fee × ${cyoung + colder}`, IRCC.pr_child * (cyoung + colder), true));
+    rows.push(line('Family Biometrics', IRCC.bio_fam));
+    const prTotal = total; total = wpSubtotal + prTotal;
+  } else if (svc === 'work_permit') {
+    rows.push(line('Work Permit Application Fee', IRCC.work_permit));
+    if (wpType === 'open' || isPgwp) rows.push(line('Open Work Permit Holder Fee (Primary)', IRCC.open_wp_holder));
+    if (hasSpouse) rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
+    if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
+  } else if (svc === 'francophone_wp') {
+    rows.push(line('Work Permit Application Fee', IRCC.work_permit));
+    rows.push(line('Open Work Permit Holder Fee (Primary)', IRCC.open_wp_holder));
+    if (hasSpouse) rows.push(line('Open Work Permit Holder Fee (Spouse)', IRCC.open_wp_holder));
+    if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
+    if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
+  } else if (svc === 'study_permit') {
+    rows.push(line('Study Permit Application Fee', IRCC.study_permit));
+    if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
+    if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
+  } else if (svc === 'family_sponsorship') {
+    rows.push(line('Sponsorship Application Fee', 1260));
+    rows.push(line('Sponsored Person PR Application', IRCC.pr_pa));
+    rows.push(line('Right of Permanent Residence Fee (RPRF)', IRCC.rprf));
+    if (cyoung + colder > 0) rows.push(line(`PR Child × ${cyoung + colder}`, IRCC.pr_child * (cyoung + colder), true));
+  } else if (svc === 'visitor_visa') {
+    rows.push(line('Visitor Visa Application Fee', IRCC.visitor_visa));
+  } else if (svc === 'super_visa') {
+    rows.push(line('Super Visa Application Fee', IRCC.super_visa_fee));
+  } else if (svc === 'eta') {
+    rows.push(line('Electronic Travel Authorization (eTA) Fee', IRCC.eta_fee));
+  } else if (svc === 'citizenship') {
+    rows.push(line('Citizenship Application Fee', IRCC.citizenship_adult));
+    if (hasSpouse) rows.push(line('Spouse Citizenship Fee', IRCC.citizenship_adult));
+    if (cyoung + colder > 0) rows.push(line(`Minor Citizenship × ${cyoung + colder}`, IRCC.citizenship_minor * (cyoung + colder), true));
+  } else if (svc === 'status_restoration') {
+    rows.push(line('Status Restoration Application Fee', IRCC.status_restore));
+  } else if (svc === 'sinp_employer') {
+    rows.push(line('SINP Employer Application Fee (by Employer)', IRCC.sinp_employer));
+    rows.push(line('Work Permit Application Fee (Employee)', IRCC.work_permit));
+  } else {
+    rows.push(`<tr><td colspan="2" style="font-style:italic;color:#555;font-size:9pt;">Government fees will be confirmed and advised prior to application submission.</td></tr>`);
+    return rows.join('');
+  }
+
+  rows.push(`<tr class="subtotal-row"><td><strong>Estimated Government Total</strong></td><td class="amt"><strong>$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></td></tr>`);
+  return rows.join('');
+}
+</script>
+</body>
+</html>
