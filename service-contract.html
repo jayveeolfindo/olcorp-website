@@ -59,7 +59,7 @@
       border-bottom: 2px solid #000;
       padding-bottom: 16px;
     }
-    .doc-header img { height: 200px; width: auto; }
+    .doc-header img { height: 100px; width: auto; }
     .doc-header .contact-info { text-align: right; font-size: 9pt; line-height: 1.6; }
 
     /* Title */
@@ -226,7 +226,7 @@
   <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
 </div>
 
-<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Initial 3 locations + draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="window.print()">Generate PDF</button></div>
+<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="window.print()">Generate PDF</button></div>
 <div class="page">
 
   <!-- Header -->
@@ -257,10 +257,6 @@
     <div class="client-row"><span class="lbl">Mailing Address:</span><span class="val" id="cAddr"></span></div>
     <div class="client-row"><span class="lbl">Phone Number:</span><span class="val" id="cPhone"></span></div>
     <div class="client-row"><span class="lbl">E-mail Address:</span><span class="val" id="cEm"></span></div>
-    <div class="client-row" style="margin-top:12px;border-top:1px solid #ccc;padding-top:8px;">
-      <span class="lbl">Client Initials:</span>
-      <span class="val" style="max-width:140px;border-bottom:none;"><span class="init-field" id="init1" onclick="doInitial('init1')"></span></span>
-    </div>
   </div>
 
   <p class="party-label">(the "CLIENT")</p>
@@ -372,7 +368,6 @@
         <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (not to be collected by the Firm — paid directly by the client)</span>
       </p>
       <table class="gov-table" id="govTable"></table>
-      <div class="initials-line">Client Initials: <span class="init-field" id="init2" onclick="doInitial('init2')"></span></div>
     </div>
   </div>
 
@@ -1009,7 +1004,7 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
 
 // ── Electronic Signature ──────────────────────────────────────────────────────
 const _initDone = new Set();
-const _REQUIRED = 2;
+const _REQUIRED = 0;
 function _stampDate() {
   const d = document.getElementById('sigDate');
   if (!d || d.textContent) return;
@@ -1063,13 +1058,13 @@ function clearSig() {
 }
 
 function _updateSign() {
-  const n = _initDone.size, ok = n >= _REQUIRED && _sigDrawn;
+  const n = _initDone.size, ok = _sigDrawn;
   const btn = document.getElementById('pdfBtn');
   const st = document.getElementById('signStatus');
   if (btn) btn.disabled = !ok;
   if (st) st.textContent = ok
     ? '\u2713 Document ready \u2014 click Generate PDF'
-    : 'Initials: ' + n + '/' + _REQUIRED + ' \u00b7 Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending');
+    : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
 }
 _updateSign();
 
