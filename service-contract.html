@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Service Agreement — Olcorp.ca</title>
   <style>
@@ -1088,24 +1089,39 @@ function generatePDF() {
 
 function doSend() {
   var title = document.title;
-  var isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (isMobile && navigator.share) {
-    navigator.share({
-      title: title,
-      text: 'Please find the signed Service Agreement: ' + title,
-      url: location.href
-    }).catch(function(){});
-  } else {
+  var isMob = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (!isMob) {
     var subj = encodeURIComponent('[Signed Contract] ' + title);
-    var body = encodeURIComponent(
-      'Dear Jayvee,' +
-      '\n\nPlease find the signed Service Agreement attached.' +
-      '\n\nDocument: ' + title +
-      '\n\nTo view the signed contract, open: ' + location.href +
-      '\n\nBest regards'
-    );
+    var body = encodeURIComponent('Dear Jayvee,\n\nPlease find the signed Service Agreement below.\n\nDocument: ' + title + '\n\nLink: ' + location.href + '\n\nBest regards');
     window.open('mailto:consulting@olcorp.ca?subject=' + subj + '&body=' + body);
+    return;
   }
+  // Mobile: capture page as image then share
+  var btn = document.getElementById('pdfBtn');
+  var bar = document.getElementById('signBar');
+  if (btn) { btn.textContent = 'Preparing…'; btn.disabled = true; }
+  if (bar) bar.style.visibility = 'hidden';
+  var page = document.querySelector('.page');
+  html2canvas(page, { scale: 2, useCORS: true, allowTaint: true }).then(function(canvas) {
+    if (bar) bar.style.visibility = '';
+    if (btn) { btn.textContent = 'Send Signed Contract'; btn.disabled = false; }
+    canvas.toBlob(function(blob) {
+      var fname = title.replace(/[^a-z0-9 _\-]/gi, '') + '.png';
+      var file = new File([blob], fname, { type: 'image/png' });
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: title }).catch(function(){});
+      } else {
+        var url = URL.createObjectURL(blob);
+        var modal = document.getElementById('imgModal');
+        document.getElementById('imgPreview').src = url;
+        if (modal) modal.style.display = 'flex';
+      }
+    }, 'image/png');
+  }).catch(function() {
+    if (bar) bar.style.visibility = '';
+    if (btn) { btn.textContent = 'Send Signed Contract'; btn.disabled = false; }
+    alert('Could not capture the contract. Please take a screenshot and send it manually.');
+  });
 }
 
 function _updateSign() {
@@ -1123,9 +1139,16 @@ _updateSign();
   (function(){
     if (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
       var pb = document.getElementById('pdfBtn');
-      if (pb) pb.textContent = 'Share Contract';
+      if (pb) pb.textContent = 'Send Signed Contract';
     }
   })();
 </script>
+
+<!-- Signed contract image modal (fallback for browsers without navigator.share+files) -->
+<div id="imgModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;">
+  <p style="color:#fff;font-size:16px;font-weight:600;text-align:center;margin:0;">Hold the image below and tap <strong>'Save Image'</strong> — then send it to your consultant.</p>
+  <img id="imgPreview" style="max-width:100%;max-height:68vh;border:3px solid #fff;border-radius:4px;" />
+  <button onclick="document.getElementById('imgModal').style.display='none'" style="padding:12px 32px;background:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">Close</button>
+</div>
 </body>
 </html>
