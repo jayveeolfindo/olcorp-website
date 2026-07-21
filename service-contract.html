@@ -1077,6 +1077,8 @@ function clearSig() {
 
 
 function generatePDF() {
+  var isMob = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (isMob) { doSend(); return; }
   window.print();
   window.addEventListener('afterprint', function() {
     var b = document.getElementById('sendBtn');
@@ -1112,11 +1114,18 @@ function _updateSign() {
   const st = document.getElementById('signStatus');
   if (btn) btn.disabled = !ok;
   if (st) st.textContent = ok
-    ? '\u2713 Document ready \u2014 click Generate PDF'
+    ? ((window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? '\u2713 Ready \u2014 tap Share to send' : '\u2713 Document ready \u2014 click Generate PDF')
     : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
 }
 _updateSign();
 
+
+  (function(){
+    if (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+      var pb = document.getElementById('pdfBtn');
+      if (pb) pb.textContent = 'Share Contract';
+    }
+  })();
 </script>
 </body>
 </html>
