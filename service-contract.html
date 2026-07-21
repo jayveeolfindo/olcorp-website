@@ -924,6 +924,21 @@ function fmtDate(d) {
   document.getElementById('govTable').innerHTML = govLines;
 
   // Page title
+const TITLES = {
+  sinp_pr:           'SINP Permanent Residence',
+  family_sponsorship:'Family Sponsorship',
+  work_permit:       'Work Permit',
+  francophone_wp:    'Francophone Work Permit',
+  study_permit:      'Study Permit',
+  stay_extension:    'Status Extension',
+  visitor_visa:      'Visitor Visa',
+  super_visa:        'Super Visa',
+  eta:               'eTA',
+  status_restoration:'Status Restoration',
+  citizenship:       'Citizenship',
+  school_enrollment: 'School Enrollment',
+  sinp_employer:     'SINP Employer',
+};
   document.title = `${ln} - ${fn} - ${TITLES[svc] || 'Service Agreement'}`;
 })();
 
@@ -1004,21 +1019,6 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
 
 
 // ── Contract title map (for PDF filename) ───────────────────────────────────
-const TITLES = {
-  sinp_pr:           'SINP Permanent Residence',
-  family_sponsorship:'Family Sponsorship',
-  work_permit:       'Work Permit',
-  francophone_wp:    'Francophone Work Permit',
-  study_permit:      'Study Permit',
-  stay_extension:    'Status Extension',
-  visitor_visa:      'Visitor Visa',
-  super_visa:        'Super Visa',
-  eta:               'eTA',
-  status_restoration:'Status Restoration',
-  citizenship:       'Citizenship',
-  school_enrollment: 'School Enrollment',
-  sinp_employer:     'SINP Employer',
-};
 
 // ── Electronic Signature ──────────────────────────────────────────────────────
 const _initDone = new Set();
