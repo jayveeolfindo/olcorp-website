@@ -226,7 +226,7 @@
   <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
 </div>
 
-<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="window.print()">Generate PDF</button></div>
+<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="generatePDF()">Generate PDF</button><button class="sign-bar-btn" id="sendBtn" style="display:none;margin-left:10px;background:#2e7d32;" onclick="doSend()">Send to Consultant</button></div>
 <div class="page">
 
   <!-- Header -->
@@ -924,7 +924,7 @@ function fmtDate(d) {
   document.getElementById('govTable').innerHTML = govLines;
 
   // Page title
-  document.title = `Service Agreement — ${ln}, ${fn} — Olcorp.ca`;
+  document.title = `${ln} - ${fn} - ${TITLES[svc] || 'Service Agreement'}`;
 })();
 
 function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
@@ -1002,6 +1002,24 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
   return rows.join('');
 }
 
+
+// ── Contract title map (for PDF filename) ───────────────────────────────────
+const TITLES = {
+  sinp_pr:           'SINP Permanent Residence',
+  family_sponsorship:'Family Sponsorship',
+  work_permit:       'Work Permit',
+  francophone_wp:    'Francophone Work Permit',
+  study_permit:      'Study Permit',
+  stay_extension:    'Status Extension',
+  visitor_visa:      'Visitor Visa',
+  super_visa:        'Super Visa',
+  eta:               'eTA',
+  status_restoration:'Status Restoration',
+  citizenship:       'Citizenship',
+  school_enrollment: 'School Enrollment',
+  sinp_employer:     'SINP Employer',
+};
+
 // ── Electronic Signature ──────────────────────────────────────────────────────
 const _initDone = new Set();
 const _REQUIRED = 0;
@@ -1055,6 +1073,37 @@ function clearSig() {
   const d = document.getElementById('sigDate');
   if (d) d.textContent = '';
   _updateSign();
+}
+
+
+function generatePDF() {
+  window.print();
+  window.addEventListener('afterprint', function() {
+    var b = document.getElementById('sendBtn');
+    if (b) b.style.display = 'inline-block';
+  }, { once: true });
+}
+
+function doSend() {
+  var title = document.title;
+  var isMobile = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+  if (isMobile && navigator.share) {
+    navigator.share({
+      title: title,
+      text: 'Please find the signed Service Agreement: ' + title,
+      url: location.href
+    }).catch(function(){});
+  } else {
+    var subj = encodeURIComponent('[Signed Contract] ' + title);
+    var body = encodeURIComponent(
+      'Dear Jayvee,' +
+      '\n\nPlease find the signed Service Agreement attached.' +
+      '\n\nDocument: ' + title +
+      '\n\nTo view the signed contract, open: ' + location.href +
+      '\n\nBest regards'
+    );
+    window.open('mailto:consulting@olcorp.ca?subject=' + subj + '&body=' + body);
+  }
 }
 
 function _updateSign() {
