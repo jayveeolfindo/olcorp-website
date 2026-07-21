@@ -348,7 +348,6 @@
       no holding of funds on account.</p>
       <p>The details of this billing method are as payment prior to every milestone based on Section 2
       and as stated in Payment Schedule under Section 6.</p>
-      <div class="initials-line">Client Initials: <span class="init-field" id="init2" onclick="doInitial('init2')"></span></div>
     </div>
   </div>
 
@@ -373,7 +372,7 @@
         <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (not to be collected by the Firm — paid directly by the client)</span>
       </p>
       <table class="gov-table" id="govTable"></table>
-      <div class="initials-line">Client Initials: <span class="init-field" id="init3" onclick="doInitial('init3')"></span></div>
+      <div class="initials-line">Client Initials: <span class="init-field" id="init2" onclick="doInitial('init2')"></span></div>
     </div>
   </div>
 
@@ -617,7 +616,7 @@
       <div class="sig-canvas-wrap"><canvas id="sigCanvas" width="380" height="110"></canvas><button class="clear-sig-btn" onclick="clearSig()">Clear</button></div>
       <span class="sig-hint-text">Draw signature above with mouse or touch</span>
       <div class="sig-label"><strong>Signature of Client – Principal Applicant</strong></div>
-      <div class="sig-label" style="margin-top:4px;">Date: ___________________________</div>
+      <div class="sig-label" style="margin-top:4px;">Date: <span id="sigDate" style="font-style:italic;"></span></div>
     </div>
     <div class="sig-block">
       <div class="sig-line"></div>
@@ -1010,7 +1009,14 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
 
 // ── Electronic Signature ──────────────────────────────────────────────────────
 const _initDone = new Set();
-const _REQUIRED = 3;
+const _REQUIRED = 2;
+function _stampDate() {
+  const d = document.getElementById('sigDate');
+  if (!d || d.textContent) return;
+  const now = new Date();
+  const mo = ['January','February','March','April','May','June','July','August','September','October','November','December'][now.getMonth()];
+  d.textContent = mo + ' ' + now.getDate() + ', ' + now.getFullYear();
+}
 
 function doInitial(id) {
   if (_initDone.has(id)) {
@@ -1040,17 +1046,20 @@ let _sigDrawn = false, _pen = false;
   function pt(e) { const r = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top]; }
   c.addEventListener('mousedown', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
   c.addEventListener('mousemove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
-  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _updateSign(); });
+  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
   c.addEventListener('mouseleave', () => { _pen = false; });
   c.addEventListener('touchstart', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
   c.addEventListener('touchmove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
-  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _updateSign(); });
+  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
 })();
 
 function clearSig() {
   const c = document.getElementById('sigCanvas');
   c.getContext('2d').clearRect(0, 0, c.width, c.height);
-  _sigDrawn = false; _updateSign();
+  _sigDrawn = false;
+  const d = document.getElementById('sigDate');
+  if (d) d.textContent = '';
+  _updateSign();
 }
 
 function _updateSign() {
