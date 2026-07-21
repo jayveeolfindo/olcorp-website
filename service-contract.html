@@ -939,7 +939,7 @@ const TITLES = {
   school_enrollment: 'School Enrollment',
   sinp_employer:     'SINP Employer',
 };
-  document.title = `${ln} - ${fn} - ${TITLES[svc] || 'Service Agreement'}`;
+  document.title = (`${ln} - ${fn} - Service Agreement ${TITLES[svc] || ''}`).trimEnd();
 })();
 
 function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
