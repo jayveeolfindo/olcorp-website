@@ -218,6 +218,11 @@
       }
       .section { page-break-inside: avoid; }
     }
+
+    /* Mobile: hide horizontal overflow from scaled page */
+    @media screen and (max-width: 900px) {
+      html, body { overflow-x: hidden; }
+    }
   </style>
 </head>
 <body>
@@ -1079,9 +1084,13 @@ function clearSig() {
 
 
 function generatePDF() {
-  // window.print() works on iOS Safari & Android Chrome — saves as PDF
+  var page = document.querySelector('.page');
+  var savedTx = page ? page.style.transform : '';
+  var savedMb = page ? page.style.marginBottom : '';
+  if (page) { page.style.transform = ''; page.style.marginBottom = ''; }
   window.print();
   window.addEventListener('afterprint', function() {
+    if (page) { page.style.transform = savedTx; page.style.marginBottom = savedMb; }
     var b = document.getElementById('sendBtn');
     if (b) b.style.display = 'inline-block';
   }, { once: true });
@@ -1115,6 +1124,27 @@ function _updateSign() {
 _updateSign();
 
 
+
+  // Mobile: scale the page to fit viewport width
+  (function() {
+    function scalePage() {
+      var page = document.querySelector('.page');
+      if (!page) return;
+      var vw = window.innerWidth;
+      if (vw >= 900) {
+        page.style.transform = '';
+        page.style.marginBottom = '';
+        return;
+      }
+      var scale = (vw - 8) / 816;
+      page.style.transformOrigin = 'top center';
+      page.style.transform = 'scale(' + scale + ')';
+      page.style.marginBottom = Math.round((scale - 1) * page.offsetHeight) + 'px';
+    }
+    window._scalePage = scalePage;
+    scalePage();
+    window.addEventListener('resize', scalePage);
+  })();
 </script>
 
 <!-- Signed contract image modal (fallback for browsers without navigator.share+files) -->
