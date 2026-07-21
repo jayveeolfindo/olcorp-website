@@ -1079,8 +1079,7 @@ function clearSig() {
 
 
 function generatePDF() {
-  var isMob = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (isMob) { doSend(); return; }
+  // window.print() works on iOS Safari & Android Chrome — saves as PDF
   window.print();
   window.addEventListener('afterprint', function() {
     var b = document.getElementById('sendBtn');
@@ -1091,60 +1090,17 @@ function generatePDF() {
 function doSend() {
   var title = document.title;
   var isMob = window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-  if (!isMob) {
+  if (isMob && navigator.share) {
+    navigator.share({
+      title: title,
+      text: 'Please find my signed Service Agreement attached. Document: ' + title,
+      url: location.href
+    }).catch(function(){});
+  } else {
     var subj = encodeURIComponent('[Signed Contract] ' + title);
-    var body = encodeURIComponent('Dear Jayvee,\n\nPlease find the signed Service Agreement below.\n\nDocument: ' + title + '\n\nLink: ' + location.href + '\n\nBest regards');
+    var body = encodeURIComponent('Dear Jayvee,\n\nPlease find the signed Service Agreement attached.\n\nDocument: ' + title + '\n\nBest regards');
     window.open('mailto:consulting@olcorp.ca?subject=' + subj + '&body=' + body);
-    return;
   }
-  // Mobile: generate proper letter-size PDF via jsPDF + html2canvas
-  var btn = document.getElementById('pdfBtn');
-  var bar = document.getElementById('signBar');
-  if (btn) { btn.textContent = 'Preparing PDF…'; btn.disabled = true; }
-  if (bar) bar.style.visibility = 'hidden';
-  var page = document.querySelector('.page');
-  // Force page to letter width for accurate capture
-  var savedW = page.style.width, savedMW = page.style.minWidth;
-  page.style.width = '816px';
-  page.style.minWidth = '816px';
-  html2canvas(page, { scale: 2, useCORS: true, allowTaint: true, windowWidth: 816 }).then(function(canvas) {
-    page.style.width = savedW;
-    page.style.minWidth = savedMW;
-    if (bar) bar.style.visibility = '';
-    // Build PDF
-    var pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
-    var pdfW = pdf.internal.pageSize.getWidth();
-    var pdfH = pdf.internal.pageSize.getHeight();
-    var imgData = canvas.toDataURL('image/jpeg', 0.92);
-    var imgH = (canvas.height / canvas.width) * pdfW;
-    var pos = 0;
-    pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-    var remaining = imgH - pdfH;
-    while (remaining > 1) {
-      pos -= pdfH;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', 0, pos, pdfW, imgH);
-      remaining -= pdfH;
-    }
-    var fname = title.replace(/[^a-z0-9 _\-]/gi, '').trim() + '.pdf';
-    var pdfBlob = pdf.output('blob');
-    var file = new File([pdfBlob], fname, { type: 'application/pdf' });
-    if (btn) { btn.textContent = 'Send Signed Contract'; btn.disabled = false; }
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      navigator.share({ files: [file], title: title }).catch(function() {
-        // fallback to download
-        pdf.save(fname);
-      });
-    } else {
-      pdf.save(fname);
-    }
-  }).catch(function() {
-    page.style.width = savedW;
-    page.style.minWidth = savedMW;
-    if (bar) bar.style.visibility = '';
-    if (btn) { btn.textContent = 'Send Signed Contract'; btn.disabled = false; }
-    alert('Could not generate PDF. Please take a screenshot and send it manually.');
-  });
 }
 
 function _updateSign() {
@@ -1159,12 +1115,6 @@ function _updateSign() {
 _updateSign();
 
 
-  (function(){
-    if (window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-      var pb = document.getElementById('pdfBtn');
-      if (pb) pb.textContent = 'Send Signed Contract';
-    }
-  })();
 </script>
 
 <!-- Signed contract image modal (fallback for browsers without navigator.share+files) -->
