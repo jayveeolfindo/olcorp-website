@@ -832,6 +832,7 @@ function fmtDate(d) {
   const isPgwp     = p.get('isPgwp') === '1';
   const wpType     = p.get('wpType') || 'employer';
   const fullPayment = p.get('fullPayment') === '1';
+  const clientStatus    = p.get('clientStatus') || 'new';
 
   const effSvc  = svc; // 'work_permit' used for both WP and PGWP
   const repKey  = (svc === 'work_permit' && isPgwp) ? 'pgwp' : svc;
@@ -844,8 +845,11 @@ function fmtDate(d) {
   const spouseFee         = hasSpouse ? fees.spouse : 0;
   const childrenFee       = totalChildren * fees.child;
   const profTotal         = professionalBase + spouseFee + childrenFee;
-  const gst               = profTotal * 0.05;
-  const grandTotal        = profTotal + gst;
+  const discountPct     = clientStatus === 'returning' ? 0.20 : clientStatus === 'family' ? 0.10 : 0;
+  const discountAmt     = Math.round(profTotal * discountPct * 100) / 100;
+  const discountedProf  = profTotal - discountAmt;
+  const gst               = discountedProf * 0.05;
+  const grandTotal        = discountedProf + gst;
 
   const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
   const isTR2 = TR_2INST.includes(svc);
@@ -894,6 +898,10 @@ function fmtDate(d) {
     payRows.push(`<tr><td style="padding-left:24px">Add: Dependent Children (${totalChildren} × ${fmt(fees.child).replace(' CAD','')})</td><td class="amt">${fmt(childrenFee)}</td></tr>`);
   }
   payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(profTotal)}</td></tr>`);
+  if (discountAmt > 0) {
+    const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
+    payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
+  }
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
   if (fullPayment) {
     const discount = grandTotal * 0.05;
