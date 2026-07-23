@@ -1628,6 +1628,7 @@ function updateSocialProof(svc) {
       childrenYoung: state.childrenYoung || 0,
       childrenOlder: state.childrenOlder || 0,
       wpType: state.wpType || 'employer',
+      clientStatus: state.clientStatus,
       fullPayment: document.getElementById('scFullPayment').checked ? '1' : '0',
     });
     window.open('/service-contract.html?' + p, '_blank');
