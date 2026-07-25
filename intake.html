@@ -69,6 +69,7 @@
   }
   input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
   input[type=text]::placeholder{text-transform:uppercase;}
+  #edu_elementary::placeholder{text-transform:none;}
   textarea{resize:vertical; min-height:70px;}
 
   .choice-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; margin-bottom:8px;}
@@ -243,7 +244,7 @@ const data = {
   spouse:{lastName:'',givenNames:'',dob:'',pobCity:'',pobCountry:''},
   children:[],
   childrenNone:false,
-  parents:{motherName:'',motherDob:'',motherPobCity:'',motherPobCountry:'',
+  parents:{motherName:'',motherMaidenName:'',motherDob:'',motherPobCity:'',motherPobCountry:'',
            motherAddress:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
            motherOccupation:'',motherDeceased:false,motherDeceasedDate:'',
            fatherName:'',fatherDob:'',fatherPobCity:'',fatherPobCountry:'',
@@ -255,6 +256,7 @@ const data = {
   travelHistory:[],
   travelHistoryNone:false,
   education:[],
+  eduYears:{elementary:'',secondary:0,university:0,trade:0},
   employment:[],
   background:{militaryPoliceGovt:'', criminal:'', medical:'', refusalsRemovals:'', details:''},
   status:{currentStatus:'',expiryDate:'',extensionType:'',reason:''},
@@ -371,7 +373,13 @@ function clampRange(str, min, max){
 
 function maskDateInput(raw, mode){
   const digits = (raw||'').replace(/\D/g,'');
-  const year = digits.slice(0,4);
+  let year = digits.slice(0,4);
+  if(year.length===4){
+    const y = parseInt(year,10);
+    const maxYear = new Date().getFullYear() + 1; // allow near-term future dates (e.g. visa expiry)
+    if(y > maxYear) year = String(maxYear);
+    else if(y < 1900) year = '1900';
+  }
   let cursor = year.length;
   let month = '';
   let monthDone = false;
@@ -507,11 +515,12 @@ function parseDate(str){
 }
 function requiredHistoryStart(){
   const today = new Date();
-  const tenYearsAgo = new Date(today); tenYearsAgo.setFullYear(today.getFullYear()-10);
+  const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const tenYearsAgo = new Date(currentMonthStart); tenYearsAgo.setFullYear(currentMonthStart.getFullYear()-10);
   const dob = parseDate(data.identity.dob);
-  if(dob){
+  if(dob && dob <= today && dob.getFullYear() >= 1900){
     const eighteen = new Date(dob); eighteen.setFullYear(dob.getFullYear()+18);
-    if(eighteen > tenYearsAgo) return eighteen;
+    if(eighteen > tenYearsAgo && eighteen <= today) return eighteen;
   }
   return tenYearsAgo;
 }
@@ -625,6 +634,10 @@ function renderContact(card){
     <div class="step-label">Step 2 of 12</div>
     <div class="step-title">Contact Information</div>
     ${autofillNotice.contact ? `<div class="autofill-banner">Some fields below were inserted from a scanned document. Please verify.</div>` : ''}
+    <div class="grid2">
+      ${fieldText('Phone', data.contact, 'phone', {id:'c_phone', type:'tel'})}
+      ${fieldText('Email', data.contact, 'email', {id:'c_email', type:'email'})}
+    </div>
     <label class="field"><span>Current mailing address</span></label>
     ${renderAddressBlock('c_mail', data.contact.mailing, false)}
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:6px 0 10px;">
@@ -633,10 +646,6 @@ function renderContact(card){
     </label>
     <label class="field"><span>Residential address</span></label>
     ${renderAddressBlock('c_res', data.contact.residential, data.contact.sameAsMailing)}
-    <div class="grid2">
-      ${fieldText('Phone', data.contact, 'phone', {id:'c_phone', type:'tel'})}
-      ${fieldText('Email', data.contact, 'email', {id:'c_email', type:'email'})}
-    </div>
   `;
   const sameEl = card.querySelector('#c_sameAddr');
   function syncResidential(){
@@ -697,9 +706,11 @@ function renderMarital(card){
 function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
   card.innerHTML = `
     <div class="step-title">${title}</div>
+    ${opts.subtitle ? `<div class="step-sub">${opts.subtitle}</div>` : ''}
     ${opts.panelId ? `<div id="${opts.panelId}"></div>` : ''}
     <div id="repWrap"></div>
     <button class="add-btn" id="addRow">+ Add entry</button>
+    ${opts.bottomPanelId ? `<div id="${opts.bottomPanelId}" style="margin-top:22px;"></div>` : ''}
   `;
   const wrap = card.querySelector('#repWrap');
   function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''}; }
@@ -744,8 +755,10 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
       sel.addEventListener('change', e=>{
         const idx = +e.target.dataset.idx, k = e.target.dataset.k;
         data[listKey][idx][k] = e.target.value;
+        if(opts.onFieldChange) opts.onFieldChange(data[listKey][idx], k, idx);
         refreshSidebar();
         if(opts.onChange) opts.onChange();
+        draw();
       });
     });
     wrap.querySelectorAll('[data-addr-key]').forEach(el=>{
@@ -919,9 +932,9 @@ function renderParents(card){
   const motherOccGrid = card.querySelector('#motherOccGrid');
   const motherAddrWrap = card.querySelector('#motherAddrBlock');
   function drawMother(){
-    mGrid.innerHTML = ['motherName:Full Name','motherDob:Date of Birth:date','motherPobCity:Place of Birth — City','motherPobCountry:Place of Birth — Country']
+    mGrid.innerHTML = ['motherName:Full Name','motherMaidenName:Maiden Name','motherDob:Date of Birth:date','motherPobCity:Place of Birth — City','motherPobCountry:Place of Birth — Country']
       .map(def=>{const [k,l,t]=def.split(':'); return fieldText(l,data.parents,k,{id:'p_'+k,type:t||'text'});}).join('');
-    ['motherName','motherPobCity','motherPobCountry'].forEach(k=>{
+    ['motherName','motherMaidenName','motherPobCity','motherPobCountry'].forEach(k=>{
       mGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
     });
     bindDate(mGrid.querySelector('#p_motherDob'), data.parents, 'motherDob', 'full');
@@ -1077,13 +1090,14 @@ function renderTravelHistory(card){
       const purposeOpts = ['Leisure','Work','Business','Family Visit','Study','Medical','Other'];
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
         <label class="field"><span>City, Country Visited</span><input type="text" data-k="destination" data-idx="${idx}" value="${(row.destination||'').replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Purpose of Trip</span><input type="text" data-k="purpose" data-idx="${idx}" value="${(row.purpose||'').replace(/"/g,'&quot;')}"></label>
-        <div class="pill-row" style="grid-column:2/3;">
-          ${purposeOpts.map(p=>`<div class="pill${row.purpose===p?' sel':''}" data-purpose-idx="${idx}" data-purpose-val="${p}">${p}</div>`).join('')}
-        </div>
+        <label class="field"><span>Purpose of Trip</span>
+          <div class="pill-row">
+            ${purposeOpts.map(p=>`<div class="pill${row.purpose===p?' sel':''}" data-purpose-idx="${idx}" data-purpose-val="${p}">${p}</div>`).join('')}
+          </div>
+        </label>
         <label class="field"><span>Departure Date</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="from" data-type="month" data-idx="${idx}" value="${row.from||''}"></label>
         <label class="field"><span>Return Date</span><input type="text" inputmode="numeric" placeholder="yyyy-mm" data-k="to" data-type="month" data-idx="${idx}" value="${row.to||''}"></label>
-        <label class="field"><span>Duration</span><input type="text" disabled data-duration-idx="${idx}" value="${tripDuration(row.from,row.to)}" style="background:#f4f6f7;color:#5b6b75;"></label>
+        <label class="field"><span>Duration <small style="color:#b3432b;">*required</small><small>e.g. 5 days, 6 months</small></span><input type="text" data-k="duration" data-idx="${idx}" value="${(row.duration||'').replace(/"/g,'&quot;')}"></label>
         <div></div>
       </div>`;
       wrap.appendChild(block);
@@ -1101,10 +1115,6 @@ function renderTravelHistory(card){
         let v = e.target.value;
         if(e.target.dataset.type==='month'){ v = maskDateInput(v,'month'); e.target.value = v; }
         data.travelHistory[idx][k]=v;
-        if(k==='from' || k==='to'){
-          const durEl = wrap.querySelector('[data-duration-idx="'+idx+'"]');
-          if(durEl) durEl.value = tripDuration(data.travelHistory[idx].from, data.travelHistory[idx].to);
-        }
         refreshSidebar();
       });
     });
@@ -1123,15 +1133,61 @@ function renderTravelHistory(card){
   draw();
 }
 
+function eduYearsFor(entries){
+  let secondary=0, university=0, trade=0;
+  entries.forEach(e=>{
+    const f = parseDate(e.from);
+    const t = parseDate(e.to) || new Date();
+    if(!f || !t || t<f) return;
+    const yrs = (t-f)/(365.25*86400000);
+    if(e.level==='Secondary Level') secondary += yrs;
+    else if(e.level==='Vocational') trade += yrs;
+    else if(['University / College','Post Graduate Diploma','Post Graduate Degree','Masteral Degree','Doctoral Degree'].includes(e.level)) university += yrs;
+  });
+  return {secondary:Math.round(secondary), university:Math.round(university), trade:Math.round(trade)};
+}
+function renderEduYearsPanel(){
+  const panel = document.getElementById('eduYearsPanel');
+  if(!panel) return;
+  if(!data.education.length){ panel.innerHTML = ''; return; }
+  const y = eduYearsFor(data.education);
+  data.eduYears.secondary = y.secondary;
+  data.eduYears.university = y.university;
+  data.eduYears.trade = y.trade;
+  panel.innerHTML = `
+    <label class="field"><span>Years of Education Completed<small>Matches IMM 5669 Question 7 — number of years successfully completed at each level.</small></span></label>
+    <div class="grid4">
+      <label class="field"><span>Primary <small style="color:#b3432b;">*required</small></span><input type="text" inputmode="numeric" id="edu_elementary" placeholder="No. of Years" required value="${(data.eduYears.elementary||'').toString().replace(/"/g,'&quot;')}"></label>
+      <label class="field"><span>Secondary</span><input type="text" value="${y.secondary}" disabled></label>
+      <label class="field"><span>Post Secondary</span><input type="text" value="${y.university}" disabled></label>
+      <label class="field"><span>Others</span><input type="text" value="${y.trade}" disabled></label>
+    </div>
+  `;
+  panel.querySelector('#edu_elementary').addEventListener('input', e=>{
+    data.eduYears.elementary = e.target.value;
+    refreshSidebar();
+  });
+}
 function renderEducation(card){
   renderRepeatable(card, 'Education History', 'Institutions attended since secondary school. Only list schools where you graduated — if you did not complete or graduate from a program, you do not need to include it.', 'education', [
     {label:'From', key:'from', type:'month'},
     {label:'To', key:'to', type:'month'},
-    {label:'Education Level', key:'level', type:'select', options:['Secondary Level','Post Secondary','Vocational','Post Graduate Diploma','Post Graduate Degree','Masteral Degree','Doctoral Degree']},
+    {label:'Education Level', key:'level', type:'select', options:['Secondary Level','University / College','Vocational','Post Graduate Diploma','Post Graduate Degree','Masteral Degree','Doctoral Degree']},
     {label:'City, Country', key:'location'},
     {label:'Institution', key:'institution'},
+    {label:'Field of Study', key:'fieldOfStudy'},
     {label:'Credential Obtained', key:'credential'},
-  ]);
+  ], {
+    subtitle: 'Please list your education starting from your Secondary (High School) level. Do not include any education or training that was not completed.',
+    bottomPanelId: 'eduYearsPanel',
+    onFieldChange: (row, key)=>{
+      if(key==='level' && row.level==='Secondary Level'){
+        row.fieldOfStudy = 'Secondary Level';
+        row.credential = 'Secondary Diploma';
+      }
+    },
+    onChange: renderEduYearsPanel
+  });
 }
 function addressCityCountry(addr){
   if(!addr) return '';
@@ -1146,6 +1202,22 @@ function currentAddressFromHistory(){
   if(dated.length) return addressCityCountry(dated[0].address);
   const any = data.addressHistory.find(hasContent);
   return any ? addressCityCountry(any.address) : '';
+}
+function addressForPeriod(from, to){
+  if(!data.addressHistory.length) return '';
+  const hasContent = e => e.address && (e.address.city || e.address.streetName || e.address.country);
+  const f = parseDate(from);
+  if(!f) return currentAddressFromHistory();
+  const t = parseDate(to) || new Date();
+  const overlapping = data.addressHistory.filter(e=>{
+    if(!hasContent(e)) return false;
+    const af = parseDate(e.from);
+    if(!af) return false;
+    const at = parseDate(e.to) || new Date();
+    return af <= t && at >= f;
+  }).sort((a,b)=> (parseDate(b.from)||0) - (parseDate(a.from)||0));
+  if(overlapping.length) return addressCityCountry(overlapping[0].address);
+  return currentAddressFromHistory();
 }
 function renderEmployment(card){
   card.innerHTML = `
@@ -1171,8 +1243,14 @@ function renderEmployment(card){
         <div></div>
         <label class="field"><span>Employer / Activity</span><input type="text" data-k="employer" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.employer||'').replace(/"/g,'&quot;')}"></label>
         <label class="field"><span>Position / Description</span><input type="text" data-k="position" data-idx="${idx}" ${row.unemployed?'disabled':''} value="${(row.position||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field" style="grid-column:1/-1;"><span>Status in Country <small style="color:#b3432b;">*required</small></span><div class="status-choice"></div></label>
       </div>`;
       wrap.appendChild(block);
+      const statusWrap = block.querySelector('.status-choice');
+      statusWrap.appendChild(choiceRow(
+        [{value:'Citizen',label:'Citizen'},{value:'Work Permit',label:'Work Permit'},{value:'Study Permit',label:'Study Permit'},{value:'Visitor',label:'Visitor'},{value:'Out of Status',label:'Out of Status'}],
+        row.statusInCountry, v=>{ row.statusInCountry=v; draw(); refreshSidebar(); onChange(); }
+      ));
     });
     wrap.querySelectorAll('input[type=checkbox]').forEach(cb=>{
       cb.addEventListener('change', e=>{
@@ -1180,7 +1258,7 @@ function renderEmployment(card){
         const row = data.employment[idx];
         row.unemployed = e.target.checked;
         if(e.target.checked){
-          row.location = currentAddressFromHistory();
+          row.location = addressForPeriod(row.from, row.to);
           row.employer = 'At Residence';
           row.position = 'Unemployed';
         } else {
@@ -1195,6 +1273,12 @@ function renderEmployment(card){
         let v = e.target.value;
         if(t==='month'){ v = maskDateInput(v, 'month'); e.target.value = v; }
         data.employment[idx][k] = v;
+        const row = data.employment[idx];
+        if((k==='from' || k==='to') && row.unemployed){
+          row.location = addressForPeriod(row.from, row.to);
+          const locEl = wrap.querySelector(`input[data-idx="${idx}"][data-k="location"]`);
+          if(locEl) locEl.value = row.location;
+        }
         refreshSidebar();
         onChange();
       });
@@ -1207,7 +1291,7 @@ function renderEmployment(card){
     });
   }
   card.querySelector('#addRow').addEventListener('click', ()=>{
-    data.employment.push({employer:'',position:'',location:'',from:'',to:'',unemployed:false});
+    data.employment.push({employer:'',position:'',location:'',from:'',to:'',unemployed:false,statusInCountry:''});
     draw(); refreshSidebar(); onChange();
   });
   draw();
@@ -1256,7 +1340,7 @@ function renderReview(card){
       </label>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;">
         <input type="checkbox" id="consentSignature" style="width:20px;height:20px;margin-top:2px;flex-shrink:0;cursor:pointer;" ${data.consent.authorizeSignature?'checked':''}>
-        <span style="margin:0;">I authorize Olcorp Immigration Consulting Corporation to use my digital signature below to sign IRCC forms on my behalf. If you did not authorize, you will be asked to manually sign all the forms and send it to us.</span>
+        <span style="margin:0;">(Optional) I authorize Olcorp Immigration Consulting Corporation to use my digital signature below to sign IRCC forms on my behalf. If you did not authorize, you will be asked to manually sign all the forms and send it to us.</span>
       </label>
       <label class="field"><span>Please sign below.</span></label>
       <canvas id="sigPad" width="600" height="180" style="border:1px solid #ccc;border-radius:6px;width:100%;max-width:600px;height:180px;touch-action:none;background:#fff;"></canvas>
@@ -1463,6 +1547,7 @@ function renderReview(card){
     heading('Parents & Siblings');
     subheading('Mother');
     row('Full Name', data.parents.motherName);
+    row('Maiden Name', data.parents.motherMaidenName);
     row('Date of Birth', data.parents.motherDob);
     row('Place of Birth', [data.parents.motherPobCity, data.parents.motherPobCountry].filter(Boolean).join(', '));
     row('Occupation', data.parents.motherOccupation);
@@ -1490,9 +1575,10 @@ function renderReview(card){
       row('Education', 'None declared');
     } else {
       data.education.forEach((e,i)=>{
-        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.level||'—'} · ${e.institution||'—'} (${e.location||'—'}) · ${e.credential||'No credential listed'}`);
+        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.level||'—'} · ${e.institution||'—'} (${e.location||'—'}) · Field of Study: ${e.fieldOfStudy||'—'} · ${e.credential||'No credential listed'}`);
       });
     }
+    row('Years of Education', `Elementary/Primary: ${data.eduYears.elementary||'—'} · Secondary/High School: ${data.eduYears.secondary||0} · University/College: ${data.eduYears.university||0} · Trade/Other Post-Secondary: ${data.eduYears.trade||0}`);
     spacer();
 
     heading('Address History (10 years)');
@@ -1510,7 +1596,7 @@ function renderReview(card){
       row('Employment', 'None declared');
     } else {
       data.employment.forEach((e,i)=>{
-        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.unemployed ? 'Unemployed' : (e.employer||'—')} · ${e.position||'—'} · ${e.location||'—'}`);
+        row(`Entry ${i+1}`, `${e.from||'—'} to ${e.to||'Present'} · ${e.unemployed ? 'Unemployed' : (e.employer||'—')} · ${e.position||'—'} · ${e.location||'—'} · Status: ${e.statusInCountry||'—'}`);
       });
     }
     spacer();
@@ -1522,7 +1608,7 @@ function renderReview(card){
       row('Travel History', 'None declared');
     } else {
       data.travelHistory.forEach((t,i)=>{
-        row(`Trip ${i+1}`, `${t.destination||'—'} · ${t.purpose||'—'} · ${t.from||'—'} to ${t.to||'—'} (${tripDuration(t.from,t.to)||'—'})`);
+        row(`Trip ${i+1}`, `${t.destination||'—'} · ${t.purpose||'—'} · ${t.from||'—'} to ${t.to||'—'} (${t.duration||'—'})`);
       });
     }
     spacer();
@@ -1626,6 +1712,8 @@ function validateStep(key){
         return 'Please add at least one education entry before continuing.';
       if(data.education.some(r=>!isFilled(r.from) || !isFilled(r.institution)))
         return 'Please fill in the From date and Institution for each education entry before continuing.';
+      if(!isFilled(data.eduYears.elementary))
+        return 'Please fill in the number of years completed for Primary before continuing.';
       return null;
     case 'address':
       if(data.addressHistory.length===0)
@@ -1633,17 +1721,29 @@ function validateStep(key){
       if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address)))
         return 'Please fill in the From date and address (at least street/city and country) for each entry before continuing.';
       return null;
-    case 'employment':
+    case 'employment': {
       if(data.employment.length===0)
         return 'Please add at least one employment/activity entry before continuing.';
       if(data.employment.some(r=>!isFilled(r.from) || (!r.unemployed && !isFilled(r.employer))))
         return 'Please fill in the From date and Employer/Activity (or check "Unemployed") for each entry before continuing.';
+      if(data.employment.some(r=>!isFilled(r.statusInCountry)))
+        return 'Please select a Status in Country for each employment/activity entry before continuing.';
+      const start = requiredHistoryStart(), end = new Date();
+      const combined = [...data.employment, ...data.education];
+      const gaps = computeGaps(combined, start, end);
+      if(gaps.length){
+        const totalMonths = gaps.reduce((s,g)=>s+monthsBetween(g[0],g[1]),0);
+        return `Your employment/education history must cover the full period from ${fmtMonthYear(start)} to Present with no gaps (see the coverage panel above). About ${totalMonths} month${totalMonths>1?'s':''} still ${totalMonths>1?'are':'is'} unaccounted for — please add entries to cover it before continuing.`;
+      }
       return null;
+    }
     case 'travel':
       if(!data.travelHistoryNone && data.travelHistory.length===0)
         return 'Please add at least one trip, or check "I did not travel outside my country of residence" before continuing.';
       if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.destination) || !isFilled(r.from)))
         return 'Please fill in the City/Country Visited and Departure Date for each trip before continuing.';
+      if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.duration)))
+        return 'Please fill in the Duration (e.g. 5 days, 6 months) for each trip before continuing.';
       return null;
     case 'background':
       const bgKeys = ['militaryPoliceGovt','criminal','medical','refusalsRemovals'];
