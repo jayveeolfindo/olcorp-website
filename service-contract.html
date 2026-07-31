@@ -834,6 +834,8 @@ function fmtDate(d) {
   const wpLocation = p.get('wpLocation') || 'inside';
   const fullPayment = p.get('fullPayment') === '1';
   const clientStatus    = p.get('clientStatus') || 'new';
+  const consultPaid    = p.get('consultationPaid') === '1';
+  const consultAmt     = parseFloat(p.get('consultationAmount') || '0');
 
   const effSvc  = svc; // 'work_permit' used for both WP and PGWP
   const repKey  = (svc === 'work_permit' && isPgwp) ? 'pgwp' : svc;
@@ -850,8 +852,10 @@ function fmtDate(d) {
   const discountPct     = clientStatus === 'returning' ? 0.20 : clientStatus === 'family' ? 0.10 : 0;
   const discountAmt     = Math.round(profTotal * discountPct * 100) / 100;
   const discountedProf  = profTotal - discountAmt;
-  const gst               = discountedProf * 0.05;
-  const grandTotal        = discountedProf + gst;
+  const creditAmt         = (consultPaid && consultAmt > 0) ? Math.min(consultAmt, discountedProf) : 0;
+  const afterCredit       = discountedProf - creditAmt;
+  const gst               = afterCredit * 0.05;
+  const grandTotal        = afterCredit + gst;
 
   const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
   const isTR2 = TR_2INST.includes(svc);
@@ -901,6 +905,9 @@ function fmtDate(d) {
   }
   if (ocFee > 0) {
     payRows.push(`<tr><td style="padding-left:24px">Add: Outside Canada Representation Fee</td><td class="amt">${fmt(ocFee)}</td></tr>`);
+  }
+  if (creditAmt > 0) {
+    payRows.push(`<tr><td style="color:#2e8b57;">Consultation Fee Credit</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(creditAmt)}</td></tr>`);
   }
   payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(profTotal)}</td></tr>`);
   if (discountAmt > 0) {
