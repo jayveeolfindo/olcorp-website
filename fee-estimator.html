@@ -709,7 +709,17 @@
         </div>
       </div>
 
-      <!-- Sponsorship Dependents -->
+            <!-- Work Permit / PGWP dependents (no age split) -->
+      <div class="field-group" id="wpChildrenGroup">
+        <div class="step-q">Dependent children</div>
+        <div class="stepper">
+          <button class="step-btn" onclick="adjustCount('children', -1)">&#8722;</button>
+          <span class="step-val" id="childrenVal">0</span>
+          <button class="step-btn" onclick="adjustCount('children', 1)">+</button>
+        </div>
+      </div>
+
+<!-- Sponsorship Dependents -->
       <div class="field-group" id="sponsorFamilyGroup">
         <div class="step-q">Who are you sponsoring?</div>
         <div class="opt-stack">
@@ -1091,7 +1101,7 @@ const SEQUENCES = {
 
 const ALL_CONDITIONAL = [
   'consultationTypeGroup','familyGroup','sponsorFamilyGroup','childrenGroup',
-  'numApplicantsGroup','wpTypeGroup','wpLocationGroup','statusTypeGroup','citizenshipTypeGroup',
+  'numApplicantsGroup','wpTypeGroup','wpLocationGroup','wpChildrenGroup','statusTypeGroup','citizenshipTypeGroup',
   'sinpCandidatesGroup','visaSpouseGroup','commonLawGroup',
   'trBiometricsGroup','consultationCreditGroup','returningClientGroup'
 ];
@@ -1152,6 +1162,7 @@ function hideAllConditional() {
   // Reset stepper displays
   g('childrenYoungVal').textContent = 0;
   g('childrenOlderVal').textContent = 0;
+  if (g('childrenVal')) g('childrenVal').textContent = 0;
   g('numApplicantsVal').textContent = 1;
   g('sinpCandidatesVal').textContent = 1;
   // Reset toggles
@@ -1288,7 +1299,7 @@ function toggleOpt(field, btn) {
 
 function adjustCount(field, delta) {
   const isChild = field === 'childrenYoung' || field === 'childrenOlder';
-  const min = isChild ? 0 : 1;
+  const min = isChild || field === 'children' ? 0 : 1;
   const max = field === 'sinpCandidates' ? 20 : 10;
   state[field] = Math.max(min, Math.min(max, (state[field] === undefined ? min : state[field]) + delta));
   if (isChild) { state.children = (state.childrenYoung || 0) + (state.childrenOlder || 0); }
@@ -1303,16 +1314,19 @@ function onFamilyChange() {
   const needChildren = state.family === 'family';
   const hasBiometrics = svc !== 'sinp_pr';
   if (needChildren) {
-    showField('childrenGroup', 130);
     if (hasBiometrics) {
+      showField('wpChildrenGroup', 130);
       showField('trBiometricsGroup', 300);
       // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
     } else {
+      hideField('wpChildrenGroup');
+      showField('childrenGroup', 130);
       hideField('trBiometricsGroup');
       showField('consultationCreditGroup', 300);
     }
   } else {
     hideField('childrenGroup');
+    hideField('wpChildrenGroup');
     if (hasBiometrics) {
       showField('trBiometricsGroup', 130);
       // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
@@ -1322,7 +1336,6 @@ function onFamilyChange() {
     }
   }
 }
-
 function showEmailThankYou() {
   g('startEmailBtn').style.display = 'none';
   g('emailStatus').style.display = 'block';
