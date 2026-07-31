@@ -703,22 +703,16 @@
           <button class="opt-card" onclick="selectOpt('family', 'spouse', this); onFamilyChange()">
             <div><div class="oc-title">Me + Spouse / Partner</div></div>
           </button>
+          <button class="opt-card" onclick="selectOpt('family', 'children', this); onFamilyChange()">
+            <div><div class="oc-title">Me + Children</div><div class="oc-desc">No spouse / partner</div></div>
+          </button>
           <button class="opt-card" onclick="selectOpt('family', 'family', this); onFamilyChange()">
             <div><div class="oc-title">Me + Spouse + Children</div></div>
           </button>
         </div>
       </div>
 
-            <!-- Work Permit / PGWP dependents (no age split) -->
-      <div class="field-group" id="wpChildrenGroup">
-        <div class="step-q">Dependent children</div>
-        <div class="stepper">
-          <button class="step-btn" onclick="adjustCount('children', -1)">&#8722;</button>
-          <span class="step-val" id="childrenVal">0</span>
-          <button class="step-btn" onclick="adjustCount('children', 1)">+</button>
-        </div>
-      </div>
-
+      
 <!-- Sponsorship Dependents -->
       <div class="field-group" id="sponsorFamilyGroup">
         <div class="step-q">Who are you sponsoring?</div>
@@ -1101,7 +1095,7 @@ const SEQUENCES = {
 
 const ALL_CONDITIONAL = [
   'consultationTypeGroup','familyGroup','sponsorFamilyGroup','childrenGroup',
-  'numApplicantsGroup','wpTypeGroup','wpLocationGroup','wpChildrenGroup','statusTypeGroup','citizenshipTypeGroup',
+  'numApplicantsGroup','wpTypeGroup','wpLocationGroup','statusTypeGroup','citizenshipTypeGroup',
   'sinpCandidatesGroup','visaSpouseGroup','commonLawGroup',
   'trBiometricsGroup','consultationCreditGroup','returningClientGroup'
 ];
@@ -1162,7 +1156,6 @@ function hideAllConditional() {
   // Reset stepper displays
   g('childrenYoungVal').textContent = 0;
   g('childrenOlderVal').textContent = 0;
-  if (g('childrenVal')) g('childrenVal').textContent = 0;
   g('numApplicantsVal').textContent = 1;
   g('sinpCandidatesVal').textContent = 1;
   // Reset toggles
@@ -1299,7 +1292,7 @@ function toggleOpt(field, btn) {
 
 function adjustCount(field, delta) {
   const isChild = field === 'childrenYoung' || field === 'childrenOlder';
-  const min = isChild || field === 'children' ? 0 : 1;
+  const min = isChild ? 0 : 1;
   const max = field === 'sinpCandidates' ? 20 : 10;
   state[field] = Math.max(min, Math.min(max, (state[field] === undefined ? min : state[field]) + delta));
   if (isChild) { state.children = (state.childrenYoung || 0) + (state.childrenOlder || 0); }
@@ -1311,25 +1304,20 @@ function adjustCount(field, delta) {
 
 function onFamilyChange() {
   const svc = state.service;
-  const needChildren = state.family === 'family';
+  const needChildren = state.family === 'family' || state.family === 'children';
   const hasBiometrics = svc !== 'sinp_pr';
   if (needChildren) {
+    showField('childrenGroup', 130);
     if (hasBiometrics) {
-      showField('wpChildrenGroup', 130);
       showField('trBiometricsGroup', 300);
-      // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
     } else {
-      hideField('wpChildrenGroup');
-      showField('childrenGroup', 130);
       hideField('trBiometricsGroup');
       showField('consultationCreditGroup', 300);
     }
   } else {
     hideField('childrenGroup');
-    hideField('wpChildrenGroup');
     if (hasBiometrics) {
       showField('trBiometricsGroup', 130);
-      // consultationCreditGroup shown by revealAfter when user answers trBiometricsGroup
     } else {
       hideField('trBiometricsGroup');
       showField('consultationCreditGroup', 130);
@@ -1428,7 +1416,7 @@ function calculate() {
   const trBioReq  = state.trBiometrics === 'required';
   const prBioReq  = true; // Always required since June 2023
   const returning = state.clientStatus === 'returning';
-  const needChildren = (family === 'family') || (sponFam === 'couple_children');
+  const needChildren = (family === 'family') || (family === 'children') || (sponFam === 'couple_children');
   const children = needChildren ? numChild : 0;
   const childrenYoung = needChildren ? (state.childrenYoung || 0) : 0;
   const childrenOlder = needChildren ? (state.childrenOlder || 0) : 0;
@@ -1500,10 +1488,10 @@ function calculate() {
   }
   if (svc === 'family_sponsorship' && commonLaw) { addLine(repDiv, 'Common-Law Surcharge', 500); repSub += 500; }
   if (svc === 'eta') addNote(repDiv, '$7 IRCC eTA fee included in representation fee.');
+  if (svc === 'work_permit' && state.wpLocation === 'outside') { repSub += 300; addLine(repDiv, 'Outside Canada Representation Fee', 300); }
   if (state.clientStatus === 'family') { const disc = repSub * 0.10; addLine(repDiv, 'Family of Client Discount (−10%)', disc, false, true); repSub -= disc; }
   if (state.clientStatus === 'returning') { const disc = repSub * 0.20; addLine(repDiv, 'Returning Client Discount (−20%)', disc, false, true); repSub -= disc; }
   if (state.consultationPaid && state.consultationAmount > 0) { const credit = Math.min(state.consultationAmount, repSub); addLine(repDiv, 'Consultation Fee Credit', credit, false, true); repSub -= credit; }
-    if (state.wpLocation === 'outside') { repSub += 300; addLine(repDiv, 'Outside Canada Application Fee', 300); }
   const gst = repSub * GST;
   addLine(repDiv, 'GST (5%)', gst);
   const repTotal = repSub + gst;
@@ -1599,6 +1587,9 @@ function calculate() {
 
   // Determine first installment amount
   const threeInstall = ['sinp_pr','family_sponsorship','study_permit','sinp_employer'];
+  } else if (svc === 'work_permit') {
+    if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
+    if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
   const twoInstall   = ['work_permit','pgwp','francophone_wp','stay_extension','visitor_visa','super_visa','status_restoration','school_enrollment'];
   let firstInstall;
   if (threeInstall.includes(svc))    firstInstall = repTotal / 3;
