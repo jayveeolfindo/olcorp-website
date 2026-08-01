@@ -854,8 +854,10 @@ function fmtDate(d) {
   const discountedProf  = profTotal - discountAmt;
   const creditAmt         = (consultPaid && consultAmt > 0) ? Math.min(consultAmt, discountedProf) : 0;
   const afterCredit       = discountedProf - creditAmt;
-  const gst               = afterCredit * 0.05;
-  const grandTotal        = afterCredit + gst;
+  const fullPayDisc       = fullPayment ? Math.round(afterCredit * 0.05 * 100) / 100 : 0;
+  const taxableBase       = afterCredit - fullPayDisc;
+  const gst               = taxableBase * 0.05;
+  const grandTotal        = taxableBase + gst;
 
   const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
   const isTR2 = TR_2INST.includes(svc);
@@ -914,24 +916,19 @@ function fmtDate(d) {
     const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
     payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
   }
-  payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
-  if (fullPayment) {
-    const discount = grandTotal * 0.05;
-    payRows.push(`<tr class="grand-row"><td>Subtotal (incl. GST):</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
-    payRows.push(`<tr><td style="color:#2e8b57;">Full Payment Discount (5%)</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discount)}</td></tr>`);
-    payRows.push(`<tr class="grand-row"><td>Total Contract Payable (Full Payment):</td><td class="amt">${fmt(grandTotal * 0.95)}</td></tr>`);
-  } else {
-    payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+  if (fullPayDisc > 0) {
+    payRows.push(`<tr><td style="color:#2e8b57;">Full Payment Discount (5%)</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(fullPayDisc)}</td></tr>`);
   }
+  payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
+  payRows.push(`<tr class="grand-row"><td>Total Contract Payable${fullPayment ? ' (Full Payment)' : ''}:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
   document.getElementById('paymentTable').innerHTML = payRows.join('');
 
   // Section 6 — Payment Schedule
   let schedRows;
   if (fullPayment) {
-    const discTotal = grandTotal * 0.95;
     schedRows = `<tr><th>Payment</th><th class="amt">Amount</th></tr>`;
-    schedRows += `<tr><td>Full Payment (5% discount applied)</td><td class="amt">${fmt(discTotal)} <span class="note">incl. 5% GST</span></td></tr>`;
-    schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(discTotal)} Tax Inclusive</td></tr>`;
+    schedRows += `<tr><td>Full Payment (5% discount applied)</td><td class="amt">${fmt(grandTotal)} <span class="note">incl. 5% GST</span></td></tr>`;
+    schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
   } else {
     schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
     installMilestones.forEach(m => {
