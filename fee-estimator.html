@@ -1652,6 +1652,8 @@ function updateSocialProof(svc) {
       wpLocation: state.wpLocation || 'inside',
       wpType: state.wpType || 'employer',
       clientStatus: state.clientStatus,
+      consultationPaid: state.consultationPaid ? '1' : '0',
+      consultationAmount: state.consultationAmount || 0,
       fullPayment: document.getElementById('scFullPayment').checked ? '1' : '0',
     });
     window.open('/service-contract.html?' + p, '_blank');
