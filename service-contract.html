@@ -832,7 +832,6 @@ function fmtDate(d) {
   const isPgwp     = p.get('isPgwp') === '1';
   const wpType     = p.get('wpType') || 'employer';
   const wpLocation = p.get('wpLocation') || 'inside';
-  const fullPayment = p.get('fullPayment') === '1';
   const clientStatus    = p.get('clientStatus') || 'new';
   const consultPaid    = p.get('consultationPaid') === '1';
   const consultAmt     = parseFloat(p.get('consultationAmount') || '0');
@@ -854,10 +853,8 @@ function fmtDate(d) {
   const discountedProf  = profTotal - discountAmt;
   const creditAmt         = (consultPaid && consultAmt > 0) ? Math.min(consultAmt, discountedProf) : 0;
   const afterCredit       = discountedProf - creditAmt;
-  const fullPayDisc       = fullPayment ? Math.round(afterCredit * 0.05 * 100) / 100 : 0;
-  const taxableBase       = afterCredit - fullPayDisc;
-  const gst               = taxableBase * 0.05;
-  const grandTotal        = taxableBase + gst;
+  const gst               = afterCredit * 0.05;
+  const grandTotal        = afterCredit + gst;
 
   const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
   const isTR2 = TR_2INST.includes(svc);
@@ -916,26 +913,17 @@ function fmtDate(d) {
     const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
     payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
   }
-  if (fullPayDisc > 0) {
-    payRows.push(`<tr><td style="color:#2e8b57;">Full Payment Discount (5%)</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(fullPayDisc)}</td></tr>`);
-  }
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
   payRows.push(`<tr class="grand-row"><td>Total Contract Payable${fullPayment ? ' (Full Payment)' : ''}:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
   document.getElementById('paymentTable').innerHTML = payRows.join('');
 
   // Section 6 — Payment Schedule
   let schedRows;
-  if (fullPayment) {
-    schedRows = `<tr><th>Payment</th><th class="amt">Amount</th></tr>`;
-    schedRows += `<tr><td>Full Payment (5% discount applied)</td><td class="amt">${fmt(grandTotal)} <span class="note">incl. 5% GST</span></td></tr>`;
-    schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
-  } else {
-    schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
+  schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
     installMilestones.forEach(m => {
       schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installAmt)} <span class="note">incl. 5% GST</span></td></tr>`;
     });
     schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
-  }
   document.getElementById('scheduleTable').innerHTML = schedRows;
 
   // Section 6 — Government Fees
