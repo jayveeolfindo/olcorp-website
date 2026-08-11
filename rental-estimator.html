@@ -619,7 +619,15 @@
             <span class="fn">Total (incl. taxes)</span>
             <span class="fa" id="grandAmt">—</span>
           </div>
+          <div class="fee-line" id="row_cc" style="display:none">
+            <span class="fn">Credit Card Fee (2.9% + $0.30)</span>
+            <span class="fa" id="ccAmt">—</span>
+          </div>
         </div>
+        <label id="ccToggleRow" style="display:none;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#555;padding:6px 0;">
+          <input type="checkbox" id="ccToggle" onchange="updateResult()">
+          <span>Customer pays by credit card (Stripe fee: 2.9% + $0.30)</span>
+        </label>
 
         <!-- Deposit note -->
         <div id="depositNote" class="field-note" style="margin-bottom:12px;display:none">
@@ -896,12 +904,26 @@
       document.getElementById('heroTaxLabel').style.opacity = '1';
       document.getElementById('priceNote').textContent = formatDuration(hrs) + ' · GST & PST included';
       document.getElementById('depositNote').style.display = 'block';
+      // Credit card (Stripe) payment fee
+      const ccEl = document.getElementById('ccToggle');
+      const payByCC = ccEl && ccEl.checked;
+      const stripeFee = payByCC ? Math.round((grandTotal * 0.029 + 0.30) * 100) / 100 : 0;
+      document.getElementById('row_cc').style.display = payByCC ? 'flex' : 'none';
+      document.getElementById('ccAmt').textContent = fmt(stripeFee);
+      document.getElementById('ccToggleRow').style.display = 'flex';
+      if (payByCC) {
+        const displayTotal = grandTotal + stripeFee;
+        document.getElementById('grandAmt').textContent = fmt(displayTotal);
+        document.getElementById('totalAmount').textContent = fmt(displayTotal);
+      }
     } else {
       document.getElementById('subtotalAmt').textContent = hrs > 0 ? fmt(subtotal) : '—';
       document.getElementById('totalAmount').textContent = '—';
       document.getElementById('heroTaxLabel').style.opacity = '0';
       document.getElementById('priceNote').textContent = 'Select your dates to calculate';
       document.getElementById('subtotalAmt').textContent = '—';
+      document.getElementById('row_cc').style.display = 'none';
+      document.getElementById('ccToggleRow').style.display = 'none';
     }
   }
 </script>
