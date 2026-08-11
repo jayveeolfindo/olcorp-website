@@ -969,7 +969,11 @@
     msg += `Subtotal: ${fmt(subtotal)}\n`;
     msg += `GST (5%): ${fmt(gst)}\n`;
     msg += `PST (6%): ${fmt(pst)}\n`;
-    msg += `TOTAL: ${fmt(grandTotal)}\n`;
+    const ccEl2 = document.getElementById('ccToggle');
+    const payByCC2 = ccEl2 && ccEl2.checked;
+    const stripeFee2 = payByCC2 ? Math.round((grandTotal * 0.029 + 0.30) * 100) / 100 : 0;
+    if (payByCC2) msg += `Credit Card Fee (2.9%+$0.30): ${fmt(stripeFee2)}\n`;
+    msg += `TOTAL: ${fmt(grandTotal + stripeFee2)}\n`;
     msg += `─────────────────\n`;
     msg += `Sent via olcorp.ca`;
 
