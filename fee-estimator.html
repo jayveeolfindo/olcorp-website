@@ -1619,6 +1619,66 @@ function calculate() {
   if (svc === 'super_visa') d.push('Super Visa applicants must provide proof of private medical insurance and a medical exam.');
   g('disclaimer').textContent = d.join(' ');
 
+  updateURL();
+}
+
+function updateURL() {
+  if (!state.service) return;
+  const p = new URLSearchParams({
+    svc: state.service,
+    fam: state.family,
+    cy:  state.childrenYoung || 0,
+    co:  state.childrenOlder || 0,
+    wpt: state.wpType,
+    wpl: state.wpLocation,
+    cs:  state.clientStatus,
+    cp:  state.consultationPaid ? '1' : '0',
+    ca:  state.consultationAmount || 0,
+    bio: state.trBiometrics  ? '1' : '0',
+    pbio:state.prBiometrics  ? '1' : '0',
+    ref: state.prevRefusal   ? '1' : '0',
+    cl:  state.commonLaw     ? '1' : '0',
+    sn:  state.sinpCandidates || 1,
+    sa:  state.specialAssist ? '1' : '0',
+    vs:  state.visaSpouse    ? '1' : '0',
+  });
+  history.replaceState(null, '', location.pathname + '?' + p.toString());
+  let btn = document.getElementById('est-share-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'est-share-btn';
+    btn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999;background:#1d1d1f;color:#fff;border:none;border-radius:980px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);';
+    btn.textContent = '🔗 Copy Link';
+    btn.onclick = () => {
+      navigator.clipboard.writeText(location.href);
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '🔗 Copy Link'; }, 2000);
+    };
+    document.body.appendChild(btn);
+  }
+}
+
+function loadFromURL() {
+  const p = new URLSearchParams(location.search);
+  const svc = p.get('svc');
+  if (!svc) return;
+  if (typeof selectService === 'function') selectService(svc);
+  state.family             = p.get('fam')  || state.family;
+  state.childrenYoung      = +(p.get('cy')  || 0);
+  state.childrenOlder      = +(p.get('co')  || 0);
+  state.wpType             = p.get('wpt') || state.wpType;
+  state.wpLocation         = p.get('wpl') || state.wpLocation;
+  state.clientStatus       = p.get('cs')  || state.clientStatus;
+  state.consultationPaid   = p.get('cp')  === '1';
+  state.consultationAmount = parseFloat(p.get('ca')  || 0);
+  state.trBiometrics       = p.get('bio')  === '1';
+  state.prBiometrics       = p.get('pbio') === '1';
+  state.prevRefusal        = p.get('ref')  === '1';
+  state.commonLaw          = p.get('cl')   === '1';
+  state.sinpCandidates     = +(p.get('sn') || 1);
+  state.specialAssist      = p.get('sa')  === '1';
+  state.visaSpouse         = p.get('vs')  === '1';
+  calculate();
 }
 
 function updateSocialProof(svc) {
@@ -1659,6 +1719,7 @@ function updateSocialProof(svc) {
     window.open('/service-contract.html?' + p, '_blank');
     closeContractModal();
   }
+setTimeout(loadFromURL, 100);
 </script>
 
   <!-- Service Contract Modal -->
