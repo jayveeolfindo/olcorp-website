@@ -914,7 +914,7 @@ function fmtDate(d) {
     payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
   }
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
-  payRows.push(`<tr class="grand-row"><td>Total Contract Payable${fullPayment ? ' (Full Payment)' : ''}:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
+  payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
   document.getElementById('paymentTable').innerHTML = payRows.join('');
 
   // Section 6 — Payment Schedule
