@@ -1648,11 +1648,11 @@ function updateURL() {
     btn = document.createElement('button');
     btn.id = 'est-share-btn';
     btn.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:999;background:#1d1d1f;color:#fff;border:none;border-radius:980px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);';
-    btn.textContent = '🔗 Copy Link';
+    btn.textContent = 'Share this Estimate';
     btn.onclick = () => {
       navigator.clipboard.writeText(location.href);
       btn.textContent = '✅ Copied!';
-      setTimeout(() => { btn.textContent = '🔗 Copy Link'; }, 2000);
+      setTimeout(() => { btn.textContent = 'Share this Estimate'; }, 2000);
     };
     document.body.appendChild(btn);
   }
@@ -1714,7 +1714,6 @@ function updateSocialProof(svc) {
       clientStatus: state.clientStatus,
       consultationPaid: state.consultationPaid ? '1' : '0',
       consultationAmount: state.consultationAmount || 0,
-      fullPayment: document.getElementById('scFullPayment').checked ? '1' : '0',
     });
     window.open('/service-contract.html?' + p, '_blank');
     closeContractModal();
@@ -1731,12 +1730,6 @@ setTimeout(loadFromURL, 100);
       <div class="sc-field"><label>Mailing Address</label><input id="scAddr" placeholder="Full mailing address"></div>
       <div class="sc-field"><label>Phone Number</label><input id="scPhone" placeholder="+1 (xxx) xxx-xxxx"></div>
       <div class="sc-field"><label>Email Address</label><input id="scEm" placeholder="client@email.com"></div>
-      <div class="sc-field" style="margin-top:4px;">
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
-          <input type="checkbox" id="scFullPayment" style="width:16px;height:16px;">
-          <span>Full Payment <span style="color:#2e8b57;font-weight:600;">(5% discount)</span></span>
-        </label>
-      </div>
       <div class="sc-actions">
         <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
         <button class="sc-generate" onclick="openContract()">Generate Contract</button>
