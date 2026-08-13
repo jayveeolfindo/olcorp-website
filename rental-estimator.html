@@ -463,7 +463,7 @@
             <div class="oc-left">
               <div class="oc-title">Yes, deliver to my location</div>
             </div>
-            <span class="oc-price">+$20</span>
+            <span class="oc-price">+$30</span>
             <div class="oc-check">✓</div>
           </button>
           <button class="opt-card" id="delivery_later" onclick="selectOpt('delivery','later',this)">
@@ -492,7 +492,7 @@
             <div class="oc-left">
               <div class="oc-title">Yes, pick up from my location</div>
             </div>
-            <span class="oc-price">+$20</span>
+            <span class="oc-price">+$30</span>
             <div class="oc-check">✓</div>
           </button>
           <button class="opt-card" id="pickup_later" onclick="selectOpt('pickup','later',this)">
@@ -585,11 +585,11 @@
           </div>
           <div class="fee-line" id="row_delivery" style="display:none">
             <span class="fn">Delivery to your location</span>
-            <span class="fa">$20.00</span>
+            <span class="fa">$30.00</span>
           </div>
           <div class="fee-line" id="row_pickup" style="display:none">
             <span class="fn">Pickup from your location</span>
-            <span class="fa">$20.00</span>
+            <span class="fa">$30.00</span>
           </div>
           <div class="fee-line" id="row_nop" style="display:none">
             <span class="fn" id="nopLabel">No Obligation Plan</span>
@@ -851,8 +851,8 @@
     }
 
     // Delivery / pickup flat fees (these stay flat)
-    const deliveryFee = sel.delivery === 'yes' ? 20 : 0;
-    const pickupFee = sel.pickup === 'yes' ? 20 : 0;
+    const deliveryFee = sel.delivery === 'yes' ? 30 : 0;
+    const pickupFee = sel.pickup === 'yes' ? 30 : 0;
     document.getElementById('row_delivery').style.display = sel.delivery === 'yes' ? 'flex' : 'none';
     document.getElementById('row_pickup').style.display = sel.pickup === 'yes' ? 'flex' : 'none';
 
@@ -942,8 +942,8 @@
     const hrRate = v.rate / 24;
     const base = hrRate * hrs;
     const destAddon = sel.dest ? (DEST_ADDON[sel.dest] / 24) * hrs : 0;
-    const deliveryFee = sel.delivery === 'yes' ? 20 : 0;
-    const pickupFee = sel.pickup === 'yes' ? 20 : 0;
+    const deliveryFee = sel.delivery === 'yes' ? 30 : 0;
+    const pickupFee = sel.pickup === 'yes' ? 30 : 0;
     const nopFee = sel.nop === 'yes' ? (15 / 24) * hrs : 0;
     const subtotal = base + destAddon + deliveryFee + pickupFee + nopFee;
     const gst = subtotal * 0.05;
@@ -962,8 +962,8 @@
     msg += `Drop-off: ${endStr}\n`;
     msg += `Duration: ${formatDuration(hrs)}\n`;
     msg += `Destination: ${DEST_LABEL[sel.dest]}\n`;
-    msg += `Delivery: ${sel.delivery === 'yes' ? 'Yes (+$20)' : 'No'}\n`;
-    msg += `Pickup Service: ${sel.pickup === 'yes' ? 'Yes (+$20)' : 'No'}\n`;
+    msg += `Delivery: ${sel.delivery === 'yes' ? 'Yes (+$30)' : 'No'}\n`;
+    msg += `Pickup Service: ${sel.pickup === 'yes' ? 'Yes (+$30)' : 'No'}\n`;
     msg += `Insurance: ${insText}\n`;
     msg += `─────────────────\n`;
     msg += `Subtotal: ${fmt(subtotal)}\n`;
