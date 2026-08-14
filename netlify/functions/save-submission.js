@@ -7,7 +7,7 @@
 // No extra account/API key needed for this one -- Netlify Blobs is built
 // into Netlify itself.
 
-const { getStore } = require("@netlify/blobs");
+const { getSubmissionsStore } = require("./_shared/blob-store");
 const crypto = require("crypto");
 
 exports.handler = async function (event) {
@@ -36,6 +36,7 @@ exports.handler = async function (event) {
     fullName: (payload.fullName || "").toString().slice(0, 200),
     email: (payload.email || "").toString().slice(0, 200),
     phone: (payload.phone || "").toString().slice(0, 60),
+    vehicle: (payload.vehicle || "").toString().slice(0, 200),
     emergencyContactName: (payload.emergencyContactName || "").toString().slice(0, 200),
     emergencyContactPhone: (payload.emergencyContactPhone || "").toString().slice(0, 60),
     photoConsent: (payload.photoConsent || "").toString().slice(0, 200),
@@ -52,7 +53,7 @@ exports.handler = async function (event) {
   };
 
   try {
-    const store = getStore("rental-submissions");
+    const store = getSubmissionsStore();
     await store.setJSON(submissionId, record);
   } catch (e) {
     return {
