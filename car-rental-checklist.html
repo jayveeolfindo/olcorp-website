@@ -122,13 +122,13 @@
   <form name="rental-checklist" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="rentalForm">
   <input type="hidden" name="form-name" value="rental-checklist">
   <p style="display:none;"><label>Don't fill this out: <input name="bot-field"></label></p>
-  <input type="hidden" name="email" id="email">
   <input type="hidden" name="phone" id="phone">
   <input type="hidden" name="totalDueNow" id="totalDueNow" value="50.00">
 
   <div class="card">
     <div class="step-title">Your Name</div>
     <label class="field"><span>Full Name</span><input type="text" name="fullName" id="fullName" required></label>
+    <label class="field" style="margin-bottom:0;"><span>Email Address <small>We'll send your signed checklist here</small></span><input type="email" name="email" id="email" required></label>
   </div>
 
   <div class="card">
@@ -615,7 +615,7 @@ if(params.get('paid') === '1'){
 }
 
 // --- Whole-page validation gate ---
-const requiredIds = ['fullName','agreeTerms','emergencyContactName','emergencyContactPhone','notedPolicies','finalAgree'];
+const requiredIds = ['fullName','email','agreeTerms','emergencyContactName','emergencyContactPhone','notedPolicies','finalAgree'];
 function updateGate(){
   let ok = true;
   requiredIds.forEach(id=>{
@@ -661,8 +661,49 @@ checkoutBtn.addEventListener('click', async ()=>{
 
     const amount = parseFloat(totalDueNowInput.value) || 0;
     const paymentMethod = document.getElementById('paymentMethodInput').value;
+    const clientEmail = document.getElementById('email').value || '';
+    const clientName = document.getElementById('fullName').value || 'Client';
+
+    // Save the full submission (including signature) so a PDF copy can be
+    // emailed to the client + consulting@olcorp.ca once payment is confirmed
+    // (immediately for e-Transfer, or via Stripe webhook for card payments).
+    let submissionId = null;
+    try{
+      const saveResp = await fetch('/.netlify/functions/save-submission', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          fullName: clientName,
+          email: clientEmail,
+          phone: document.getElementById('phone').value || '',
+          emergencyContactName: document.getElementById('emergencyContactName').value || '',
+          emergencyContactPhone: document.getElementById('emergencyContactPhone').value || '',
+          photoConsent: document.getElementById('photoConsentInput').value || '',
+          vehicleCondition: document.getElementById('vehicleConditionInput').value || '',
+          conditionNotes: document.getElementById('conditionNotes').value || '',
+          damageCoverage: document.getElementById('damageCoverageInput').value || '',
+          paymentMethod: paymentMethod,
+          quoteTotal: quoteTotal,
+          rentalDays: parseFloat(rentalDays.value) || 0,
+          amountPaid: parseFloat(amountPaid.value) || 0,
+          totalDue: amount,
+          signatureDataUrl: document.getElementById('signatureDataUrl').value || ''
+        })
+      });
+      const saveResult = await saveResp.json();
+      submissionId = saveResult.submissionId || null;
+    }catch(e){ /* non-fatal — checklist is already saved via Netlify Forms */ }
 
     if(paymentMethod === 'etransfer'){
+      if(submissionId){
+        try{
+          await fetch('/.netlify/functions/send-confirmation-email', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ submissionId: submissionId })
+          });
+        }catch(e){ /* email is best-effort; checklist itself was already saved */ }
+      }
       checkoutStatus.textContent = amount > 0
         ? ('Checklist received — thank you! Please send $' + fmt(amount) + ' by Interac e-Transfer to payment@olcorp.ca to complete your payment.')
         : 'Checklist received — thank you! You\'re all set, see you at pickup.';
@@ -679,9 +720,10 @@ checkoutBtn.addEventListener('click', async ()=>{
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         amount: amount,
-        clientName: document.getElementById('fullName').value || 'Client',
-        email: document.getElementById('email').value || '',
-        description: 'Rental balance + deposit' + (document.getElementById('damageCoverageInput').value.startsWith('Accepted') ? ' + No Obligation Plan' : '')
+        clientName: clientName,
+        email: clientEmail,
+        description: 'Rental balance + deposit' + (document.getElementById('damageCoverageInput').value.startsWith('Accepted') ? ' + No Obligation Plan' : ''),
+        submissionId: submissionId
       })
     });
     const result = await payResp.json();
