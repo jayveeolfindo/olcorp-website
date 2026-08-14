@@ -321,6 +321,7 @@ document.getElementById('legalToggle').addEventListener('click', ()=>{
 
 // --- Quotation: URL prefill or manual paste fallback ---
 const params = new URLSearchParams(window.location.search);
+const vehicleName = params.get('vehicle') || '';
 const amountPaid = document.getElementById('amountPaid');
 const amountPaidOther = document.getElementById('amountPaidOther');
 const amountPaidOtherBox = document.getElementById('amountPaidOtherBox');
@@ -676,6 +677,7 @@ checkoutBtn.addEventListener('click', async ()=>{
           fullName: clientName,
           email: clientEmail,
           phone: document.getElementById('phone').value || '',
+          vehicle: vehicleName,
           emergencyContactName: document.getElementById('emergencyContactName').value || '',
           emergencyContactPhone: document.getElementById('emergencyContactPhone').value || '',
           photoConsent: document.getElementById('photoConsentInput').value || '',
