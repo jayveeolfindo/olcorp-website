@@ -865,7 +865,7 @@
     // No Obligation Plan ($15/day → $15/24 per hr)
     let nopFee = 0;
     if (sel.nop === 'yes' && hrs > 0) {
-      nopFee = (15 / 24) * hrs;
+      nopFee = 15 * Math.ceil(hrs / 24);
       document.getElementById('row_nop').style.display = 'flex';
       document.getElementById('nopLabel').textContent = 'No Obligation Plan · ' + formatDuration(hrs);
       document.getElementById('nopAmt').textContent = fmt(nopFee);
@@ -944,7 +944,7 @@
     const destAddon = sel.dest ? (DEST_ADDON[sel.dest] / 24) * hrs : 0;
     const deliveryFee = sel.delivery === 'yes' ? 30 : 0;
     const pickupFee = sel.pickup === 'yes' ? 30 : 0;
-    const nopFee = sel.nop === 'yes' ? (15 / 24) * hrs : 0;
+    const nopFee = sel.nop === 'yes' ? 15 * Math.ceil(hrs / 24) : 0;
     const subtotal = base + destAddon + deliveryFee + pickupFee + nopFee;
     const gst = subtotal * 0.05;
     const pst = subtotal * 0.06;
