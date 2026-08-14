@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vehicle Rental Checklist | Olfindo Immigration Consulting</title>
+<style>
+  :root{
+    --navy:#161616;
+    --navy-deep:#0a0a0a;
+    --gold:#5f9c52;
+    --gold-bright:#78b56a;
+    --paper:#f2f2f0;
+    --line:#e1e1de;
+    --ok:#2e7d4f;
+    --danger:#b3432b;
+    --mono: ui-monospace, "SF Mono", "IBM Plex Mono", monospace;
+    --display: -apple-system, "system-ui", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    --body: -apple-system, "system-ui", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:var(--body); background:var(--paper); color:var(--navy-deep);
+    -webkit-font-smoothing:antialiased;
+  }
+  .topbar{
+    background:var(--navy); color:#fff; padding:14px 24px; display:flex; align-items:center;
+    justify-content:space-between; position:sticky; top:0; z-index:50; border-bottom:1px solid rgba(255,255,255,.08);
+  }
+  .topbar .brand{display:flex; align-items:center; gap:12px;}
+  .logo-box{background:#fff; border:1px solid var(--line); border-radius:9px; padding:5px 12px; display:inline-flex; align-items:center; line-height:0;}
+  .logo-box img{height:24px; width:auto; display:block;}
+  .brand-suffix{font-family:var(--display); font-size:13px; color:#a9b3ba; font-weight:500;}
+  .topbar-link{color:#dfe6ea; font-size:12.5px; font-weight:600; text-decoration:none;}
+  .topbar-link:hover{color:#fff;}
+  .shell{max-width:680px; margin:0 auto; padding:24px 20px 60px;}
+  .head{margin-bottom:22px;}
+  .head h1{font-family:var(--display); font-weight:800; font-size:23px; margin:0 0 8px; color:var(--navy-deep);}
+  .head p{margin:0; color:#5b6b78; font-size:13.5px; max-width:640px; line-height:1.5;}
+
+  .card{background:#fff; border:1px solid var(--line); border-radius:20px; padding:24px; box-shadow:0 1px 2px rgba(20,20,20,.03); margin-bottom:16px;}
+  .step-title{font-family:var(--display); font-weight:800; font-size:19px; margin:0 0 4px; color:var(--navy-deep);}
+  .step-sub{font-size:13px; color:#5b6b78; margin:0 0 18px; line-height:1.5;}
+  .legal{font-size:12.5px; color:#3d4c58; line-height:1.6; border:1px solid var(--line); border-radius:10px; padding:16px; background:#fbfcfd; margin-bottom:14px; display:none;}
+  .legal h4{font-size:12.5px; margin:14px 0 4px; color:var(--navy-deep);}
+  .legal h4:first-child{margin-top:0;}
+  .legal p{margin:0 0 8px;}
+  .legal-toggle{background:none; border:none; color:var(--gold); font-weight:700; font-size:13px; cursor:pointer; padding:0; margin-bottom:14px; text-decoration:underline;}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media(max-width:600px){.grid2{grid-template-columns:1fr;}}
+
+  label.field{display:block; margin-bottom:14px;}
+  label.field span{display:block; font-size:12px; font-weight:600; color:#3d4c58; margin-bottom:6px;}
+  label.field small{font-weight:400; color:#8a97a1; margin-left:4px;}
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=file], select, textarea{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:8px; font-size:16px;
+    font-family:var(--body); background:#fbfcfd; color:var(--navy-deep); transition:border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
+  textarea{resize:vertical; min-height:64px;}
+  input[readonly]{background:#f2f4f3; color:#3d4c58;}
+
+  .choice-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:8px;}
+  .choice{
+    position:relative; border:1.5px solid var(--line); border-radius:10px; padding:13px 30px 13px 12px; font-size:14px; cursor:pointer;
+    color:#3d4c58; background:#fbfcfd; text-align:center; font-weight:600; transition:border-color .15s, background .15s;
+  }
+  .choice:hover{border-color:var(--gold);}
+  .choice.sel{border-color:var(--gold); background:#f2f8f0; color:var(--navy-deep);}
+  .choice.sel::after{content:"\2713"; position:absolute; top:8px; right:10px; color:var(--gold); font-weight:800; font-size:13px;}
+
+  .doc-item{display:flex; align-items:flex-start; gap:10px; margin-bottom:0; font-size:13.5px; color:#3d4c58;}
+  .doc-item input{width:22px; height:22px; flex-shrink:0; margin-top:1px; cursor:pointer;}
+
+  .btn{border:none; padding:14px 26px; border-radius:999px; font-weight:600; font-size:15px; cursor:pointer; font-family:var(--body);}
+  .btn-primary{background:var(--navy); color:#fff;}
+  .btn-primary:hover{background:var(--navy-deep);}
+  .btn-primary:disabled{opacity:.35; cursor:not-allowed;}
+  .btn-pay{background:var(--gold); color:#fff;}
+  .btn-pay:hover{background:var(--gold-bright);}
+  .btn-pay:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-ghost{background:none; color:#5b6b78; border:1.5px solid var(--line);}
+  .btn-sm{padding:9px 18px; font-size:12.5px;}
+  .btn-block{width:100%; display:block; padding:17px 20px; font-size:16px;}
+
+  .summary-box{border:1.5px solid var(--line); border-radius:12px; padding:16px; background:#fbfcfd; margin-top:6px;}
+  .summary-row{display:flex; justify-content:space-between; font-size:13.5px; padding:5px 0; color:#3d4c58;}
+  .summary-row.total{border-top:1px solid var(--line); margin-top:6px; padding-top:10px; font-weight:700; color:var(--navy-deep); font-size:16px;}
+  .banner{border-radius:12px; padding:14px 16px; font-size:13.5px; margin-bottom:16px;}
+  .banner.ok{background:#f2f8f0; color:var(--ok); border:1px solid #cfe6cc;}
+  .banner.warn{background:#fdf3ef; color:var(--danger); border:1px solid #f0d8cd;}
+
+  .summary-card{border:2px solid var(--navy); position:relative;}
+  .badge-num{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--navy); color:#fff; font-size:12px; font-weight:700; margin-right:8px;}
+
+  @media(max-width:600px){
+    .card{padding:18px;}
+    .step-title{font-size:17px;}
+    .choice-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo-box"><img src="/logo.png" alt="Olfindo Immigration Consulting"></div>
+    <span class="brand-suffix">&mdash; Vehicle Rental Checklist</span>
+  </div>
+  <a class="topbar-link" href="/">Back to Olcorp.ca</a>
+</div>
+
+<div class="shell">
+  <div class="head">
+    <h1>Vehicle Rental Checklist &amp; Agreement</h1>
+    <p>Fill this out before you arrive to pick up the vehicle. Your answers are saved automatically &mdash; if you close this and come back later, you'll pick up right where you left off.</p>
+  </div>
+
+  <div id="paidBanner"></div>
+
+  <form name="rental-checklist" method="POST" data-netlify="true" netlify-honeypot="bot-field" enctype="multipart/form-data" id="rentalForm">
+  <input type="hidden" name="form-name" value="rental-checklist">
+  <p style="display:none;"><label>Don't fill this out: <input name="bot-field"></label></p>
+  <input type="hidden" name="email" id="email">
+  <input type="hidden" name="phone" id="phone">
+  <input type="hidden" name="totalDueNow" id="totalDueNow" value="50.00">
+
+  <div class="card">
+    <div class="step-title">Your Name</div>
+    <label class="field"><span>Full Name</span><input type="text" name="fullName" id="fullName" required></label>
+  </div>
+
+  <div class="card">
+    <div class="step-title">Car Rental Agreement</div>
+    <div class="step-sub">Lessor: Olfindo Immigration Consulting Corporation (Olcorp.ca). Governed by Saskatchewan law. Pay via e-transfer to payment@olcorp.ca; $100 security deposit; renter covers deductibles, fines, fuel, cleaning, and late fees; personal use only.</div>
+    <button type="button" class="legal-toggle" id="legalToggle">View full agreement</button>
+    <div class="legal" id="legalText">
+      <h4>1. Rental &amp; Payment</h4>
+      <p>Pay in advance via e-transfer to <strong>payment@olcorp.ca</strong>. Security deposit: $100 total ($50 at booking, $50 at delivery). Credit card on file may be charged for damages, penalties, or fees.</p>
+      <h4>2. Kilometers</h4>
+      <p>Unlimited kilometers within the declared booking destinations only.</p>
+      <h4>3. Vehicle Use Rules</h4>
+      <p>Personal use only. No illegal activity, no drunk/drug driving, no subleasing. No smoking or pets inside.</p>
+      <h4>4. Responsibility &amp; Charges</h4>
+      <p>Report accidents immediately to police &amp; Lessor. Renter covers deductibles, fines, fuel, cleaning, and late fees.<br>
+      Accident &amp; Broken/Chipped Windshield Penalty: no charge if availed No Obligation Plan; $800 (non-AutoPak holder); $200 (AutoPak holder).<br>
+      Cleaning fee: $200 (smoking or pets). Late fee: $1/min after 5-minute grace. Fuel: return full or pay refuel cost + $10. Early termination: 50% of daily rate for unused days.</p>
+      <h4>5. Insurance</h4>
+      <p>Must have liability, collision, and comprehensive coverage.</p>
+      <h4>6. Return Condition</h4>
+      <p>Return on time in the same condition (normal wear allowed).</p>
+      <h4>7. Legal</h4>
+      <p>Governed by Saskatchewan law. Agreement stays valid for future rentals unless replaced.</p>
+    </div>
+    <label class="doc-item">
+      <input type="checkbox" name="agreeTerms" id="agreeTerms" required>
+      <span>I have read and agree to the Rental Agreement above. <strong>*</strong></span>
+    </label>
+  </div>
+
+  <div class="card">
+    <div class="step-title">Quotation &amp; Balance</div>
+    <div id="quotePrefillBox" style="display:none;">
+      <div class="summary-box" style="margin-top:0;">
+        <div class="summary-row"><span>Vehicle</span><span id="dispVehicle">&mdash;</span></div>
+        <div class="summary-row"><span>Pickup</span><span id="dispPickup">&mdash;</span></div>
+        <div class="summary-row"><span>Drop-off</span><span id="dispDropoff">&mdash;</span></div>
+      </div>
+    </div>
+    <div id="quotePasteBox" style="display:none;">
+      <div class="step-sub">Paste the rental quotation text you received &mdash; the total and duration will be detected automatically.</div>
+      <label class="field"><span>Paste Rental Quotation</span><textarea name="quotationText" id="quotationText" style="min-height:110px; font-family:var(--mono); font-size:12.5px;" placeholder="Paste the full quotation text here, e.g. starting with 'RENTAL QUOTATION'..."></textarea></label>
+    </div>
+    <label class="field" style="margin-top:6px;"><span>Rental Duration (Days) <small>Used to calculate the No Obligation Plan fee, if selected below</small></span><input type="number" min="0" step="1" id="rentalDays" value="0"></label>
+    <label class="field" style="margin:0 0 6px;"><span>Amount Already Paid Toward Rental (at booking)</span></label>
+    <div class="choice-row" id="amountPaidRow">
+      <div class="choice" data-val="50">$50</div>
+      <div class="choice" data-val="other">Other Amount</div>
+    </div>
+    <div id="amountPaidOtherBox" style="display:none; margin-top:10px;">
+      <input type="number" id="amountPaidOther" min="0" step="0.01" placeholder="Enter amount already paid">
+    </div>
+    <input type="hidden" name="amountPaid" id="amountPaid" value="0">
+  </div>
+
+  <div class="card">
+    <div class="step-title">Emergency Contact</div>
+    <div class="step-sub">Name and phone number of your emergency contact, in case you're unreachable or if no response is received within 24 hours.</div>
+    <label class="field"><span>Name</span><input type="text" name="emergencyContactName" id="emergencyContactName" required></label>
+    <label class="field"><span>Phone Number</span><input type="tel" name="emergencyContactPhone" id="emergencyContactPhone" required></label>
+  </div>
+
+  <div class="card">
+    <div class="step-title">Key Policies</div>
+    <div class="step-sub">
+      &bull; Extensions must be requested at least 2 days before your return time, subject to availability.<br>
+      &bull; If you use street parking, Olcorp is not liable for theft, damage, or loss caused by others.<br>
+      &bull; You must remain reachable on your return date &mdash; an unreturned, unreachable vehicle may be reported stolen, which can lead to a Canada-wide police search and criminal charges.
+    </div>
+    <label class="doc-item">
+      <input type="checkbox" name="notedPolicies" id="notedPolicies" required>
+      <span>I acknowledge the extension, parking, and reachability policies above. <strong>*</strong></span>
+    </label>
+  </div>
+
+  <div class="card">
+    <div class="step-title">Photo Consent</div>
+    <div class="step-sub">May we share your photo, along with your first name only, with our rental car on our website and Facebook page?</div>
+    <div class="choice-row" id="photoConsentRow"></div>
+    <input type="hidden" name="photoConsent" id="photoConsentInput">
+  </div>
+
+  <div class="card">
+    <div class="step-title">Vehicle Condition During Turnover</div>
+    <div class="step-sub">Complete this part when you arrive to pick up the vehicle. Please also take a couple of pictures for your own reference before driving off.</div>
+    <div class="choice-row" id="conditionRow"></div>
+    <input type="hidden" name="vehicleCondition" id="vehicleConditionInput">
+    <div id="damagePhotoBox" style="display:none; margin-top:10px;">
+      <label class="field"><span>Upload a Photo of the Damage <small>Optional, but recommended</small></span><input type="file" name="damagePhoto" id="damagePhoto" accept="image/*" capture="environment"></label>
+      <label class="field"><span>Notes on Existing Damage</span><textarea name="conditionNotes" id="conditionNotes"></textarea></label>
+    </div>
+  </div>
+
+  <div class="card" id="coverageCard">
+    <div class="step-title">Damage Coverage Option</div>
+    <div class="step-sub">Were you offered the "No Obligation Fee" Plan? ($15/day &mdash; added to your balance below if accepted)</div>
+    <div class="choice-row" id="coverageRow"></div>
+    <input type="hidden" name="damageCoverage" id="damageCoverageInput">
+  </div>
+
+  <div class="card">
+    <div class="step-title">Signature</div>
+    <label class="doc-item" style="margin-bottom:14px;">
+      <input type="checkbox" name="finalAgree" id="finalAgree" required>
+      <span>I confirm the information above is accurate, I agree to the terms of this Car Rental Agreement, and I confirm I am receiving the vehicle in the condition described above. <strong>*</strong></span>
+    </label>
+    <label class="field"><span>Please sign below.</span></label>
+    <canvas id="sigPad" width="600" height="180" style="border:1px solid #ccc;border-radius:6px;width:100%;max-width:600px;height:180px;touch-action:none;background:#fff;"></canvas>
+    <input type="hidden" name="signatureDataUrl" id="signatureDataUrl">
+    <div style="margin-top:8px;">
+      <button class="btn btn-ghost btn-sm" id="clearSigBtn" type="button">Clear Signature</button>
+    </div>
+  </div>
+
+  <div class="card summary-card" id="summaryCard">
+    <div class="step-title">Review &amp; Checkout</div>
+
+    <label class="field" style="margin:0 0 6px;"><span>How will you pay the amount below?</span></label>
+    <div class="choice-row" id="paymentMethodRow" style="margin-bottom:16px;"></div>
+    <input type="hidden" name="paymentMethod" id="paymentMethodInput">
+
+    <div class="summary-box">
+      <div class="summary-row"><span>Quotation Total</span><span id="dispQuoteTotal">&mdash;</span></div>
+      <div class="summary-row" id="ccFeeRemovedRow" style="display:none;color:var(--ok);"><span>Credit Card Fee Removed (paying by e-Transfer)</span><span id="dispCcFeeRemoved">-$0.00</span></div>
+      <div class="summary-row"><span>Reservation Fee Paid</span><span id="dispAmountPaid">-$0.00</span></div>
+      <div class="summary-row total"><span>Remaining Rental Balance</span><span id="dispRentalBalance">$0.00</span></div>
+      <div class="summary-row"><span>$100 Refundable Security Deposit</span><span id="dispDeposit">+$100.00</span></div>
+      <div class="summary-row total"><span>Subtotal</span><span id="dispSubtotal">$100.00</span></div>
+      <div class="summary-row" id="coverageFeeRow" style="display:none;"><span>No Obligation Plan Insurance (<span id="coverageDaysLabel">0</span> days &times; $15)</span><span id="dispCoverageFee">$0.00</span></div>
+      <div class="summary-row" id="gstRow" style="display:none;"><span>GST (5% on No Obligation Plan)</span><span id="dispGst">$0.00</span></div>
+      <div class="summary-row" id="pstRow" style="display:none;"><span>PST (6% on No Obligation Plan)</span><span id="dispPst">$0.00</span></div>
+      <div class="summary-row" id="ccFeeRow" style="display:none;"><span>Credit Card Processing Fee (2.9% + $0.30, on No Obligation Plan only)</span><span id="dispCcFee">$0.00</span></div>
+      <div class="summary-row total"><span>Total Due Now</span><span id="dispTotalDue">$50.00</span></div>
+    </div>
+    <p class="step-sub" id="etransferNote" style="margin:8px 0 0; display:none;">Paying by e-Transfer &mdash; the credit card fee built into the quotation is removed. Send to <strong>payment@olcorp.ca</strong> for the amount above once you submit.</p>
+    <div style="margin-top:16px;">
+      <button class="btn btn-pay btn-block" id="checkoutBtn" type="button" disabled><span id="checkoutBtnLabel">Submit &amp; Checkout $50.00</span></button>
+    </div>
+    <p class="step-sub" id="consentNote" style="text-align:center;color:#8a3a26; margin:10px 0 0;">Please complete all required fields above, agree to the terms, and sign to enable checkout.</p>
+    <p class="step-sub" id="checkoutStatus" style="text-align:center; margin:10px 0 0; display:none;"></p>
+  </div>
+  </form>
+</div>
+
+<script>
+// --- Choice row helper ---
+function choiceRow(container, options, hiddenInputId, onSelect){
+  const el = document.getElementById(container);
+  el.innerHTML = options.map(o=>`<div class="choice" data-val="${o.val}">${o.label}</div>`).join('');
+  el.querySelectorAll('.choice').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      document.getElementById(hiddenInputId).value = c.dataset.val;
+      el.querySelectorAll('.choice').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      if(onSelect) onSelect(c.dataset.val);
+      recalcTotals();
+      updateGate();
+      saveDraft();
+    });
+  });
+}
+choiceRow('photoConsentRow', [
+  {val:'Yes', label:'Yes'},
+  {val:'No, keep confidential', label:'No, Keep Confidential'}
+], 'photoConsentInput');
+choiceRow('conditionRow', [
+  {val:'No visible damage', label:'No Visible Damage'},
+  {val:'Minor existing damage noted', label:'Minor Existing Damage Noted'}
+], 'vehicleConditionInput', (val)=>{
+  document.getElementById('damagePhotoBox').style.display = (val === 'Minor existing damage noted') ? 'block' : 'none';
+});
+choiceRow('coverageRow', [
+  {val:'Accepted - No Obligation Plan ($15/day)', label:'Yes, I Accept ($15/day)'},
+  {val:'Declined - responsible for SGI deductible', label:'Yes, I Decline'}
+], 'damageCoverageInput');
+choiceRow('paymentMethodRow', [
+  {val:'card', label:'Credit Card (Stripe)'},
+  {val:'etransfer', label:'Interac e-Transfer'}
+], 'paymentMethodInput', (val)=>{
+  document.getElementById('etransferNote').style.display = (val === 'etransfer') ? 'block' : 'none';
+});
+
+document.getElementById('legalToggle').addEventListener('click', ()=>{
+  const box = document.getElementById('legalText');
+  const btn = document.getElementById('legalToggle');
+  const showing = box.style.display === 'block';
+  box.style.display = showing ? 'none' : 'block';
+  btn.textContent = showing ? 'View full agreement' : 'Hide full agreement';
+});
+
+// --- Quotation: URL prefill or manual paste fallback ---
+const params = new URLSearchParams(window.location.search);
+const amountPaid = document.getElementById('amountPaid');
+const amountPaidOther = document.getElementById('amountPaidOther');
+const amountPaidOtherBox = document.getElementById('amountPaidOtherBox');
+const rentalDays = document.getElementById('rentalDays');
+const dispQuoteTotal = document.getElementById('dispQuoteTotal');
+const dispRentalBalance = document.getElementById('dispRentalBalance');
+const dispTotalDue = document.getElementById('dispTotalDue');
+const dispCoverageFee = document.getElementById('dispCoverageFee');
+const coverageFeeRow = document.getElementById('coverageFeeRow');
+const coverageDaysLabel = document.getElementById('coverageDaysLabel');
+const dispAmountPaid = document.getElementById('dispAmountPaid');
+const dispDeposit = document.getElementById('dispDeposit');
+const dispSubtotal = document.getElementById('dispSubtotal');
+const gstRow = document.getElementById('gstRow');
+const pstRow = document.getElementById('pstRow');
+const dispGst = document.getElementById('dispGst');
+const dispPst = document.getElementById('dispPst');
+const ccFeeRow = document.getElementById('ccFeeRow');
+const dispCcFee = document.getElementById('dispCcFee');
+const ccFeeRemovedRow = document.getElementById('ccFeeRemovedRow');
+const dispCcFeeRemoved = document.getElementById('dispCcFeeRemoved');
+const GST_RATE = 0.05;
+const PST_RATE = 0.06;
+const CC_FEE_PCT = 0.029;
+const CC_FEE_FLAT = 0.30;
+const coverageCard = document.getElementById('coverageCard');
+const totalDueNowInput = document.getElementById('totalDueNow');
+const checkoutBtnLabel = document.getElementById('checkoutBtnLabel');
+const DEPOSIT_FULL = 100;
+const COVERAGE_RATE = 15;
+let quoteTotal = 0;
+
+function parseQuotation(text){
+  const m = text.match(/\bTOTAL:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)/i);
+  return m ? parseFloat(m[1].replace(/,/g,'')) : 0;
+}
+function parseDuration(text){
+  // Duration lines look like "Duration: 8 days 1 hr". Any hour in excess of a
+  // full 24-hour block counts as a new full day of No Obligation Plan coverage.
+  const m = text.match(/Duration:\s*(\d+)\s*day[s]?(?:\s*(\d+)\s*(?:hour|hr)[s]?)?/i);
+  if(!m) return 0;
+  const days = parseInt(m[1], 10) || 0;
+  const hours = m[2] ? parseInt(m[2], 10) : 0;
+  return hours > 0 ? Math.ceil((days * 24 + hours) / 24) : days;
+}
+function parseInsurance(text){
+  const m = text.match(/Insurance:\s*(.+)/i);
+  return m ? m[1].trim() : '';
+}
+function applyInsuranceVisibility(insuranceText){
+  if(!insuranceText){
+    coverageCard.style.display = 'block';
+    return;
+  }
+  const isBasic = insuranceText.toLowerCase().includes('basic');
+  coverageCard.style.display = isBasic ? 'block' : 'none';
+  if(!isBasic){
+    document.getElementById('damageCoverageInput').value = '';
+    document.querySelectorAll('#coverageRow .choice').forEach(x=>x.classList.remove('sel'));
+  }
+}
+
+if(params.get('total')){
+  quoteTotal = parseFloat(params.get('total')) || 0;
+  document.getElementById('quotePrefillBox').style.display = 'block';
+  document.getElementById('dispVehicle').textContent = params.get('vehicle') || '—';
+  document.getElementById('dispPickup').textContent = params.get('pickup') || '—';
+  document.getElementById('dispDropoff').textContent = params.get('dropoff') || '—';
+  if(params.get('paid')) amountPaid.value = params.get('paid');
+  if(params.get('days')) rentalDays.value = params.get('days');
+  applyInsuranceVisibility(params.get('insurance') || '');
+} else {
+  document.getElementById('quotePasteBox').style.display = 'block';
+  const qt = document.getElementById('quotationText');
+  qt.addEventListener('input', ()=>{
+    quoteTotal = parseQuotation(qt.value || '');
+    const d = parseDuration(qt.value || '');
+    if(d) rentalDays.value = d;
+    applyInsuranceVisibility(parseInsurance(qt.value || ''));
+    recalcTotals();
+    updateGate();
+  });
+}
+['fullName','email','phone'].forEach(id=>{
+  const key = id === 'fullName' ? 'name' : id;
+  if(params.get(key)){ const el = document.getElementById(id); if(el) el.value = params.get(key); }
+  else if(params.get(id)){ const el = document.getElementById(id); if(el) el.value = params.get(id); }
+});
+
+function fmt(n){
+  return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function recalcTotals(){
+  const paid = parseFloat(amountPaid.value) || 0;
+  const days = parseFloat(rentalDays.value) || 0;
+  const coverageVisible = coverageCard.style.display !== 'none';
+  const coverageAccepted = coverageVisible && document.getElementById('damageCoverageInput').value === 'Accepted - No Obligation Plan ($15/day)';
+  const coverageFee = (coverageAccepted && days > 0) ? (COVERAGE_RATE * days) : 0;
+  const gst = coverageFee > 0 ? (coverageFee * GST_RATE) : 0;
+  const pst = coverageFee > 0 ? (coverageFee * PST_RATE) : 0;
+  const paymentMethod = document.getElementById('paymentMethodInput').value;
+
+  // The Quotation Total (from the rental-estimator) already has a 2.9% + $0.30 credit card
+  // fee built into it. If paying by e-Transfer, back that fee out of the quotation before
+  // calculating the balance — e-Transfer has no card fees, so the client shouldn't pay for one.
+  let embeddedCcFee = 0;
+  let adjustedQuoteTotal = quoteTotal;
+  if(paymentMethod === 'etransfer' && quoteTotal > 0){
+    const preFeeTotal = (quoteTotal - CC_FEE_FLAT) / (1 + CC_FEE_PCT);
+    embeddedCcFee = quoteTotal - preFeeTotal;
+    adjustedQuoteTotal = preFeeTotal;
+  }
+  const rentalBalance = Math.max(0, adjustedQuoteTotal - paid);
+  const subtotal = rentalBalance + DEPOSIT_FULL;
+  // On top of that, we only add a NEW card fee for the incremental No Obligation Plan charge
+  // (+ its tax), and only when the client is actually paying by card.
+  const nopChargeWithTax = coverageFee + gst + pst;
+  const ccFee = (paymentMethod === 'card' && nopChargeWithTax > 0) ? (nopChargeWithTax * CC_FEE_PCT + CC_FEE_FLAT) : 0;
+  const totalDue = subtotal + coverageFee + gst + pst + ccFee;
+
+  dispQuoteTotal.textContent = quoteTotal ? ('$' + fmt(quoteTotal)) : '— (not detected, paste or enter manually)';
+  if(embeddedCcFee > 0){
+    ccFeeRemovedRow.style.display = 'flex';
+    dispCcFeeRemoved.textContent = '-$' + fmt(embeddedCcFee);
+  } else {
+    ccFeeRemovedRow.style.display = 'none';
+  }
+  dispAmountPaid.textContent = '-$' + fmt(paid);
+  dispRentalBalance.textContent = '$' + fmt(rentalBalance);
+  dispDeposit.textContent = '+$' + fmt(DEPOSIT_FULL);
+  dispSubtotal.textContent = '$' + fmt(subtotal);
+  if(coverageFee > 0){
+    coverageFeeRow.style.display = 'flex';
+    coverageDaysLabel.textContent = days;
+    dispCoverageFee.textContent = '$' + fmt(coverageFee);
+    gstRow.style.display = 'flex';
+    pstRow.style.display = 'flex';
+    dispGst.textContent = '$' + fmt(gst);
+    dispPst.textContent = '$' + fmt(pst);
+  } else {
+    coverageFeeRow.style.display = 'none';
+    gstRow.style.display = 'none';
+    pstRow.style.display = 'none';
+  }
+  if(ccFee > 0){
+    ccFeeRow.style.display = 'flex';
+    dispCcFee.textContent = '$' + fmt(ccFee);
+  } else {
+    ccFeeRow.style.display = 'none';
+  }
+  dispTotalDue.textContent = '$' + fmt(totalDue);
+  totalDueNowInput.value = totalDue.toFixed(2);
+  checkoutBtnLabel.textContent = (paymentMethod === 'etransfer')
+    ? ('Submit Checklist — Pay $' + fmt(totalDue) + ' via e-Transfer')
+    : ('Submit & Checkout $' + fmt(totalDue));
+}
+
+document.querySelectorAll('#amountPaidRow .choice').forEach(ch=>{
+  ch.addEventListener('click', ()=>{
+    document.querySelectorAll('#amountPaidRow .choice').forEach(x=>x.classList.remove('sel'));
+    ch.classList.add('sel');
+    if(ch.dataset.val === 'other'){
+      amountPaidOtherBox.style.display = 'block';
+      amountPaid.value = amountPaidOther.value || 0;
+      amountPaidOther.focus();
+    } else {
+      amountPaidOtherBox.style.display = 'none';
+      amountPaid.value = ch.dataset.val;
+    }
+    recalcTotals();
+    saveDraft();
+  });
+});
+amountPaidOther.addEventListener('input', ()=>{
+  amountPaid.value = amountPaidOther.value || 0;
+  recalcTotals();
+  saveDraft();
+});
+rentalDays.addEventListener('input', ()=>{ recalcTotals(); saveDraft(); });
+recalcTotals();
+
+// --- Local draft autosave/restore ---
+const STORAGE_KEY = 'olcorp_rental_checklist_draft_v3';
+const draftFieldIds = ['fullName','email','phone','emergencyContactName','emergencyContactPhone','quotationText','conditionNotes','amountPaidOther','rentalDays'];
+function saveDraft(){
+  const draft = {};
+  draftFieldIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) draft[id] = el.value;
+  });
+  draft.agreeTerms = document.getElementById('agreeTerms').checked;
+  draft.notedPolicies = document.getElementById('notedPolicies').checked;
+  draft.photoConsent = document.getElementById('photoConsentInput').value;
+  draft.vehicleCondition = document.getElementById('vehicleConditionInput').value;
+  draft.damageCoverage = document.getElementById('damageCoverageInput').value;
+  draft.paymentMethod = document.getElementById('paymentMethodInput').value;
+  draft.amountPaid = document.getElementById('amountPaid').value;
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(draft)); }catch(e){}
+}
+function restoreDraft(){
+  let draft;
+  try{ draft = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); }catch(e){ draft = null; }
+  if(!draft) return;
+  draftFieldIds.forEach(id=>{
+    if(draft[id] !== undefined){
+      const el = document.getElementById(id);
+      if(el && !el.value) el.value = draft[id];
+    }
+  });
+  if(draft.agreeTerms) document.getElementById('agreeTerms').checked = true;
+  if(draft.notedPolicies) document.getElementById('notedPolicies').checked = true;
+  const restoreChoice = (containerSel, hiddenId, val, cb)=>{
+    if(!val) return;
+    document.getElementById(hiddenId).value = val;
+    document.querySelectorAll(containerSel + ' .choice').forEach(c=>{
+      if(c.dataset.val === val) c.classList.add('sel');
+    });
+    if(cb) cb(val);
+  };
+  restoreChoice('#photoConsentRow', 'photoConsentInput', draft.photoConsent);
+  restoreChoice('#conditionRow', 'vehicleConditionInput', draft.vehicleCondition, (val)=>{
+    document.getElementById('damagePhotoBox').style.display = (val === 'Minor existing damage noted') ? 'block' : 'none';
+  });
+  restoreChoice('#coverageRow', 'damageCoverageInput', draft.damageCoverage);
+  restoreChoice('#paymentMethodRow', 'paymentMethodInput', draft.paymentMethod, (val)=>{
+    document.getElementById('etransferNote').style.display = (val === 'etransfer') ? 'block' : 'none';
+  });
+  if(draft.amountPaid !== undefined){
+    document.getElementById('amountPaid').value = draft.amountPaid;
+    const val = String(draft.amountPaid);
+    document.querySelectorAll('#amountPaidRow .choice').forEach(c=>{
+      if(c.dataset.val === val) c.classList.add('sel');
+    });
+    if(val !== '50' && val !== '0'){
+      amountPaidOtherBox.style.display = 'block';
+      amountPaidOther.value = draft.amountPaid;
+      document.querySelector('#amountPaidRow .choice[data-val="other"]').classList.add('sel');
+    }
+  }
+  if(!params.get('total')){
+    const qtEl = document.getElementById('quotationText');
+    if(qtEl && qtEl.value){
+      quoteTotal = parseQuotation(qtEl.value);
+      const d = parseDuration(qtEl.value);
+      if(d && !params.get('days')) rentalDays.value = d;
+      applyInsuranceVisibility(parseInsurance(qtEl.value));
+    }
+  }
+  recalcTotals();
+  updateGate();
+}
+
+// --- Signature pad ---
+const sigCanvas = document.getElementById('sigPad');
+const sigCtx = sigCanvas.getContext('2d');
+sigCtx.lineWidth = 2; sigCtx.lineCap = 'round'; sigCtx.strokeStyle = '#1a1a1a';
+let sigDrawing = false, sigLastX = 0, sigLastY = 0, sigHasStroke = false;
+function sigPos(e){
+  const rect = sigCanvas.getBoundingClientRect();
+  const scaleX = sigCanvas.width / rect.width, scaleY = sigCanvas.height / rect.height;
+  const point = e.touches ? e.touches[0] : e;
+  return { x: (point.clientX - rect.left) * scaleX, y: (point.clientY - rect.top) * scaleY };
+}
+function sigStart(e){ e.preventDefault(); sigDrawing = true; const p = sigPos(e); sigLastX = p.x; sigLastY = p.y; }
+function sigMove(e){
+  if(!sigDrawing) return;
+  e.preventDefault();
+  const p = sigPos(e);
+  sigCtx.beginPath(); sigCtx.moveTo(sigLastX, sigLastY); sigCtx.lineTo(p.x, p.y); sigCtx.stroke();
+  sigLastX = p.x; sigLastY = p.y; sigHasStroke = true;
+  updateGate();
+}
+function sigEnd(){ sigDrawing = false; }
+sigCanvas.addEventListener('mousedown', sigStart);
+sigCanvas.addEventListener('mousemove', sigMove);
+window.addEventListener('mouseup', sigEnd);
+sigCanvas.addEventListener('touchstart', sigStart);
+sigCanvas.addEventListener('touchmove', sigMove);
+sigCanvas.addEventListener('touchend', sigEnd);
+document.getElementById('clearSigBtn').addEventListener('click', ()=>{
+  sigCtx.clearRect(0,0,sigCanvas.width,sigCanvas.height);
+  sigHasStroke = false;
+  document.getElementById('signatureDataUrl').value = '';
+  updateGate();
+});
+
+if(params.get('paid') === '1'){
+  document.getElementById('paidBanner').innerHTML = '<div class="banner ok">Payment received — thank you!</div>';
+} else if(params.get('paid') === '0'){
+  document.getElementById('paidBanner').innerHTML = '<div class="banner warn">Payment was not completed. You can try again below.</div>';
+}
+
+// --- Whole-page validation gate ---
+const requiredIds = ['fullName','agreeTerms','emergencyContactName','emergencyContactPhone','notedPolicies','finalAgree'];
+function updateGate(){
+  let ok = true;
+  requiredIds.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(el.type === 'checkbox'){ if(!el.checked) ok = false; }
+    else { if(!el.value || !el.value.trim()) ok = false; }
+  });
+  if(!document.getElementById('photoConsentInput').value) ok = false;
+  if(!document.getElementById('vehicleConditionInput').value) ok = false;
+  if(coverageCard.style.display !== 'none' && !document.getElementById('damageCoverageInput').value) ok = false;
+  if(!document.getElementById('paymentMethodInput').value) ok = false;
+  if(!sigHasStroke) ok = false;
+  document.getElementById('checkoutBtn').disabled = !ok;
+  document.getElementById('consentNote').style.display = ok ? 'none' : 'block';
+}
+document.querySelectorAll('input, textarea').forEach(el=>{
+  const evt = (el.type === 'checkbox' || el.type === 'file') ? 'change' : 'input';
+  el.addEventListener(evt, ()=>{ updateGate(); saveDraft(); });
+});
+updateGate();
+restoreDraft();
+
+// --- Submit (Netlify Forms) then Stripe checkout, single tap ---
+const rentalForm = document.getElementById('rentalForm');
+const checkoutBtn = document.getElementById('checkoutBtn');
+const checkoutStatus = document.getElementById('checkoutStatus');
+
+checkoutBtn.addEventListener('click', async ()=>{
+  document.getElementById('signatureDataUrl').value = sigCanvas.toDataURL('image/png');
+  checkoutBtn.disabled = true;
+  checkoutStatus.style.display = 'block';
+  checkoutStatus.textContent = 'Saving your checklist…';
+  try{
+    const formData = new FormData(rentalForm);
+    const resp = await fetch('/', { method: 'POST', body: formData });
+    if(!resp.ok){
+      checkoutStatus.textContent = 'Submission failed. Please check your connection and try again, or contact consulting@olcorp.ca.';
+      checkoutBtn.disabled = false;
+      return;
+    }
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+
+    const amount = parseFloat(totalDueNowInput.value) || 0;
+    const paymentMethod = document.getElementById('paymentMethodInput').value;
+
+    if(paymentMethod === 'etransfer'){
+      checkoutStatus.textContent = amount > 0
+        ? ('Checklist received — thank you! Please send $' + fmt(amount) + ' by Interac e-Transfer to payment@olcorp.ca to complete your payment.')
+        : 'Checklist received — thank you! You\'re all set, see you at pickup.';
+      return;
+    }
+
+    if(amount <= 0){
+      checkoutStatus.textContent = 'Checklist received — thank you! You\'re all set, see you at pickup.';
+      return;
+    }
+    checkoutStatus.textContent = 'Opening secure Stripe checkout…';
+    const payResp = await fetch('/.netlify/functions/create-checkout', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        amount: amount,
+        clientName: document.getElementById('fullName').value || 'Client',
+        email: document.getElementById('email').value || '',
+        description: 'Rental balance + deposit' + (document.getElementById('damageCoverageInput').value.startsWith('Accepted') ? ' + No Obligation Plan' : '')
+      })
+    });
+    const result = await payResp.json();
+    if(result.url){
+      window.location.href = result.url;
+    } else {
+      checkoutStatus.textContent = (result.error || 'Could not start payment.') + ' Your checklist was saved — contact us to complete payment.';
+      checkoutBtn.disabled = false;
+    }
+  } catch(e){
+    checkoutStatus.textContent = 'Something went wrong. Please try again, or contact consulting@olcorp.ca.';
+    checkoutBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
