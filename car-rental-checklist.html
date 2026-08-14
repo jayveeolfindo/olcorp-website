@@ -108,7 +108,7 @@
     <div class="logo-box"><img src="/logo.png" alt="Olfindo Immigration Consulting"></div>
     <span class="brand-suffix">&mdash; Vehicle Rental Checklist</span>
   </div>
-  <a class="topbar-link" href="/">Back to Olcorp.ca</a>
+  <button class="topbar-link" id="newCustomerBtn" type="button" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;">New Customer</button>
 </div>
 
 <div class="shell">
@@ -695,6 +695,13 @@ checkoutBtn.addEventListener('click', async ()=>{
     checkoutStatus.textContent = 'Something went wrong. Please try again, or contact consulting@olcorp.ca.';
     checkoutBtn.disabled = false;
   }
+});
+
+// --- New Customer: clear saved draft + any URL prefill, reload blank ---
+document.getElementById('newCustomerBtn').addEventListener('click', ()=>{
+  if(!confirm('Start a new customer? This will clear all entered information.')) return;
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  window.location.href = window.location.pathname;
 });
 </script>
 </body>
