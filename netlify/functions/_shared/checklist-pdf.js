@@ -16,16 +16,28 @@ const CC_FEE_FLAT = 0.3;
 const DEPOSIT_FULL = 100;
 const COVERAGE_RATE = 15;
 
-// Vehicle owners who should be CC'd on the confirmation email for their car.
-// Match is case-insensitive substring against the vehicle name captured from
-// the rental checklist link (?vehicle=...).
-const OWNER_CC_BY_VEHICLE = [
-  { match: "kia carnival", email: "castorjuel@yahoo.com" },
-  { match: "jeep wrangler", email: "castorjuel@yahoo.com" },
-];
+// Vehicle owner CC'd on every car rental confirmation email, regardless of
+// which vehicle was booked.
+const OWNER_CC_EMAIL = "castorjuel@yahoo.com";
 
 function fmt(n) {
 return (Number(n) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Fetches the Olcorp company logo (same file used in the site's topbar) from
+// the live site so the PDF stays in sync automatically if the logo is ever
+// replaced. Returns null (and the PDF is built without a logo) if anything
+// goes wrong -- a missing logo should never block the checklist PDF from
+// being generated and emailed.
+async function fetchLogoBytes() {
+try {
+const baseUrl = (process.env.URL || "https://olcorp.ca").replace(/\/$/, "");
+const resp = await fetch(baseUrl + "/logo.png");
+if (!resp.ok) return null;
+return Buffer.from(await resp.arrayBuffer());
+} catch (e) {
+return null;
+}
 }
 
 // Mirrors the client-side recalcTotals() logic so the PDF breakdown matches
@@ -68,6 +80,28 @@ totalDue: Number(sub.totalDue) || computedTotalDue,
 };
 }
 
+// Company letterhead block -- mirrors the header on Olcorp.ca's real
+// invoices (see the accounting app's invoice PDFs) so this document reads as
+// an official Olcorp.ca form rather than a generic one-off page.
+const COMPANY_LINES = [
+{ text: "Olcorp.ca Immigration & Rentals", bold: true, size: 10.5 },
+{ text: "7th Floor 2010 11th Ave", size: 9 },
+{ text: "Regina SK  S4P 0J3", size: 9 },
+{ text: "+1 639 554 9791", size: 9 },
+{ text: "consulting@olcorp.ca", size: 9 },
+{ text: "www.olcorp.ca", size: 9 },
+{ text: "GST/HST Registration No.: 779913003RT0001", size: 8 },
+{ text: "Business Number 779913003", size: 8 },
+];
+
+function formatSubmittedDate(iso) {
+try {
+return new Date(iso).toLocaleDateString("en-CA", { year: "numeric", month: "short", day: "numeric" });
+} catch (e) {
+return iso;
+}
+}
+
 async function buildPdfBuffer(sub) {
 const doc = await PDFDocument.create();
 const page = doc.addPage([612, 792]); // US Letter
@@ -76,79 +110,129 @@ const bold = await doc.embedFont(StandardFonts.HelveticaBold);
 const navy = rgb(0.05, 0.05, 0.05);
 const gray = rgb(0.35, 0.35, 0.35);
 
-let y = 740;
 const left = 54;
+const right = 558; // right margin -- amount columns and right-aligned text end here
 const lineGap = 16;
 
-function heading(text) {
-page.drawText(text, { x: left, y, size: 15, font: bold, color: navy });
-y -= 22;
+function widthOf(f, text, size) {
+return f.widthOfTextAtSize(String(text), size);
 }
-function row(label, value) {
-page.drawText(label, { x: left, y, size: 10.5, font: bold, color: gray });
+function drawRight(text, yPos, size, f, color) {
+page.drawText(String(text), { x: right - widthOf(f, text, size), y: yPos, size, font: f, color });
+}
+function heading(text, yPos) {
+page.drawText(text, { x: left, y: yPos, size: 13, font: bold, color: navy });
+page.drawLine({ start: { x: left, y: yPos - 6 }, end: { x: right, y: yPos - 6 }, thickness: 0.75, color: rgb(0.85, 0.85, 0.85) });
+return yPos - 24;
+}
+function row(label, value, yPos) {
+page.drawText(label, { x: left, y: yPos, size: 10, font: bold, color: gray });
 page.drawText(String(value == null || value === "" ? "—" : value), {
-x: left + 190,
-y,
-size: 10.5,
+x: left + 160,
+y: yPos,
+size: 10,
 font,
 color: navy,
 });
-y -= lineGap;
+return yPos - lineGap;
 }
-function moneyRow(label, value, opts) {
+function moneyRow(label, value, yPos, opts) {
 opts = opts || {};
-page.drawText(label, { x: left, y, size: 10.5, font: opts.bold ? bold : font, color: navy });
-page.drawText("$" + fmt(value), { x: 480, y, size: 10.5, font: opts.bold ? bold : font, color: navy });
-y -= lineGap;
+const f = opts.bold ? bold : font;
+const text = "$" + fmt(value);
+page.drawText(label, { x: left, y: yPos, size: 10.5, font: f, color: navy });
+drawRight(text, yPos, 10.5, f, navy);
+return yPos - lineGap;
 }
 
-page.drawText("Olfindo Immigration Consulting Corporation (Olcorp.ca)", {
-x: left,
-y,
-size: 11,
-font: bold,
-color: navy,
-});
-y -= 16;
-page.drawText("Vehicle Rental Checklist & Agreement — Signed Copy", { x: left, y, size: 16, font: bold, color: navy });
-y -= 30;
+// --- Letterhead: logo top-left (2x size), company block top-right ---
+const topY = 758;
+let logoBottom = topY;
+const logoBytes = await fetchLogoBytes();
+if (logoBytes) {
+try {
+const logoImg = await doc.embedPng(logoBytes);
+const logoWidth = 200; // 2x the original header size
+const logoHeight = (logoImg.height / logoImg.width) * logoWidth;
+page.drawImage(logoImg, { x: left, y: topY - logoHeight, width: logoWidth, height: logoHeight });
+logoBottom = topY - logoHeight;
+} catch (e) {
+// If the logo fails to embed, just skip it -- the rest of the letterhead still renders.
+}
+}
 
-heading("Client Information");
-row("Full Name", sub.fullName);
-row("Email", sub.email);
-row("Phone", sub.phone);
-row("Emergency Contact", sub.emergencyContactName);
-row("Emergency Phone", sub.emergencyContactPhone);
-y -= 8;
+let companyY = topY - 2;
+for (const line of COMPANY_LINES) {
+drawRight(line.text, companyY, line.size, line.bold ? bold : font, line.bold ? navy : gray);
+companyY -= line.size + 3;
+}
 
-heading("Checklist");
-if (sub.vehicle) row("Vehicle", sub.vehicle);
-row("Photo Consent", sub.photoConsent);
-row("Vehicle Condition", sub.vehicleCondition);
-if (sub.conditionNotes) row("Condition Notes", sub.conditionNotes);
-row("Damage Coverage", sub.damageCoverage);
-row("Payment Method", sub.paymentMethod === "etransfer" ? "Interac e-Transfer" : "Credit Card (Stripe)");
-row("Rental Duration", (Number(sub.rentalDays) || 0) + " day(s)");
-y -= 8;
+let y = Math.min(logoBottom, companyY) - 26;
+
+// --- Title ---
+const titleText = "VEHICLE RENTAL CHECKLIST & AGREEMENT";
+const titleSize = 20 * 0.2; // 80% smaller than the original 20pt
+const titleWidth = widthOf(bold, titleText, titleSize);
+page.drawText(titleText, { x: (612 - titleWidth) / 2, y, size: titleSize, font: bold, color: navy });
+y -= 18;
+page.drawText("Signed Copy", { x: left, y, size: 10.5, font, color: gray });
+y -= 20;
+page.drawLine({ start: { x: left, y }, end: { x: right, y }, thickness: 1, color: navy });
+y -= 26;
+
+// --- Meta block: client on the left, booking reference on the right (mirrors BILL TO / INVOICE #) ---
+const metaTop = y;
+page.drawText("PREPARED FOR", { x: left, y, size: 8.5, font: bold, color: gray });
+page.drawText("SUBMITTED", { x: left + 260, y, size: 8.5, font: bold, color: gray });
+y -= 14;
+page.drawText(sub.fullName || "—", { x: left, y, size: 12.5, font: bold, color: navy });
+page.drawText(sub.submittedAt ? formatSubmittedDate(sub.submittedAt) : "—", { x: left + 260, y, size: 11, font, color: navy });
+y -= 15;
+if (sub.email) {
+page.drawText(sub.email, { x: left, y, size: 9.5, font, color: gray });
+y -= 13;
+}
+if (sub.phone) {
+page.drawText(sub.phone, { x: left, y, size: 9.5, font, color: gray });
+y -= 13;
+}
+if (sub.vehicle) {
+page.drawText("VEHICLE", { x: left + 260, y: metaTop - 29, size: 8.5, font: bold, color: gray });
+page.drawText(sub.vehicle, { x: left + 260, y: metaTop - 43, size: 10.5, font, color: navy });
+}
+y = Math.min(y, metaTop - 60) - 12;
+page.drawLine({ start: { x: left, y }, end: { x: right, y }, thickness: 0.75, color: rgb(0.85, 0.85, 0.85) });
+y -= 24;
+
+y = heading("Checklist", y);
+y = row("Emergency Contact", sub.emergencyContactName, y);
+y = row("Emergency Phone", sub.emergencyContactPhone, y);
+y = row("Photo Consent", sub.photoConsent, y);
+y = row("Vehicle Condition", sub.vehicleCondition, y);
+if (sub.conditionNotes) y = row("Condition Notes", sub.conditionNotes, y);
+y = row("Damage Coverage", sub.damageCoverage, y);
+y = row("Payment Method", sub.paymentMethod === "etransfer" ? "Interac e-Transfer" : "Credit Card (Stripe)", y);
+y = row("Rental Duration", (Number(sub.rentalDays) || 0) + " day(s)", y);
+y -= 10;
 
 const b = computeBreakdown(sub);
-heading("Payment Summary");
-moneyRow("Quotation Total", b.quoteTotal);
-if (b.embeddedCcFee > 0) moneyRow("Credit Card Fee Removed (e-Transfer)", -b.embeddedCcFee);
-moneyRow("Reservation Fee Paid", -(Number(sub.amountPaid) || 0));
-moneyRow("Remaining Rental Balance", b.rentalBalance, { bold: true });
-moneyRow("$100 Refundable Security Deposit", b.deposit);
-moneyRow("Subtotal", b.subtotal, { bold: true });
+y = heading("Payment Summary", y);
+y = moneyRow("Quotation Total", b.quoteTotal, y);
+if (b.embeddedCcFee > 0) y = moneyRow("Credit Card Fee Removed (e-Transfer)", -b.embeddedCcFee, y);
+y = moneyRow("Reservation Fee Paid", -(Number(sub.amountPaid) || 0), y);
+y = moneyRow("Remaining Rental Balance", b.rentalBalance, y, { bold: true });
+y = moneyRow("$100 Refundable Security Deposit", b.deposit, y);
+y = moneyRow("Subtotal", b.subtotal, y, { bold: true });
 if (b.coverageFee > 0) {
-moneyRow("No Obligation Plan (" + (Number(sub.rentalDays) || 0) + " days x $15)", b.coverageFee);
-moneyRow("GST (5%)", b.gst);
-moneyRow("PST (6%)", b.pst);
+y = moneyRow("No Obligation Plan (" + (Number(sub.rentalDays) || 0) + " days x $15)", b.coverageFee, y);
+y = moneyRow("GST (5%)", b.gst, y);
+y = moneyRow("PST (6%)", b.pst, y);
 }
-if (b.ccFee > 0) moneyRow("Credit Card Processing Fee", b.ccFee);
+if (b.ccFee > 0) y = moneyRow("Credit Card Processing Fee", b.ccFee, y);
 y -= 4;
-page.drawLine({ start: { x: left, y: y + 10 }, end: { x: 558, y: y + 10 }, thickness: 0.75, color: gray });
+page.drawLine({ start: { x: left, y: y + 10 }, end: { x: right, y: y + 10 }, thickness: 0.75, color: gray });
 y -= 10;
-moneyRow("Total Due", b.totalDue, { bold: true });
+y = moneyRow("Total Due", b.totalDue, y, { bold: true });
 y -= 20;
 
 if (sub.signatureDataUrl && sub.signatureDataUrl.indexOf("data:image/png;base64,") === 0) {
@@ -158,7 +242,7 @@ const bytes = Buffer.from(base64, "base64");
 const png = await doc.embedPng(bytes);
 const sigWidth = 220;
 const sigHeight = (png.height / png.width) * sigWidth;
-page.drawText("Signature", { x: left, y, size: 10.5, font: bold, color: gray });
+page.drawText("Customer Signature", { x: left, y, size: 10.5, font: bold, color: gray });
 y -= sigHeight - 4;
 page.drawImage(png, { x: left, y, width: sigWidth, height: sigHeight });
 y -= 16;
@@ -167,10 +251,17 @@ y -= 16;
 }
 }
 
+page.drawText("Questions? Please contact Juel at 639-915-0209.", {
+x: left,
+y: 50,
+size: 9,
+font,
+color: gray,
+});
 page.drawText("Submitted " + (sub.submittedAt || new Date().toISOString()), {
 x: left,
-y: 40,
-size: 8.5,
+y: 34,
+size: 8,
 font,
 color: gray,
 });
@@ -180,10 +271,7 @@ return Buffer.from(pdfBytes);
 }
 
 function ownerCcForVehicle(vehicleName) {
-const key = (vehicleName || "").toLowerCase();
-if (!key) return null;
-const hit = OWNER_CC_BY_VEHICLE.find((o) => key.includes(o.match));
-return hit ? hit.email : null;
+return OWNER_CC_EMAIL;
 }
 
 async function sendConfirmationEmail(sub) {
