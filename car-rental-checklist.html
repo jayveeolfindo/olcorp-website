@@ -160,6 +160,19 @@
   </div>
 
   <div class="card">
+    <div class="step-title">Key Policies</div>
+    <div class="step-sub">
+      &bull; Extensions must be requested at least 2 days before your return time, subject to availability.<br>
+      &bull; If you use street parking, Olcorp is not liable for theft, damage, or loss caused by others.<br>
+      &bull; You must remain reachable on your return date &mdash; an unreturned, unreachable vehicle may be reported stolen, which can lead to a Canada-wide police search and criminal charges.
+    </div>
+    <label class="doc-item">
+      <input type="checkbox" name="notedPolicies" id="notedPolicies" required>
+      <span>I acknowledge the extension, parking, and reachability policies above. <strong>*</strong></span>
+    </label>
+  </div>
+
+  <div class="card">
     <div class="step-title">Quotation &amp; Balance</div>
     <div id="quotePrefillBox" style="display:none;">
       <div class="summary-box" style="margin-top:0;">
@@ -169,8 +182,15 @@
       </div>
     </div>
     <div id="quotePasteBox" style="display:none;">
-      <div class="step-sub">Paste the rental quotation text you received &mdash; the total and duration will be detected automatically.</div>
-      <label class="field"><span>Paste Rental Quotation</span><textarea name="quotationText" id="quotationText" style="min-height:110px; font-family:var(--mono); font-size:12.5px;" placeholder="Paste the full quotation text here, e.g. starting with 'RENTAL QUOTATION'..."></textarea></label>
+      <div class="step-sub">Paste your rental quotation or reservation invoice text &mdash; the vehicle, dates, total, and deposit will be detected automatically.</div>
+      <label class="field"><span>Paste Rental Quotation or Reservation Invoice</span><textarea name="quotationText" id="quotationText" style="min-height:110px; font-family:var(--mono); font-size:12.5px;" placeholder="Paste the full quotation or invoice text here..."></textarea></label>
+      <div id="pasteDetectedBox" style="display:none;">
+        <div class="summary-box" style="margin-top:0;">
+          <div class="summary-row"><span>Detected Vehicle</span><span id="dispVehiclePaste">&mdash;</span></div>
+          <div class="summary-row"><span>Detected Pickup</span><span id="dispPickupPaste">&mdash;</span></div>
+          <div class="summary-row"><span>Detected Drop-off</span><span id="dispDropoffPaste">&mdash;</span></div>
+        </div>
+      </div>
     </div>
     <label class="field" style="margin-top:6px;"><span>Rental Duration (Days) <small>Used to calculate the No Obligation Plan fee, if selected below</small></span><input type="number" min="0" step="1" id="rentalDays" value="0"></label>
     <label class="field" style="margin:0 0 6px;"><span>Amount Already Paid Toward Rental (at booking)</span></label>
@@ -189,19 +209,6 @@
     <div class="step-sub">Name and phone number of your emergency contact, in case you're unreachable or if no response is received within 24 hours.</div>
     <label class="field"><span>Name</span><input type="text" name="emergencyContactName" id="emergencyContactName" required></label>
     <label class="field"><span>Phone Number</span><input type="tel" name="emergencyContactPhone" id="emergencyContactPhone" required></label>
-  </div>
-
-  <div class="card">
-    <div class="step-title">Key Policies</div>
-    <div class="step-sub">
-      &bull; Extensions must be requested at least 2 days before your return time, subject to availability.<br>
-      &bull; If you use street parking, Olcorp is not liable for theft, damage, or loss caused by others.<br>
-      &bull; You must remain reachable on your return date &mdash; an unreturned, unreachable vehicle may be reported stolen, which can lead to a Canada-wide police search and criminal charges.
-    </div>
-    <label class="doc-item">
-      <input type="checkbox" name="notedPolicies" id="notedPolicies" required>
-      <span>I acknowledge the extension, parking, and reachability policies above. <strong>*</strong></span>
-    </label>
   </div>
 
   <div class="card">
@@ -321,7 +328,7 @@ document.getElementById('legalToggle').addEventListener('click', ()=>{
 
 // --- Quotation: URL prefill or manual paste fallback ---
 const params = new URLSearchParams(window.location.search);
-const vehicleName = params.get('vehicle') || '';
+let vehicleName = params.get('vehicle') || '';
 const amountPaid = document.getElementById('amountPaid');
 const amountPaidOther = document.getElementById('amountPaidOther');
 const amountPaidOtherBox = document.getElementById('amountPaidOtherBox');
@@ -371,6 +378,66 @@ function parseInsurance(text){
   const m = text.match(/Insurance:\s*(.+)/i);
   return m ? m[1].trim() : '';
 }
+// Parses a pasted Reservation Invoice / Receipt (from the Olcorp accounting
+// app) instead of, or in addition to, a rental quotation. Invoice line looks
+// like: "Car Rental — Reservation for 2025 Kia Carnival Hybrid — Pickup Aug
+// 16, 2026 at 6:00 AM, Drop-off Aug 20, 2026 at 6:00 PM — 4 days 12 hrs —
+// Alberta & Manitoba add-on", with a "BILL TO" name block and a
+// "RESERVATION FEE (DEPOSIT) — RECEIVED $50.00" line elsewhere on the page.
+function parseReceipt(text){
+  const out = {};
+  const vehicleM = text.match(/Reservation for\s+([^—\n]+?)\s*(?:—|\n|$)/i);
+  if(vehicleM) out.vehicle = vehicleM[1].trim();
+  const pickupM = text.match(/Pickup\s+([A-Za-z]+\.?\s+\d{1,2},?\s*\d{4}(?:\s+at\s+\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\.?)?)/);
+  if(pickupM) out.pickup = pickupM[1].replace(/\s+/g,' ').trim();
+  const dropoffM = text.match(/Drop[- ]?off\s+([A-Za-z]+\.?\s+\d{1,2},?\s*\d{4}(?:\s+at\s+\d{1,2}:\d{2}\s*[AaPp]\.?[Mm]\.?)?)/);
+  if(dropoffM) out.dropoff = dropoffM[1].replace(/\s+/g,' ').trim();
+  const durM = text.match(/—\s*(\d+)\s*days?(?:\s+(\d+)\s*hrs?)?\s*—/i) || text.match(/(\d+)\s*days?(?:\s+(\d+)\s*hrs?)?/i);
+  if(durM){
+    const days = parseInt(durM[1],10) || 0;
+    const hrs = durM[2] ? parseInt(durM[2],10) : 0;
+    out.days = hrs > 0 ? Math.ceil((days*24+hrs)/24) : days;
+  }
+  const depositM = text.match(/RESERVATION FEE[^\n]*RECEIVED\s*\$?\s*([\d,]+\.\d{2})/i) || text.match(/RECEIVED\s*\$?\s*([\d,]+\.\d{2})/i);
+  if(depositM) out.deposit = parseFloat(depositM[1].replace(/,/g,''));
+  const nameM = text.match(/BILL TO\s*[\r\n]+\s*([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){1,4})/);
+  if(nameM) out.name = nameM[1].trim();
+  return out;
+}
+function applyReceiptDetection(text){
+  const r = parseReceipt(text);
+  const detectedAny = r.vehicle || r.pickup || r.dropoff || r.deposit || r.name;
+  if(!detectedAny){
+    document.getElementById('pasteDetectedBox').style.display = 'none';
+    return;
+  }
+  document.getElementById('pasteDetectedBox').style.display = 'block';
+  document.getElementById('dispVehiclePaste').textContent = r.vehicle || '—';
+  document.getElementById('dispPickupPaste').textContent = r.pickup || '—';
+  document.getElementById('dispDropoffPaste').textContent = r.dropoff || '—';
+  if(r.name){
+    const fullNameEl = document.getElementById('fullName');
+    if(fullNameEl && !fullNameEl.value) fullNameEl.value = r.name;
+  }
+  if(r.vehicle && !vehicleName) vehicleName = r.vehicle;
+  if(typeof r.days === 'number' && r.days > 0 && (!rentalDays.value || rentalDays.value === '0')){
+    rentalDays.value = r.days;
+  }
+  if(typeof r.deposit === 'number'){
+    amountPaid.value = r.deposit;
+    const val = String(r.deposit);
+    document.querySelectorAll('#amountPaidRow .choice').forEach(c=>c.classList.remove('sel'));
+    const match = document.querySelector('#amountPaidRow .choice[data-val="' + val + '"]');
+    if(match){
+      match.classList.add('sel');
+      amountPaidOtherBox.style.display = 'none';
+    } else {
+      amountPaidOtherBox.style.display = 'block';
+      amountPaidOther.value = r.deposit;
+      document.querySelector('#amountPaidRow .choice[data-val="other"]').classList.add('sel');
+    }
+  }
+}
 function applyInsuranceVisibility(insuranceText){
   if(!insuranceText){
     coverageCard.style.display = 'block';
@@ -397,10 +464,16 @@ if(params.get('total')){
   document.getElementById('quotePasteBox').style.display = 'block';
   const qt = document.getElementById('quotationText');
   qt.addEventListener('input', ()=>{
-    quoteTotal = parseQuotation(qt.value || '');
-    const d = parseDuration(qt.value || '');
+    const text = qt.value || '';
+    const parsedTotal = parseQuotation(text);
+    // A pasted reservation invoice/receipt has no "TOTAL:" quotation line --
+    // its "Total" is just the deposit, not the full rental cost -- so only
+    // overwrite quoteTotal when a real quotation total was actually found.
+    if(parsedTotal) quoteTotal = parsedTotal;
+    const d = parseDuration(text);
     if(d) rentalDays.value = d;
-    applyInsuranceVisibility(parseInsurance(qt.value || ''));
+    applyInsuranceVisibility(parseInsurance(text));
+    applyReceiptDetection(text);
     recalcTotals();
     updateGate();
   });
