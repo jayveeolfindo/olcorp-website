@@ -182,8 +182,10 @@
       </div>
     </div>
     <div id="quotePasteBox" style="display:none;">
-      <div class="step-sub">Paste your rental quotation or reservation invoice text &mdash; the vehicle, dates, total, and deposit will be detected automatically.</div>
+      <div class="step-sub">Paste your rental quotation or reservation invoice text, or upload the invoice PDF below &mdash; the vehicle, dates, total, and deposit will be detected automatically.</div>
       <label class="field"><span>Paste Rental Quotation or Reservation Invoice</span><textarea name="quotationText" id="quotationText" style="min-height:110px; font-family:var(--mono); font-size:12.5px;" placeholder="Paste the full quotation or invoice text here..."></textarea></label>
+      <label class="field" style="margin-top:-4px;"><span>Or Upload the Invoice PDF</span><input type="file" id="quoteInvoicePdf" accept="application/pdf,.pdf"></label>
+      <div id="pdfParseStatus" style="display:none; font-size:12.5px; color:#5b6b78; margin:-8px 0 14px;"></div>
       <div id="pasteDetectedBox" style="display:none;">
         <div class="summary-box" style="margin-top:0;">
           <div class="summary-row"><span>Detected Vehicle</span><span id="dispVehiclePaste">&mdash;</span></div>
@@ -820,6 +822,48 @@ document.getElementById('newCustomerBtn').addEventListener('click', ()=>{
   try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
   window.location.href = window.location.pathname;
 });
+</script>
+<script type="module">
+// --- Invoice PDF upload: extracts text client-side via pdf.js and feeds it
+// through the same #quotationText input handler used for pasted text, so it
+// reuses parseQuotation/parseDuration/parseInsurance/parseReceipt as-is.
+import * as pdfjsLib from 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.2.108/pdf.min.mjs';
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.2.108/pdf.worker.min.mjs';
+
+const pdfInput = document.getElementById('quoteInvoicePdf');
+const pdfStatus = document.getElementById('pdfParseStatus');
+
+async function extractPdfText(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((it) => it.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+if (pdfInput) {
+  pdfInput.addEventListener('change', async () => {
+    const file = pdfInput.files && pdfInput.files[0];
+    if (!file) return;
+    pdfStatus.style.display = 'block';
+    pdfStatus.textContent = 'Reading PDF…';
+    try {
+      const text = await extractPdfText(file);
+      const qt = document.getElementById('quotationText');
+      if (qt) {
+        Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(qt, text);
+        qt.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      pdfStatus.textContent = 'PDF read successfully — details detected below.';
+    } catch (e) {
+      pdfStatus.textContent = 'Could not read that PDF. Please paste the invoice text instead.';
+    }
+  });
+}
 </script>
 </body>
 </html>
