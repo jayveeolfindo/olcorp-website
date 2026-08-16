@@ -681,7 +681,7 @@ function renderAppType(card){
       {value:'sponsor', label:'Sponsor'},
     ],
     data.applicationType,
-    v => { data.applicationType = v; renderStep(); }
+    v => { data.applicationType = v; renderStep(); document.getElementById('nextBtn').click(); }
   ));
 }
 
