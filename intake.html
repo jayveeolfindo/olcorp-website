@@ -586,11 +586,8 @@ function historyRequirements(appType){
   if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 0 };
   if(appType === 'citizenship') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'pr-application') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
-  // ASSUMPTION: Jayvee's stated rules didn't specify address history for PR Card Renewal or
-  // Sponsorship -- defaulting to "current address only" (same treatment as temporary
-  // residence), the conservative/minimal-burden option. Revisit if this should differ.
-  if(appType === 'pr-card-renewal') return { addressYears: 0, travelRequired: false, employmentYears: 5 };
-  if(appType === 'sponsor') return { addressYears: 0, travelRequired: false, employmentYears: 5 };
+  if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
+  if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   // No application type selected yet (shouldn't normally happen once the gate step is
   // answered) -- fall back to the fullest, most conservative requirements.
   return { addressYears: 10, travelRequired: true, employmentYears: 5 };
