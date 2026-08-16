@@ -202,8 +202,6 @@
       <div class="nav-row">
         <div class="nav-row-left">
           <button class="btn btn-ghost" id="backBtn" tabindex="-1">Back</button>
-          <button class="btn btn-ghost btn-sm" id="resumeProgressBtn" tabindex="-1">Resume Encoding</button>
-          <input type="file" id="resumeFileInput" accept="application/json" style="display:none;">
         </div>
         <div class="nav-row-center">
           <button class="btn btn-ghost btn-sm" id="saveProgressBtn2" tabindex="-1">Save & Continue Later</button>
@@ -225,6 +223,18 @@
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
       <button class="btn btn-primary btn-sm" id="doneModalNo" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="resumeLinkModal" style="display:none;">
+  <div class="modal-box">
+    <h4>Progress saved</h4>
+    <p>Use this link to come back and pick up right where you left off. It stays valid for 60 days after your last save.</p>
+    <input type="text" id="resumeLinkInput" readonly style="margin-bottom:12px;" onclick="this.select();">
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" id="resumeLinkCopyBtn" type="button">Copy Link</button>
+      <button class="btn btn-primary btn-sm" id="resumeLinkModalClose" type="button">Got it</button>
     </div>
   </div>
 </div>
@@ -456,49 +466,49 @@ function showToast(msg, isError){
   t._timer = setTimeout(()=>{ t.className='toast'; }, 3200);
 }
 
-function downloadSaveFile(){
-  const payload = {
-    __olcorpIntakeSave: true, version: 1,
-    recordId, stepIndex, savedAt: new Date().toISOString(), data
-  };
-  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const fname = `${(data.identity.lastName||'Applicant')} - ${(data.identity.givenNames||'Untitled')} - Client Information Progress.json`;
-  a.href = url; a.download = fname; a.click();
-  URL.revokeObjectURL(url);
-  showToast('Progress saved. Keep this file — upload it later to continue where you left off.');
+let resumeId = null;
+
+async function saveProgressGetLink(){
+  const btn = document.getElementById('saveProgressBtn2');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving...';
+  try{
+    const resp = await fetch('/.netlify/functions/save-intake-resume', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ id: resumeId, recordId, stepIndex, data })
+    });
+    if(!resp.ok) throw new Error('save failed');
+    const json = await resp.json();
+    resumeId = json.id;
+    const link = window.location.origin + window.location.pathname + '?resume=' + resumeId;
+    document.getElementById('resumeLinkInput').value = link;
+    document.getElementById('resumeLinkModal').style.display = 'flex';
+  }catch(err){
+    showToast("Couldn't save your progress right now — please try again in a moment.", true);
+  }finally{
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
 }
 
-function loadSaveFile(file){
-  const reader = new FileReader();
-  reader.onload = e => {
-    try{
-      const parsed = JSON.parse(e.target.result);
-      if(!parsed || !parsed.data || !parsed.__olcorpIntakeSave) throw new Error('not a save file');
-      Object.keys(data).forEach(k=>{
-        if(parsed.data[k] !== undefined) data[k] = parsed.data[k];
-      });
-      recordId = parsed.recordId || recordId;
-            stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length-1);
-      renderStep();
-      showToast('Welcome back — picking up where you left off.');
-    }catch(err){
-      showToast("Couldn't read that file — make sure it's a saved intake file from this form.", true);
-    }
-  };
-  reader.readAsText(file);
-}
+document.getElementById('saveProgressBtn2').addEventListener('click', saveProgressGetLink);
+document.getElementById('resumeLinkCopyBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('resumeLinkInput');
+  try{
+    await navigator.clipboard.writeText(input.value);
+    showToast('Link copied.');
+  }catch(err){
+    input.select();
+    showToast('Select and copy the link manually.', true);
+  }
+});
+document.getElementById('resumeLinkModalClose').addEventListener('click', ()=>{
+  document.getElementById('resumeLinkModal').style.display = 'none';
+});
+document.getElementById('resumeLinkModal').addEventListener('click', e=>{
+  if(e.target.id==='resumeLinkModal') document.getElementById('resumeLinkModal').style.display = 'none';
+});
 
-document.getElementById('saveProgressBtn2').addEventListener('click', downloadSaveFile);
-document.getElementById('resumeProgressBtn').addEventListener('click', ()=>{
-  document.getElementById('resumeFileInput').click();
-});
-document.getElementById('resumeFileInput').addEventListener('change', e=>{
-  const f = e.target.files[0];
-  if(f) loadSaveFile(f);
-  e.target.value = '';
-});
 document.getElementById('newApplicantBtn').addEventListener('click', ()=>{
   const ok = confirm('Start a new application? This will clear everything currently on screen for this applicant.\n\nIf you want to keep this data, use "Save & Continue Later" first and cancel this dialog.');
   if(ok){
@@ -1806,7 +1816,6 @@ function renderStep(){
   const lbl = card.querySelector('.step-label');
   if(lbl) lbl.textContent = `Step ${stepIndex+1} of ${steps.length}`;
   document.getElementById('backBtn').style.display = stepIndex===0 ? 'none':'inline-block';
-  document.getElementById('resumeProgressBtn').style.display = stepIndex===0 ? 'inline-block':'none';
   document.getElementById('saveProgressBtn2').style.display = stepIndex===0 ? 'none':'inline-block';
   document.getElementById('nextBtn').textContent = 'Continue';
   document.getElementById('nextBtn').style.display = stepIndex===steps.length-1 ? 'none' : 'inline-block';
@@ -1849,6 +1858,7 @@ document.getElementById('doneModal').addEventListener('click', e=>{
 (async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const prefillId = urlParams.get('prefill');
+  const resumeParam = urlParams.get('resume');
   if (prefillId) {
     try {
       const resp = await fetch('/.netlify/functions/get-intake-prefill?id=' + encodeURIComponent(prefillId));
@@ -1860,6 +1870,23 @@ document.getElementById('doneModal').addEventListener('click', e=>{
           stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length - 1);
           renderStep();
           showToast('Welcome! Some of your information has been pre-filled from a previous form — please review it for accuracy.');
+          return;
+        }
+      }
+    } catch (e) { /* fall through to a normal blank form */ }
+  }
+  if (resumeParam) {
+    try {
+      const resp = await fetch('/.netlify/functions/get-intake-resume?id=' + encodeURIComponent(resumeParam));
+      if (resp.ok) {
+        const parsed = await resp.json();
+        if (parsed && parsed.data && parsed.__olcorpIntakeSave) {
+          Object.keys(data).forEach(k => { if (parsed.data[k] !== undefined) data[k] = parsed.data[k]; });
+          recordId = parsed.recordId || recordId;
+          stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length - 1);
+          resumeId = resumeParam;
+          renderStep();
+          showToast('Welcome back — picking up where you left off.');
           return;
         }
       }
