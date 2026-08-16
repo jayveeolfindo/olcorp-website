@@ -453,6 +453,44 @@ function choiceRow(options, current, onPick){
   return row;
 }
 
+function renderPortChoice(container, dataObj, key){
+  const TORONTO = 'Toronto Pearson International Airport';
+  const VANCOUVER = 'Vancouver International Airport';
+  let otherMode = dataObj[key] !== '' && dataObj[key] !== TORONTO && dataObj[key] !== VANCOUVER;
+  function draw(){
+    container.innerHTML = '';
+    const current = otherMode ? '__other__' : dataObj[key];
+    const row = choiceRow(
+      [{value:TORONTO, label:'Toronto (Pearson Airport)'},
+       {value:VANCOUVER, label:'Vancouver (Airport)'},
+       {value:'__other__', label:'Other, please specify'}],
+      current,
+      v => {
+        if(v === '__other__'){
+          otherMode = true;
+          dataObj[key] = '';
+        } else {
+          otherMode = false;
+          dataObj[key] = v;
+        }
+        draw();
+        refreshSidebar();
+      }
+    );
+    container.appendChild(row);
+    if(otherMode){
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.placeholder = 'Enter port of entry';
+      inp.value = dataObj[key] || '';
+      inp.style.marginTop = '8px';
+      inp.addEventListener('input', e => { dataObj[key] = e.target.value; refreshSidebar(); });
+      container.appendChild(inp);
+    }
+  }
+  draw();
+}
+
 // ---- Save & Resume ----
 function showToast(msg, isError, withCheck){
   let t = document.getElementById('toastMsg');
@@ -637,9 +675,9 @@ function renderEntry(card){
     </label>
     <div class="grid2" id="entryFieldsWrap">
       ${fieldText('Original Entry Date in Canada', data.entry, 'originalDate', {id:'e_origDate', type:'date'})}
-      ${fieldText('Port of Entry (Original Entry)', data.entry, 'originalPort', {id:'e_origPort'})}
+      <label class="field"><span>Port of Entry (Original Entry)</span><div id="e_origPortChoice"></div></label>
       ${fieldText('Latest Entry Date in Canada', data.entry, 'latestDate', {id:'e_latestDate', type:'date'})}
-      ${fieldText('Port of Entry (Latest Entry)', data.entry, 'latestPort', {id:'e_latestPort'})}
+      <label class="field"><span>Port of Entry (Latest Entry)</span><div id="e_latestPortChoice"></div></label>
     </div>
   `;
   const entryWrap = card.querySelector('#entryFieldsWrap');
@@ -649,18 +687,13 @@ function renderEntry(card){
     if(e.target.checked){
       data.entry.originalDate=''; data.entry.originalPort='';
       data.entry.latestDate=''; data.entry.latestPort='';
-      card.querySelector('#e_origDate').value='';
-      card.querySelector('#e_origPort').value='';
-      card.querySelector('#e_latestDate').value='';
-      card.querySelector('#e_latestPort').value='';
     }
-    entryWrap.style.display = e.target.checked ? 'none' : '';
-    refreshSidebar();
+    renderStep();
   });
-  card.querySelector('#e_origPort').addEventListener('input', e=>{ data.entry.originalPort=e.target.value; refreshSidebar(); });
-  card.querySelector('#e_latestPort').addEventListener('input', e=>{ data.entry.latestPort=e.target.value; refreshSidebar(); });
   bindDate(card.querySelector('#e_origDate'), data.entry, 'originalDate', 'full');
   bindDate(card.querySelector('#e_latestDate'), data.entry, 'latestDate', 'full');
+  renderPortChoice(card.querySelector('#e_origPortChoice'), data.entry, 'originalPort');
+  renderPortChoice(card.querySelector('#e_latestPortChoice'), data.entry, 'latestPort');
 }
 
 function renderContact(card){
