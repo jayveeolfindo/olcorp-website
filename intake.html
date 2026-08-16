@@ -1846,7 +1846,27 @@ document.getElementById('doneModal').addEventListener('click', e=>{
   if(e.target.id==='doneModal') document.getElementById('doneModal').style.display = 'none';
 });
 
-renderStep();
+(async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefillId = urlParams.get('prefill');
+  if (prefillId) {
+    try {
+      const resp = await fetch('/.netlify/functions/get-intake-prefill?id=' + encodeURIComponent(prefillId));
+      if (resp.ok) {
+        const parsed = await resp.json();
+        if (parsed && parsed.data && parsed.__olcorpIntakeSave) {
+          Object.keys(data).forEach(k => { if (parsed.data[k] !== undefined) data[k] = parsed.data[k]; });
+          recordId = parsed.recordId || recordId;
+          stepIndex = Math.min(typeof parsed.stepIndex === 'number' ? parsed.stepIndex : 0, steps.length - 1);
+          renderStep();
+          showToast('Welcome! Some of your information has been pre-filled from a previous form — please review it for accuracy.');
+          return;
+        }
+      }
+    } catch (e) { /* fall through to a normal blank form */ }
+  }
+  renderStep();
+})();
 </script>
 </body>
 </html>
