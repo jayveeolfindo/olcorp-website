@@ -250,7 +250,7 @@ const data = {
     residential:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
     sameAsMailing:false,phone:'',email:''
   },
-  entry:{originalDate:'',originalPort:'',latestDate:'',latestPort:''},
+  entry:{originalDate:'',originalPort:'',latestDate:'',latestPort:'',notYetTravelled:false},
   marital:{status:'',marriageDate:'',marriagePlace:'',prevMarriages:''},
   spouse:{lastName:'',givenNames:'',dob:'',pobCity:'',pobCountry:''},
   children:[],
@@ -631,13 +631,32 @@ function renderEntry(card){
   card.innerHTML = `
     <div class="step-label">Step 2 of 12</div>
     <div class="step-title">Entry to Canada</div>
-    <div class="grid2">
+    <label class="field" style="display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="notYetTravelled" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.entry.notYetTravelled?'checked':''}>
+      <span style="margin:0;">I have not travelled to Canada yet.</span>
+    </label>
+    <div class="grid2" id="entryFieldsWrap">
       ${fieldText('Original Entry Date in Canada', data.entry, 'originalDate', {id:'e_origDate', type:'date'})}
       ${fieldText('Port of Entry (Original Entry)', data.entry, 'originalPort', {id:'e_origPort'})}
       ${fieldText('Latest Entry Date in Canada', data.entry, 'latestDate', {id:'e_latestDate', type:'date'})}
       ${fieldText('Port of Entry (Latest Entry)', data.entry, 'latestPort', {id:'e_latestPort'})}
     </div>
   `;
+  const entryWrap = card.querySelector('#entryFieldsWrap');
+  entryWrap.style.display = data.entry.notYetTravelled ? 'none' : '';
+  card.querySelector('#notYetTravelled').addEventListener('change', e=>{
+    data.entry.notYetTravelled = e.target.checked;
+    if(e.target.checked){
+      data.entry.originalDate=''; data.entry.originalPort='';
+      data.entry.latestDate=''; data.entry.latestPort='';
+      card.querySelector('#e_origDate').value='';
+      card.querySelector('#e_origPort').value='';
+      card.querySelector('#e_latestDate').value='';
+      card.querySelector('#e_latestPort').value='';
+    }
+    entryWrap.style.display = e.target.checked ? 'none' : '';
+    refreshSidebar();
+  });
   card.querySelector('#e_origPort').addEventListener('input', e=>{ data.entry.originalPort=e.target.value; refreshSidebar(); });
   card.querySelector('#e_latestPort').addEventListener('input', e=>{ data.entry.latestPort=e.target.value; refreshSidebar(); });
   bindDate(card.querySelector('#e_origDate'), data.entry, 'originalDate', 'full');
@@ -1753,7 +1772,7 @@ function validateStep(key){
         return 'Please fill in each sibling\'s Full Name and Date of Birth before continuing.';
       return null;
     case 'entry':
-      if(!isFilled(data.entry.originalDate) || !isFilled(data.entry.originalPort))
+      if(!data.entry.notYetTravelled && (!isFilled(data.entry.originalDate) || !isFilled(data.entry.originalPort)))
         return 'Please provide your original entry date and port of entry before continuing.';
       return null;
     case 'education':
