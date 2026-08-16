@@ -243,6 +243,7 @@
 <script>
 // ---------- Data model ----------
 const data = {
+  applicationType:'',
   identity:{uci:'',lastName:'',givenNames:'',dob:'',pob:'',sex:'',citizenship:''},
   passport:{number:'',issue:'',expiry:'',country:''},
   contact:{
@@ -283,6 +284,7 @@ let recordId = 'OLC-' + Math.random().toString(36).slice(2,8).toUpperCase();
 let stepIndex = 0;
 
 const steps = [
+  {key:'appType', label:'00 · Application Type', title:'Type of Application', sub:'This determines which sections below are required.', render: renderAppType},
   {key:'identity', label:'01 · Identity', title:'Client Identity', sub:'Core biographical details used across every form.', render: renderIdentity},
   {key:'contact', label:'02 · Contact', title:'Contact Information', sub:'Where IRCC and your representative can reach you.', render: renderContact},
   {key:'marital', label:'03 · Marital', title:'Marital Status & Spouse', sub:'Feeds IMM 0008, IMM 5406, and IMM 5710.', render: renderMarital},
@@ -566,16 +568,32 @@ function parseDate(str){
   const d = new Date(s+'T00:00:00');
   return isNaN(d.getTime()) ? null : d;
 }
-function requiredHistoryStart(){
+function requiredHistoryStart(years){
+  years = years || 10;
   const today = new Date();
   const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const tenYearsAgo = new Date(currentMonthStart); tenYearsAgo.setFullYear(currentMonthStart.getFullYear()-10);
+  const yearsAgo = new Date(currentMonthStart); yearsAgo.setFullYear(currentMonthStart.getFullYear()-years);
   const dob = parseDate(data.identity.dob);
   if(dob && dob <= today && dob.getFullYear() >= 1900){
     const eighteen = new Date(dob); eighteen.setFullYear(dob.getFullYear()+18);
-    if(eighteen > tenYearsAgo && eighteen <= today) return eighteen;
+    if(eighteen > yearsAgo && eighteen <= today) return eighteen;
   }
-  return tenYearsAgo;
+  return yearsAgo;
+}
+
+function historyRequirements(appType){
+  const TEMP_TYPES = ['tourist-visa','work-permit','study-permit'];
+  if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 0 };
+  if(appType === 'citizenship') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
+  if(appType === 'pr-application') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
+  // ASSUMPTION: Jayvee's stated rules didn't specify address history for PR Card Renewal or
+  // Sponsorship -- defaulting to "current address only" (same treatment as temporary
+  // residence), the conservative/minimal-burden option. Revisit if this should differ.
+  if(appType === 'pr-card-renewal') return { addressYears: 0, travelRequired: false, employmentYears: 5 };
+  if(appType === 'sponsor') return { addressYears: 0, travelRequired: false, employmentYears: 5 };
+  // No application type selected yet (shouldn't normally happen once the gate step is
+  // answered) -- fall back to the fullest, most conservative requirements.
+  return { addressYears: 10, travelRequired: true, employmentYears: 5 };
 }
 function computeGaps(entries, start, end){
   const DAY=86400000, TOL=31*DAY; // IRCC only flags gaps exceeding roughly one month
@@ -620,10 +638,10 @@ function tripDuration(from,to){
   return parts.join(' ');
 }
 
-function renderCoveragePanel(containerId, entries, label){
+function renderCoveragePanel(containerId, entries, label, years){
   const el = document.getElementById(containerId);
   if(!el) return;
-  const start = requiredHistoryStart(), end = new Date();
+  const start = requiredHistoryStart(years), end = new Date();
   const hasAnyDated = entries.some(e=>e.from);
   if(!hasAnyDated){
     el.innerHTML = `<div class="coverage-box"><div class="cov-head"><span>${label} coverage required: ${fmtMonthYear(start)} – Present</span></div><p class="cov-range">Add entries with dates below to check for gaps.</p></div>`;
@@ -647,6 +665,28 @@ function renderCoveragePanel(containerId, entries, label){
 }
 
 // ---- Step renderers ----
+function renderAppType(card){
+  card.innerHTML = `
+    <div class="step-title">Type of Application</div>
+    <div class="step-sub">This determines which sections below are required -- for example, how many years of address, travel, and employment history you'll need to provide.</div>
+    <div id="appTypeChoices" style="margin-top:16px;"></div>
+  `;
+  const wrap = card.querySelector('#appTypeChoices');
+  wrap.appendChild(choiceRow(
+    [
+      {value:'tourist-visa', label:'Tourist Visa'},
+      {value:'work-permit', label:'Work Permit'},
+      {value:'study-permit', label:'Study Permit'},
+      {value:'citizenship', label:'Citizenship'},
+      {value:'pr-application', label:'PR Application'},
+      {value:'pr-card-renewal', label:'PR Card Renewal'},
+      {value:'sponsor', label:'Sponsorship'},
+    ],
+    data.applicationType,
+    v => { data.applicationType = v; renderStep(); }
+  ));
+}
+
 function renderIdentity(card){
   card.innerHTML = `
     <div class="step-label">Step 1 of 12</div>
@@ -1127,18 +1167,30 @@ function renderParents(card){
 }
 
 function renderAddressHistory(card){
-  renderRepeatable(card, 'Address History (10 years)', 'Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past 10 years, whichever is shorter. The panel below flags any unaccounted stretches of time.', 'addressHistory', [
+  const req = historyRequirements(data.applicationType);
+  if(req.addressYears === 0){
+    renderRepeatable(card, 'Address History', 'Not required for this application type -- your current address from the Contact step is sufficient. You may optionally list past addresses below.', 'addressHistory', [
+      {label:'From', key:'from', type:'month'},
+      {label:'To (leave blank if current)', key:'to', type:'month'},
+      {label:'Complete Address', key:'address', type:'addressBlock'},
+    ]);
+    return;
+  }
+  renderRepeatable(card, `Address History (${req.addressYears} years)`, `Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past ${req.addressYears} years, whichever is shorter. The panel below flags any unaccounted stretches of time.`, 'addressHistory', [
     {label:'From', key:'from', type:'month'},
     {label:'To (leave blank if current)', key:'to', type:'month'},
     {label:'Complete Address', key:'address', type:'addressBlock'},
   ], {
     panelId:'addrCoverage',
-    onChange: ()=> renderCoveragePanel('addrCoverage', data.addressHistory, 'Address')
+    onChange: () => renderCoveragePanel('addrCoverage', data.addressHistory, 'Address', req.addressYears)
   });
 }
+
 function renderTravelHistory(card){
+  const req = historyRequirements(data.applicationType);
   card.innerHTML = `
     <div class="step-title">Travel History (10 years)</div>
+    ${!req.travelRequired ? `<div class="coverage-box"><p class="cov-range">Optional for this application type -- Travel History is only required for PR applications. Feel free to skip this section or fill it in if relevant.</p></div>` : ''}
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noTravel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.travelHistoryNone?'checked':''}>
       <span style="margin:0;">I did not travel outside my country of residence during this period</span>
@@ -1287,14 +1339,15 @@ function addressForPeriod(from, to){
   return currentAddressFromHistory();
 }
 function renderEmployment(card){
+  const req = historyRequirements(data.applicationType);
   card.innerHTML = `
     <div class="step-title">Employment / Activity History</div>
-    <div id="activityCoverage"></div>
+    ${req.employmentYears === 0 ? `<div class="coverage-box"><p class="cov-range">Not required for this application type. You may optionally add employment/activity entries below.</p></div>` : `<div id="activityCoverage"></div>`}
     <div id="repWrap"></div>
     <button class="add-btn" id="addRow">+ Add entry</button>
   `;
   const wrap = card.querySelector('#repWrap');
-  function onChange(){ renderCoveragePanel('activityCoverage', [...data.employment, ...data.education], 'Employment/Education'); }
+  function onChange(){ if(req.employmentYears>0) renderCoveragePanel('activityCoverage', [...data.employment, ...data.education], 'Employment/Education', req.employmentYears); }
   function draw(){
     wrap.innerHTML='';
     data.employment.forEach((row,idx)=>{
@@ -1776,6 +1829,10 @@ function addressHasContent(addr){ return !!(addr && (addr.streetName || addr.cit
 
 function validateStep(key){
   switch(key){
+    case 'appType':
+      if(!isFilled(data.applicationType))
+        return 'Please select the type of application before continuing.';
+      return null;
     case 'identity':
       if(!isFilled(data.identity.lastName) || !isFilled(data.identity.givenNames) || !isFilled(data.identity.dob))
         return 'Please fill in Last Name, Given Name(s), and Date of Birth before continuing.';
@@ -1816,20 +1873,25 @@ function validateStep(key){
       if(!isFilled(data.eduYears.elementary))
         return 'Please fill in the number of years completed for Primary before continuing.';
       return null;
-    case 'address':
+    case 'address': {
+      const req = historyRequirements(data.applicationType);
+      if(req.addressYears === 0) return null;
       if(data.addressHistory.length===0)
         return 'Please add at least one address entry before continuing.';
       if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address)))
         return 'Please fill in the From date and address (at least street/city and country) for each entry before continuing.';
       return null;
+    }
     case 'employment': {
+      const req = historyRequirements(data.applicationType);
+      if(req.employmentYears === 0) return null;
       if(data.employment.length===0)
         return 'Please add at least one employment/activity entry before continuing.';
       if(data.employment.some(r=>!isFilled(r.from) || (!r.unemployed && !isFilled(r.employer))))
         return 'Please fill in the From date and Employer/Activity (or check "Unemployed") for each entry before continuing.';
       if(data.employment.some(r=>!isFilled(r.statusInCountry)))
         return 'Please select a Status in Country for each employment/activity entry before continuing.';
-      const start = requiredHistoryStart(), end = new Date();
+      const start = requiredHistoryStart(req.employmentYears), end = new Date();
       const combined = [...data.employment, ...data.education];
       const gaps = computeGaps(combined, start, end);
       if(gaps.length){
@@ -1838,14 +1900,16 @@ function validateStep(key){
       }
       return null;
     }
-    case 'travel':
-      if(!data.travelHistoryNone && data.travelHistory.length===0)
+    case 'travel': {
+      const req = historyRequirements(data.applicationType);
+      if(req.travelRequired && !data.travelHistoryNone && data.travelHistory.length===0)
         return 'Please add at least one trip, or check "I did not travel outside my country of residence" before continuing.';
       if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.destination) || !isFilled(r.from)))
         return 'Please fill in the City/Country Visited and Departure Date for each trip before continuing.';
       if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.duration)))
         return 'Please fill in the Duration (e.g. 5 days, 6 months) for each trip before continuing.';
       return null;
+    }
     case 'background':
       const bgKeys = ['militaryPoliceGovt','criminal','medical','refusalsRemovals'];
       if(bgKeys.some(k=>!isFilled(data.background[k])))
