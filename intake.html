@@ -600,7 +600,7 @@ function renderIdentity(card){
     <div class="step-title">Client Identity</div>
     <div class="grid2">
       ${fieldText('Last / Family Name', data.identity, 'lastName', {id:'i_ln'})}
-      ${fieldText('Given Name(s)', data.identity, 'givenNames', {id:'i_gn'})}
+      ${fieldText('Given Name(s)', data.identity, 'givenNames', {id:'i_gn', hint:'Include all middle names, exactly as written on your passport'})}
       ${fieldText('Date of Birth', data.identity, 'dob', {id:'i_dob', type:'date'})}
     </div>
   `;
