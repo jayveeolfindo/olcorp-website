@@ -45,6 +45,12 @@ exports.handler = async function (event) {
   }
   const from = process.env.RESEND_FROM_EMAIL || "Olcorp.ca <onboarding@resend.dev>";
 
+  const signatureHtml =
+    "<p style=\"margin-top:22px;\">Warm regards,</p>" +
+    "<p style=\"margin:0;\">Olcorp.ca Team<br>" +
+    "Olfindo Immigration Consulting Corporation<br>" +
+    "<a href=\"mailto:consulting@olcorp.ca\">consulting@olcorp.ca</a></p>";
+
   async function sendViaResend(emailPayload) {
     const resp = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -82,14 +88,16 @@ exports.handler = async function (event) {
     let clientEmailSent = false;
     if (clientEmail) {
       try {
+        const firstName = (clientName || "").trim().split(/\s+/)[0] || "there";
         const clientResp = await sendViaResend({
           from: from,
           to: [clientEmail],
           subject: "We received your Client Information Form — Olcorp.ca",
           html:
-            "<p>Hi " + (clientName || "there") + ",</p>" +
-            "<p>Thank you — we've received your Client Information Form. A copy is attached for your records. We will carefully review it and contact you if any clarification or additional information is required.</p>" +
-            "<p>Olfindo Immigration Consulting Corporation (Olcorp.ca)</p>",
+            "<p>Hi " + firstName + ",</p>" +
+            "<p>Thank you so much for taking the time to complete your Client Information Form — we really appreciate it! We've received everything safely, and a copy is attached for your own records.</p>" +
+            "<p>Our team will carefully review your information, and we'll reach out if anything needs a little more detail or clarification. In the meantime, if you have any questions at all, please don't hesitate to get in touch.</p>" +
+            signatureHtml,
           attachments: [{ filename: filename, content: pdfBase64 }],
         });
         clientEmailSent = clientResp.ok;
