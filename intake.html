@@ -220,7 +220,7 @@
   <div class="modal-box">
     <h4>Thank you!</h4>
     <p>Thank you for completing your client form.</p>
-    <p>Your form has been downloaded, please upload this file to the shared drive you shared with Olcorp. We will carefully review your form and contact you if any clarification or additional information is required.</p>
+    <p id="doneModalMsg">Your form has been downloaded, please upload this file to the shared drive you shared with Olcorp. We will carefully review your form and contact you if any clarification or additional information is required.</p>
     <p>Would you like to complete another client form for a different applicant?</p>
     <div class="modal-actions">
       <button class="btn btn-ghost btn-sm" id="doneModalYes" type="button">Yes, start a new form</button>
@@ -1350,7 +1350,7 @@ function renderReview(card){
       </div>
     </div>
     <div class="final-actions">
-      <button class="btn btn-primary" id="emailBtn" disabled>Download Completed Form</button>
+      <button class="btn btn-primary" id="eEmail Completed Form to Olcorpoad Completed Form</button>
     </div>
     <p class="note" id="consentNote" style="color:#8a3a26;">Please confirm the information is accurate and provide your signature above to enable this button.</p>
   `;
@@ -1652,13 +1652,47 @@ function renderReview(card){
     doc.save(fname);
     return fname;
   }
-  card.querySelector('#emailBtn').addEventListener('click', ()=>{
+  card.querySelector('#emailBtn').addEventListener('click', async ()=>{
     stampRecord();
+    const btn = card.querySelector('#emailBtn');
+    const originalLabel = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
     document.getElementById('successBanner').style.display='block';
+
+    const doc = buildIntakePdfDoc();
+    const fname = pdfFileName();
+    const fullName = `${data.identity.givenNames||''} ${data.identity.lastName||''}`.trim();
+    let emailed = false;
+    try{
+      const dataUri = doc.output('datauristring');
+      const pdfBase64 = dataUri.split(',')[1];
+      const resp = await fetch('/.netlify/functions/send-intake-email', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          clientName: fullName,
+          clientEmail: data.contact.email || '',
+          pdfBase64: pdfBase64,
+          pdfFileName: fname
+        })
+      });
+      emailed = resp.ok;
+    }catch(e){ emailed = false; }
+
     downloadIntakeRecord();
+    const msgEl = document.getElementById('doneModalMsg');
+    if(msgEl){
+      msgEl.textContent = emailed
+        ? "Your form has been emailed to Olcorp Immigration Consulting, and a confirmation copy has been sent to your email. A copy has also been downloaded to your device for your records. We will carefully review your form and contact you if any clarification or additional information is required."
+        : "We couldn't email your form automatically, so it's been downloaded instead — please upload this file to the shared drive you shared with Olcorp, or email it to consulting@olcorp.ca. We will carefully review your form and contact you if any clarification or additional information is required.";
+    }
+    btn.disabled = false;
+    btn.textContent = originalLabel;
     document.getElementById('doneModal').style.display = 'flex';
   });
 }
+
 
 // ---------- Sidebar (removed — Live Record Preview no longer shown) ----------
 function refreshSidebar(){
