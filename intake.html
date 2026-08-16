@@ -585,7 +585,7 @@ function historyRequirements(appType){
   const TEMP_TYPES = ['tourist-visa','work-permit','study-permit'];
   if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 0 };
   if(appType === 'citizenship') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
-  if(appType === 'pr-application') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
+  if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   // No application type selected yet (shouldn't normally happen once the gate step is
@@ -676,8 +676,9 @@ function renderAppType(card){
       {value:'study-permit', label:'Study Permit'},
       {value:'citizenship', label:'Citizenship'},
       {value:'pr-application', label:'PR Application'},
+      {value:'sponsored-applicant', label:'Sponsored Applicant'},
       {value:'pr-card-renewal', label:'PR Card Renewal'},
-      {value:'sponsor', label:'Sponsorship'},
+      {value:'sponsor', label:'Sponsor'},
     ],
     data.applicationType,
     v => { data.applicationType = v; renderStep(); }
