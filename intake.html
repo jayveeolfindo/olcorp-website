@@ -114,6 +114,7 @@
     box-shadow:0 6px 18px rgba(0,0,0,.18); opacity:0; pointer-events:none; transition:opacity .3s;}
   .toast.show{opacity:1;}
   .toast.error{background:var(--danger);}
+  .toast-check{display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; margin-right:8px; border-radius:50%; background:var(--gold); color:#fff; font-size:11px; font-weight:700; vertical-align:-3px;}
 
 
 
@@ -453,7 +454,7 @@ function choiceRow(options, current, onPick){
 }
 
 // ---- Save & Resume ----
-function showToast(msg, isError){
+function showToast(msg, isError, withCheck){
   let t = document.getElementById('toastMsg');
   if(!t){
     t = document.createElement('div');
@@ -461,7 +462,11 @@ function showToast(msg, isError){
     document.body.appendChild(t);
   }
   t.className = 'toast show' + (isError ? ' error' : '');
-  t.textContent = msg;
+  if(withCheck){
+    t.innerHTML = '<span class="toast-check" aria-hidden="true">&#10003;</span>' + msg;
+  } else {
+    t.textContent = msg;
+  }
   clearTimeout(t._timer);
   t._timer = setTimeout(()=>{ t.className='toast'; }, 3200);
 }
@@ -496,7 +501,7 @@ document.getElementById('resumeLinkCopyBtn').addEventListener('click', async ()=
   const input = document.getElementById('resumeLinkInput');
   try{
     await navigator.clipboard.writeText(input.value);
-    showToast('Link copied.');
+    showToast('Link copied', false, true);
   }catch(err){
     input.select();
     showToast('Select and copy the link manually.', true);
