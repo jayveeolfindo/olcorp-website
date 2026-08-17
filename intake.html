@@ -673,13 +673,13 @@ function renderAppType(card){
   wrap.appendChild(choiceRow(
     [
       {value:'tourist-visa', label:'Tourist Visa'},
-      {value:'work-permit', label:'Work Permit'},
       {value:'study-permit', label:'Study Permit'},
-      {value:'citizenship', label:'Citizenship'},
-      {value:'pr-application', label:'SINP/PR Application'},
+      {value:'work-permit', label:'Work Permit / PGWP'},
+      {value:'pr-application', label:'SINP / PR Application'},
       {value:'sponsored-applicant', label:'Sponsored Applicant'},
+      {value:'sponsor', label:'Applicant\'s Sponsor'},
       {value:'pr-card-renewal', label:'PR Card Renewal'},
-      {value:'sponsor', label:'Sponsor'},
+      {value:'citizenship', label:'Citizenship'},
     ],
     data.applicationType,
     v => { data.applicationType = v; renderStep(); document.getElementById('nextBtn').click(); }
