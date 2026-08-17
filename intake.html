@@ -246,6 +246,7 @@
 const data = {
   applicationType:'',
   historyUpdateSections:{address:false,employment:false,travel:false},
+  historyUpdateYears:10,
   identity:{uci:'',lastName:'',givenNames:'',dob:'',pob:'',sex:'',citizenship:''},
   passport:{number:'',issue:'',expiry:'',country:''},
   contact:{
@@ -481,6 +482,7 @@ function renderPortChoice(container, dataObj, key){
         }
         draw();
         refreshSidebar();
+        scheduleAutoAdvance();
       }
     );
     container.appendChild(row);
@@ -490,7 +492,7 @@ function renderPortChoice(container, dataObj, key){
       inp.placeholder = 'Enter port of entry';
       inp.value = dataObj[key] || '';
       inp.style.marginTop = '8px';
-      inp.addEventListener('input', e => { dataObj[key] = e.target.value; refreshSidebar(); });
+      inp.addEventListener('input', e => { dataObj[key] = e.target.value; refreshSidebar(); scheduleAutoAdvance(); });
       container.appendChild(inp);
     }
   }
@@ -592,7 +594,7 @@ function historyRequirements(appType){
   if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
-  if(appType === 'history-only'){ const sel = data.historyUpdateSections || {}; return { addressYears: sel.address ? 10 : 0, travelRequired: !!sel.travel, employmentYears: sel.employment ? 10 : 0 }; }
+  if(appType === 'history-only'){ const sel = data.historyUpdateSections || {}; const yrs = data.historyUpdateYears || 10; return { addressYears: sel.address ? yrs : 0, travelRequired: !!sel.travel, employmentYears: sel.employment ? yrs : 0 }; }
   // No application type selected yet (shouldn't normally happen once the gate step is
   // answered) -- fall back to the fullest, most conservative requirements.
   return { addressYears: 10, travelRequired: true, employmentYears: 5 };
@@ -702,6 +704,8 @@ function renderAppType(card){
         <input type="checkbox" id="hu_travel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.historyUpdateSections.travel?'checked':''}>
         <span style="margin:0;">Travel History</span>
       </label>
+      <div class="step-sub" style="margin:14px 0 8px;">How many years of history should be collected?</div>
+      <div id="historyYearsChoice"></div>
     </div>
     ` : ''}
   `;
@@ -725,8 +729,16 @@ function renderAppType(card){
     const map = {hu_address:'address', hu_employment:'employment', hu_travel:'travel'};
     Object.keys(map).forEach(id=>{
       const el = card.querySelector('#'+id);
-      if(el) el.addEventListener('change', e=>{ data.historyUpdateSections[map[id]] = e.target.checked; });
+      if(el) el.addEventListener('change', e=>{ data.historyUpdateSections[map[id]] = e.target.checked; scheduleAutoAdvance(); });
     });
+    const yearsWrap = card.querySelector('#historyYearsChoice');
+    if(yearsWrap){
+      yearsWrap.appendChild(choiceRow(
+        [ {value:5, label:'5 years'}, {value:10, label:'10 years'} ],
+        data.historyUpdateYears,
+        v => { data.historyUpdateYears = v; renderStep(); scheduleAutoAdvance(); }
+      ));
+    }
   }
 }
 
@@ -743,9 +755,10 @@ function renderIdentity(card){
   ['i_ln','i_gn'].forEach(id=>{
     const map = {i_ln:['identity','lastName'], i_gn:['identity','givenNames']};
     const [obj,key]=map[id];
-    card.querySelector('#'+id).addEventListener('input', e=>{ data[obj][key]=e.target.value; refreshSidebar(); });
+    card.querySelector('#'+id).addEventListener('input', e=>{ data[obj][key]=e.target.value; refreshSidebar(); scheduleAutoAdvance(); });
   });
   bindDate(card.querySelector('#i_dob'), data.identity, 'dob', 'full');
+  card.querySelector('#i_dob').addEventListener('input', ()=>{ scheduleAutoAdvance(); });
 }
 
 function renderEntry(card){
@@ -772,9 +785,12 @@ function renderEntry(card){
       data.entry.latestDate=''; data.entry.latestPort='';
     }
     renderStep();
+    scheduleAutoAdvance();
   });
   bindDate(card.querySelector('#e_origDate'), data.entry, 'originalDate', 'full');
   bindDate(card.querySelector('#e_latestDate'), data.entry, 'latestDate', 'full');
+  card.querySelector('#e_origDate').addEventListener('input', ()=>{ scheduleAutoAdvance(); });
+  card.querySelector('#e_latestDate').addEventListener('input', ()=>{ scheduleAutoAdvance(); });
   renderPortChoice(card.querySelector('#e_origPortChoice'), data.entry, 'originalPort');
   renderPortChoice(card.querySelector('#e_latestPortChoice'), data.entry, 'latestPort');
 }
@@ -806,18 +822,19 @@ function renderContact(card){
     }
   }
   syncResidential();
-  bindAddressBlock(card, 'c_mail', data.contact.mailing, ()=>{ syncResidential(); refreshSidebar(); });
+  bindAddressBlock(card, 'c_mail', data.contact.mailing, ()=>{ syncResidential(); refreshSidebar(); scheduleAutoAdvance(); });
   if(!data.contact.sameAsMailing){
-    bindAddressBlock(card, 'c_res', data.contact.residential, ()=>{ refreshSidebar(); });
+    bindAddressBlock(card, 'c_res', data.contact.residential, ()=>{ refreshSidebar(); scheduleAutoAdvance(); });
   }
   sameEl.addEventListener('change', e=>{
     data.contact.sameAsMailing = !e.target.checked;
     if(data.contact.sameAsMailing) Object.assign(data.contact.residential, data.contact.mailing);
     renderContact(card);
     refreshSidebar();
+    scheduleAutoAdvance();
   });
-  card.querySelector('#c_phone').addEventListener('input', e=>{data.contact.phone=e.target.value; refreshSidebar();});
-  card.querySelector('#c_email').addEventListener('input', e=>{data.contact.email=e.target.value; refreshSidebar();});
+  card.querySelector('#c_phone').addEventListener('input', e=>{data.contact.phone=e.target.value; refreshSidebar(); scheduleAutoAdvance();});
+  card.querySelector('#c_email').addEventListener('input', e=>{data.contact.email=e.target.value; refreshSidebar(); scheduleAutoAdvance();});
 }
 
 function renderMarital(card){
@@ -2018,7 +2035,21 @@ function showStepValidationMsg(msg){
   el.textContent = msg;
   el.style.display = msg ? 'block' : 'none';
 }
+let autoAdvanceTimer = null;
+function scheduleAutoAdvance(delayMs){
+  delayMs = delayMs || 900;
+  clearTimeout(autoAdvanceTimer);
+  const scheduledStep = stepIndex;
+  autoAdvanceTimer = setTimeout(()=>{
+    if(stepIndex !== scheduledStep) return;
+    const key = steps[stepIndex].key;
+    if(validateStep(key) === null){
+      document.getElementById('nextBtn').click();
+    }
+  }, delayMs);
+}
 function renderStep(){
+  clearTimeout(autoAdvanceTimer);
   buildRail();
   gapAcknowledged = false;
   showStepValidationMsg('');
