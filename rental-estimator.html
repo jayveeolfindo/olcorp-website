@@ -686,7 +686,6 @@
     <p>Send us your quotation request for approval, and we'll confirm vehicle availability as soon as possible.</p>
     <p>Once availability is confirmed, a $50 reservation fee is required to secure your booking. This fee is non-refundable but will be credited toward your total rental cost. Deposit can be made via e-transfer to <strong>payment@olcorp.ca</strong>.</p>
     <button class="call-modal-btn" onclick="sendQuotationBySMS()">Send Text →</button>
-    <button class="call-modal-btn" onclick="sendQuotationByEmail()">Email to Consultant →</button>
     <button class="call-modal-close" onclick="closeCallModal()">Dismiss</button>
   </div>
 </div>
@@ -979,48 +978,6 @@
     msg += `Sent via olcorp.ca`;
 
     window.location.href = 'sms:+16399150209?body=' + encodeURIComponent(msg);
-  }
-  function sendQuotationByEmail() {
-    const vehicle  = document.getElementById('chipName').textContent;
-    const startDate = document.getElementById('startDateDisplay').textContent;
-    const startTime = document.getElementById('startTimeDisplay').textContent;
-    const endDate  = document.getElementById('endDateDisplay').textContent;
-    const endTime  = document.getElementById('endTimeDisplay').textContent;
-    const duration = document.getElementById('daysText').textContent;
-
-    const getRow = (rowId) => {
-      const row = document.getElementById(rowId);
-      if (!row || row.style.display === 'none') return '';
-      const lbl = row.querySelector('.fn') ? row.querySelector('.fn').textContent : '';
-      const amt = row.querySelector('.fa') ? row.querySelector('.fa').textContent : '';
-      return lbl + ': ' + amt + '\n';
-    };
-
-    const ccEl    = document.getElementById('ccToggle');
-    const payByCC = ccEl && ccEl.checked;
-    const ccAmt   = document.getElementById('ccAmt') ? document.getElementById('ccAmt').textContent : '';
-    const grandEl = document.getElementById('grandAmt');
-    const grandAmt = grandEl ? grandEl.textContent : '';
-
-    let body = 'CAR RENTAL QUOTATION \u2014 OLCORP.CA\n';
-    body += '================================\n\n';
-    body += 'Vehicle: ' + vehicle + '\n';
-    body += 'Pick-up: ' + startDate + ' at ' + startTime + '\n';
-    body += 'Return:  ' + endDate  + ' at ' + endTime   + '\n';
-    body += 'Duration: ' + duration + '\n\n';
-    body += getRow('row_base');
-    body += getRow('row_dest');
-    body += getRow('row_delivery');
-    body += getRow('row_pickup');
-    body += getRow('row_nop');
-    body += getRow('row_gst');
-    body += getRow('row_pst');
-    if (payByCC) body += 'Credit Card Fee (2.9%+$0.30): ' + ccAmt + '\n';
-    body += '\nTOTAL: ' + grandAmt + (payByCC ? ' (incl. CC fee)' : '') + '\n\n';
-    body += 'To confirm this booking, please reply to this email or contact us at consulting@olcorp.ca.';
-
-    const subject = 'Car Rental Quotation \u2014 Olcorp.ca';
-    window.open('mailto:consulting@olcorp.ca?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_blank');
   }
 
 
