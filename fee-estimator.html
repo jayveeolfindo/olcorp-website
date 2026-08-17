@@ -930,7 +930,6 @@
           </div>
           <button class="cta-btn" onclick="handleStartProcess()">Start the Process</button>
           <button class="cta-btn cta-contract" onclick="openContractModal()">Create Service Contract</button>
-        <button class="cta-btn cta-email" onclick="sendEstimateByEmail()">📧 Email to Consultant</button>
         </div>
         <p class="cta-note">All representation begins with a consultation for initial assessment. Consultation fees are deducted towards the representation fees.</p>
 
@@ -1775,6 +1774,7 @@ setTimeout(loadFromURL, 100);
       <div class="sc-actions">
         <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
         <button class="sc-generate" onclick="openContract()">Generate Contract</button>
+      <button class="sc-generate sc-email" onclick="sendEstimateByEmail()" style="background:#fff;color:#111;border:2px solid #111;margin-top:8px;">📧 Email to Consultant</button>
       </div>
     </div>
   </div>
