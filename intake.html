@@ -245,6 +245,7 @@
 // ---------- Data model ----------
 const data = {
   applicationType:'',
+  historyUpdateSections:{address:false,employment:false,travel:false},
   identity:{uci:'',lastName:'',givenNames:'',dob:'',pob:'',sex:'',citizenship:''},
   passport:{number:'',issue:'',expiry:'',country:''},
   contact:{
@@ -591,14 +592,20 @@ function historyRequirements(appType){
   if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
-  if(appType === 'history-only') return { addressYears: 10, travelRequired: true, employmentYears: 10 };
+  if(appType === 'history-only'){ const sel = data.historyUpdateSections || {}; return { addressYears: sel.address ? 10 : 0, travelRequired: !!sel.travel, employmentYears: sel.employment ? 10 : 0 }; }
   // No application type selected yet (shouldn't normally happen once the gate step is
   // answered) -- fall back to the fullest, most conservative requirements.
   return { addressYears: 10, travelRequired: true, employmentYears: 5 };
 }
 function isStepApplicable(key){
   if(data.applicationType === 'history-only'){
-    return !['marital','children','parents','entry','education','background'].includes(key);
+    const skip = ['marital','children','parents','entry','education','background'];
+    if(skip.includes(key)) return false;
+    const sel = data.historyUpdateSections || {};
+    if(key === 'address') return !!sel.address;
+    if(key === 'employment') return !!sel.employment;
+    if(key === 'travel') return !!sel.travel;
+    return true;
   }
   return true;
 }
@@ -680,6 +687,23 @@ function renderAppType(card){
     <div class="step-title">Type of Application</div>
     <div class="step-sub">This determines which sections below are required -- for example, how many years of address, travel, and employment history you'll need to provide.</div>
     <div id="appTypeChoices" style="margin-top:16px;"></div>
+    ${data.applicationType==='history-only' ? `
+    <div id="historyUpdateChoices" style="margin-top:20px;">
+      <div class="step-sub" style="margin-bottom:8px;">Which history do you need updated? Select at least one.</div>
+      <label class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="hu_address" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.historyUpdateSections.address?'checked':''}>
+        <span style="margin:0;">Address History</span>
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="hu_employment" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.historyUpdateSections.employment?'checked':''}>
+        <span style="margin:0;">Employment History</span>
+      </label>
+      <label class="field" style="display:flex;align-items:center;gap:8px;">
+        <input type="checkbox" id="hu_travel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.historyUpdateSections.travel?'checked':''}>
+        <span style="margin:0;">Travel History</span>
+      </label>
+    </div>
+    ` : ''}
   `;
   const wrap = card.querySelector('#appTypeChoices');
   wrap.appendChild(choiceRow(
@@ -695,8 +719,15 @@ function renderAppType(card){
       {value:'history-only', label:'History Update Only'},
     ],
     data.applicationType,
-    v => { data.applicationType = v; renderStep(); document.getElementById('nextBtn').click(); }
+    v => { data.applicationType = v; renderStep(); if(v !== 'history-only') document.getElementById('nextBtn').click(); }
   ));
+  if(data.applicationType==='history-only'){
+    const map = {hu_address:'address', hu_employment:'employment', hu_travel:'travel'};
+    Object.keys(map).forEach(id=>{
+      const el = card.querySelector('#'+id);
+      if(el) el.addEventListener('change', e=>{ data.historyUpdateSections[map[id]] = e.target.checked; });
+    });
+  }
 }
 
 function renderIdentity(card){
@@ -1886,6 +1917,11 @@ function validateStep(key){
     case 'appType':
       if(!isFilled(data.applicationType))
         return 'Please select the type of application before continuing.';
+      if(data.applicationType === 'history-only'){
+        const sel = data.historyUpdateSections || {};
+        if(!sel.address && !sel.employment && !sel.travel)
+          return 'Please select at least one type of history to update before continuing.';
+      }
       return null;
     case 'identity':
       if(!isFilled(data.identity.lastName) || !isFilled(data.identity.givenNames) || !isFilled(data.identity.dob))
