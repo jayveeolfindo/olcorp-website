@@ -1719,46 +1719,6 @@ function updateSocialProof(svc) {
     window.open('/service-contract.html?' + p, '_blank');
     closeContractModal();
   }
-  function sendEstimateByEmail() {
-    const serviceLabel = document.getElementById('repSectionLabel') ? document.getElementById('repSectionLabel').textContent.trim() : 'Immigration Service';
-    const heroAmt      = document.getElementById('repHeroAmount')   ? document.getElementById('repHeroAmount').textContent.trim()   : '';
-    const heroTotal    = document.getElementById('repHeroTotal')     ? document.getElementById('repHeroTotal').textContent.trim()    : '';
-    const grandTotal   = document.getElementById('grandTotal')       ? document.getElementById('grandTotal').textContent.trim()      : '';
-
-    // Build rep fee lines text
-    let repLines = '';
-    const repEl = document.getElementById('repFeeLines');
-    if (repEl) {
-      repEl.querySelectorAll('.fee-line, .fee-subtotal, .fee-note').forEach(row => {
-        const lbl = row.querySelector('.fn, .fee-note-text');
-        const amt = row.querySelector('.fa');
-        if (lbl) repLines += (lbl.textContent.trim()) + (amt ? ': ' + amt.textContent.trim() : '') + '\n';
-      });
-    }
-
-    // Build gov fee lines text
-    let govLines = '';
-    const govEl = document.getElementById('govFeeLines');
-    if (govEl) {
-      govEl.querySelectorAll('.fee-line, .fee-subtotal').forEach(row => {
-        const lbl = row.querySelector('.fn');
-        const amt = row.querySelector('.fa');
-        if (lbl && amt) govLines += lbl.textContent.trim() + ': ' + amt.textContent.trim() + '\n';
-      });
-    }
-
-    let body = 'IMMIGRATION FEE ESTIMATE \u2014 OLCORP.CA\n';
-    body += '=========================================\n\n';
-    body += 'Service: ' + serviceLabel + '\n\n';
-    if (repLines) { body += 'PROFESSIONAL FEES\n-----------------\n' + repLines + '\n'; }
-    if (govLines) { body += 'GOVERNMENT FEES\n---------------\n' + govLines + '\n'; }
-    body += 'TOTAL ESTIMATE: ' + (grandTotal || heroTotal) + '\n\n';
-    body += 'This is an estimate only. Final fees confirmed upon retainer.\n';
-    body += 'Contact: consulting@olcorp.ca';
-
-    const subject = 'Immigration Fee Estimate \u2014 ' + serviceLabel;
-    window.open('mailto:consulting@olcorp.ca?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_blank');
-  }
 
 setTimeout(loadFromURL, 100);
 </script>
