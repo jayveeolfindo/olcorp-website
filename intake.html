@@ -431,18 +431,36 @@ function maskDateInput(raw, mode){
     }
   }
   let out = year;
-  if(year.length===4){
+  if(month.length>0){
     out += '-' + month;
   }
-  if(mode==='full' && monthDone){
+  if(mode==='full' && day.length>0){
     out += '-' + day;
   }
   return out;
 }
+function applyDateMask(el, mode){
+  const caret = el.selectionStart;
+  const digitsBeforeCaret = (el.value.slice(0, caret).match(/\d/g) || []).length;
+  const masked = maskDateInput(el.value, mode);
+  el.value = masked;
+  let count = 0, pos = masked.length;
+  if(digitsBeforeCaret === 0){
+    pos = 0;
+  } else {
+    for(let i=0;i<masked.length;i++){
+      if(/\d/.test(masked[i])){
+        count++;
+        if(count === digitsBeforeCaret){ pos = i+1; break; }
+      }
+    }
+  }
+  el.setSelectionRange(pos, pos);
+  return masked;
+}
 function bindDate(el, obj, key, mode){
   el.addEventListener('input', e=>{
-    const masked = maskDateInput(e.target.value, mode);
-    e.target.value = masked;
+    const masked = applyDateMask(e.target, mode);
     obj[key] = masked;
     refreshSidebar();
   });
@@ -923,7 +941,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
       inp.addEventListener('input', e=>{
         const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
         let v = e.target.value;
-        if(t==='date' || t==='month'){ v = maskDateInput(v, t); e.target.value = v; }
+        if(t==='date' || t==='month'){ v = applyDateMask(e.target, t); }
         data[listKey][idx][k] = v;
         refreshSidebar();
         if(opts.onChange) opts.onChange();
@@ -1058,7 +1076,7 @@ function renderChildren(card){
       inp.addEventListener('input', e=>{
         const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
         let v = e.target.value;
-        if(t==='date'){ v = maskDateInput(v, 'full'); e.target.value = v; }
+        if(t==='date'){ v = applyDateMask(e.target, 'full'); }
         data.children[idx][k] = v;
         if(k==='heightCm'){
           const ftin = heightCmToFtIn(v);
@@ -1238,7 +1256,7 @@ function renderParents(card){
       inp.addEventListener('input', e=>{
         const idx=+e.target.dataset.idx, k=e.target.dataset.k;
         let v = e.target.value;
-        if(e.target.dataset.type==='date'){ v = maskDateInput(v,'full'); e.target.value = v; }
+        if(e.target.dataset.type==='date'){ v = applyDateMask(e.target, 'full'); }
         data.siblings[idx][k]=v;
         refreshSidebar();
       });
@@ -1318,7 +1336,7 @@ function renderTravelHistory(card){
       inp.addEventListener('input', e=>{
         const idx=+e.target.dataset.idx, k=e.target.dataset.k;
         let v = e.target.value;
-        if(e.target.dataset.type==='month'){ v = maskDateInput(v,'month'); e.target.value = v; }
+        if(e.target.dataset.type==='month'){ v = applyDateMask(e.target, 'month'); }
         data.travelHistory[idx][k]=v;
         refreshSidebar();
       });
@@ -1490,7 +1508,7 @@ function renderEmployment(card){
       inp.addEventListener('input', e=>{
         const idx = +e.target.dataset.idx, k = e.target.dataset.k, t = e.target.dataset.type;
         let v = e.target.value;
-        if(t==='month'){ v = maskDateInput(v, 'month'); e.target.value = v; }
+        if(t==='month'){ v = applyDateMask(e.target, 'month'); }
         data.employment[idx][k] = v;
         const row = data.employment[idx];
         if((k==='from' || k==='to') && row.unemployed){
