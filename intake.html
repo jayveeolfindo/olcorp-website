@@ -303,9 +303,11 @@ const steps = [
 function buildRail(){
   const rail = document.getElementById('progressRail');
   rail.innerHTML='';
-  steps.forEach((s,i)=>{
+  const aSteps = applicableSteps();
+  const curPos = aSteps.findIndex(s=>s.key===steps[stepIndex].key);
+  aSteps.forEach((s,i)=>{
     const seg = document.createElement('div');
-    seg.className='rail-seg' + (i<stepIndex ? ' done' : i===stepIndex ? ' active':'');
+    seg.className='rail-seg' + (i<curPos ? ' done' : i===curPos ? ' active':'');
     rail.appendChild(seg);
   });
 }
@@ -589,9 +591,19 @@ function historyRequirements(appType){
   if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
+  if(appType === 'history-only') return { addressYears: 10, travelRequired: true, employmentYears: 10 };
   // No application type selected yet (shouldn't normally happen once the gate step is
   // answered) -- fall back to the fullest, most conservative requirements.
   return { addressYears: 10, travelRequired: true, employmentYears: 5 };
+}
+function isStepApplicable(key){
+  if(data.applicationType === 'history-only'){
+    return !['marital','children','parents','entry','education','background'].includes(key);
+  }
+  return true;
+}
+function applicableSteps(){
+  return steps.filter(s=>isStepApplicable(s.key));
 }
 function computeGaps(entries, start, end){
   const DAY=86400000, TOL=31*DAY; // IRCC only flags gaps exceeding roughly one month
@@ -680,6 +692,7 @@ function renderAppType(card){
       {value:'sponsor', label:'Applicant\'s Sponsor'},
       {value:'pr-card-renewal', label:'PR Card Renewal'},
       {value:'citizenship', label:'Citizenship'},
+      {value:'history-only', label:'History Update Only'},
     ],
     data.applicationType,
     v => { data.applicationType = v; renderStep(); document.getElementById('nextBtn').click(); }
@@ -1976,7 +1989,7 @@ function renderStep(){
   const card = document.getElementById('stepCard');
   steps[stepIndex].render(card);
   const lbl = card.querySelector('.step-label');
-  if(lbl) lbl.textContent = `Step ${stepIndex+1} of ${steps.length}`;
+  if(lbl){ const aSteps = applicableSteps(); const curPos = aSteps.findIndex(s=>s.key===steps[stepIndex].key); lbl.textContent = `Step ${curPos+1} of ${aSteps.length}`; }
   document.getElementById('backBtn').style.display = stepIndex===0 ? 'none':'inline-block';
   document.getElementById('saveProgressBtn2').style.display = stepIndex===0 ? 'none':'inline-block';
   document.getElementById('nextBtn').textContent = 'Continue';
@@ -1984,7 +1997,14 @@ function renderStep(){
   refreshSidebar();
   window.scrollTo({top:0, behavior:'smooth'});
 }
-document.getElementById('backBtn').addEventListener('click', ()=>{ if(stepIndex>0){ stepIndex--; renderStep(); } });
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  if(stepIndex>0){
+    let i = stepIndex-1;
+    while(i>0 && !isStepApplicable(steps[i].key)) i--;
+    stepIndex = i;
+    renderStep();
+  }
+});
 document.getElementById('nextBtn').addEventListener('click', ()=>{
   const key = steps[stepIndex].key;
   const validationMsg = validateStep(key);
@@ -2011,7 +2031,10 @@ document.getElementById('nextBtn').addEventListener('click', ()=>{
     }
   }
   if(stepIndex<steps.length-1){
-    stepIndex++; renderStep();
+    let i = stepIndex+1;
+    while(i<steps.length-1 && !isStepApplicable(steps[i].key)) i++;
+    stepIndex = i;
+    renderStep();
   }
 });
 document.getElementById('doneModalNo').addEventListener('click', ()=>{
