@@ -1113,7 +1113,7 @@ function doSend() {
   } else {
     var subj = encodeURIComponent('[Signed Contract] ' + title);
     var body = encodeURIComponent('Dear Jayvee,\n\nPlease find the signed Service Agreement attached.\n\nDocument: ' + title + '\n\nBest regards');
-    window.open('mailto:consulting@olcorp.ca?subject=' + subj + '&body=' + body);
+    window.open('https://mail.google.com/mail/?view=cm&to=consulting%40olcorp.ca&su=' + encodeURIComponent(subj) + '&body=' + encodeURIComponent(body), '_blank');
   }
 }
 
