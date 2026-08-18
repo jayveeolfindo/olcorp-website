@@ -1110,43 +1110,79 @@ function generatePDF() {
 }
 
 function doSend() {
-      var instArr = [];
-      if (typeof installMilestones !== 'undefined' && installMilestones && installMilestones.length > 1) {
-        var iAmt = typeof installAmt !== 'undefined' ? installAmt : 0;
-        installMilestones.forEach(function(m) { instArr.push({ label: m, amount: iAmt }); });
+  var instArr = [];
+  if (typeof installMilestones !== 'undefined' && installMilestones && installMilestones.length > 1) {
+    var iAmt = typeof installAmt !== 'undefined' ? installAmt : 0;
+    installMilestones.forEach(function(m) { instArr.push({ label: m, amount: iAmt }); });
+  }
+  var endpoint = (document.querySelector('meta[name="sc-api"]') || {}).content || '';
+  var payload = {
+    secret: 'OLCORP_INTAKE_2026',
+    clientFirstName: fn || '', clientLastName: ln || '',
+    clientEmail: em || '', clientPhone: phone || '', clientAddress: addr || '',
+    serviceType: svc || '',
+    serviceLabel: (typeof TITLES !== 'undefined' && TITLES[svc]) || svc || '',
+    chargeGST: true, gstRate: 5,
+    gstAmount: typeof gst !== 'undefined' ? gst : 0,
+    professionalTotal: typeof profTotal !== 'undefined' ? profTotal : 0,
+    grandTotal: typeof grandTotal !== 'undefined' ? grandTotal : 0,
+    discountAmt: typeof discountAmt !== 'undefined' ? discountAmt : 0,
+    creditAmt: typeof creditAmt !== 'undefined' ? creditAmt : 0,
+    installments: instArr,
+  };
+  var sp = document.getElementById('sigPrompt');
+  var sm = document.getElementById('sendSuccessMsg');
+  if (sp) sp.style.display = 'none';
+  if (!endpoint) { alert('Configuration error. Please contact consulting@olcorp.ca.'); return; }
+
+  function doXHR(pdfB64) {
+    if (pdfB64) payload.contractPdfB64 = pdfB64;
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', endpoint);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { window._contractSent = true; if (sm) { sm.style.display = 'block'; sm.scrollIntoView({behavior:'smooth', block:'center'}); } if (sp) sp.style.display = 'none'; return; } } catch(e) {}
+      if (sp) sp.style.display = 'block';
+      alert('Error sending contract. Please contact consulting@olcorp.ca.');
+    };
+    xhr.onerror = function() { if (sp) sp.style.display = 'block'; alert('Could not connect. Please try again or contact consulting@olcorp.ca.'); };
+    xhr.send(JSON.stringify(payload));
+  }
+
+  // Capture the signed contract as a multi-page PDF, then POST
+  try {
+    var pageEl = document.querySelector('.page') || document.body;
+    window.html2canvas(pageEl, {
+      scale: 1.5, useCORS: true, allowTaint: false,
+      scrollX: 0, scrollY: -window.scrollY,
+      windowWidth: document.documentElement.scrollWidth,
+      windowHeight: document.documentElement.scrollHeight,
+    }).then(function(canvas) {
+      try {
+        var imgW = 595.28;
+        var imgH = canvas.height * imgW / canvas.width;
+        var jsPDFCls = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+        var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        var pageH = doc.internal.pageSize.getHeight();
+        var pages = Math.ceil(imgH / pageH);
+        for (var i = 0; i < pages; i++) {
+          if (i > 0) doc.addPage();
+          doc.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, -i * pageH, imgW, imgH);
+        }
+        doXHR(doc.output('datauristring').split(',')[1]);
+      } catch (pdfErr) {
+        console.warn('PDF generation error (non-fatal):', pdfErr);
+        doXHR(null);
       }
-      var endpoint = (document.querySelector('meta[name="sc-api"]') || {}).content || '';
-      var payload = {
-        secret: 'OLCORP_INTAKE_2026',
-        clientFirstName: fn || '', clientLastName: ln || '',
-        clientEmail: em || '', clientPhone: phone || '', clientAddress: addr || '',
-        serviceType: svc || '',
-        serviceLabel: (typeof TITLES !== 'undefined' && TITLES[svc]) || svc || '',
-        chargeGST: true, gstRate: 5,
-        gstAmount: typeof gst !== 'undefined' ? gst : 0,
-        professionalTotal: typeof profTotal !== 'undefined' ? profTotal : 0,
-        grandTotal: typeof grandTotal !== 'undefined' ? grandTotal : 0,
-        discountAmt: typeof discountAmt !== 'undefined' ? discountAmt : 0,
-        creditAmt: typeof creditAmt !== 'undefined' ? creditAmt : 0,
-        installments: instArr,
-      };
-      var sp = document.getElementById('sigPrompt');
-      var sm = document.getElementById('sendSuccessMsg');
-      if (sp) sp.style.display = 'none';
-      if (!endpoint) { alert('Configuration error. Please contact consulting@olcorp.ca.'); return; }
-      window.XMLHttpRequest && (function() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', endpoint);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.onload = function() {
-          try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { window._contractSent = true; if (sm) { sm.style.display = 'block'; sm.scrollIntoView({behavior:'smooth', block:'center'}); } if (sp) sp.style.display = 'none'; return; } } catch(e) {}
-          if (sp) sp.style.display = 'block';
-          alert('Error sending contract. Please contact consulting@olcorp.ca.');
-        };
-        xhr.onerror = function() { if (sp) sp.style.display = 'block'; alert('Could not connect. Please try again or contact consulting@olcorp.ca.'); };
-        xhr.send(JSON.stringify(payload));
-      })();
-    }
+    }).catch(function(canvasErr) {
+      console.warn('html2canvas error (non-fatal):', canvasErr);
+      doXHR(null);
+    });
+  } catch (e) {
+    console.warn('PDF capture failed (non-fatal):', e);
+    doXHR(null);
+  }
+}
 
 function _updateSign() {
   const n = _initDone.size, ok = _sigDrawn;
