@@ -103,6 +103,7 @@
     .init-field.done { border-bottom:1.5px solid #000; }
     .init-field.done::after { content:''; }
     .sig-canvas-wrap { border:1.5px solid #aaa; border-radius:4px; background:#fafafa; display:block; position:relative; }
+    .sig-canvas-wrap.signed { border-color:transparent; background:transparent; }
     .sig-canvas-wrap canvas { display:block; cursor:crosshair; width:100%; max-width:700px; height:auto; }
     .clear-sig-btn { position:absolute; top:4px; right:6px; background:none; border:1px solid #ccc; border-radius:4px; font-size:10px; padding:2px 7px; cursor:pointer; color:#777; }
     .sig-hint-text { display:block; text-align:center; font-size:9pt; color:#bbb; padding:2px 0 4px; }
@@ -1095,6 +1096,16 @@ function doInitial(id) {
 }
 
 let _sigDrawn = false, _pen = false;
+// Once the client has actually signed, the dashed placeholder box around the
+// canvas (there to invite a signature) no longer serves a purpose and just
+// looks like leftover UI chrome in the final contract — a real signed
+// document doesn't have a widget outline around the signature. Toggling this
+// class removes the border/background as soon as a stroke is drawn, and
+// restores it if they hit Clear to redo it.
+function _setSigWrapSigned(signed) {
+  const wrap = document.querySelector('.sig-canvas-wrap');
+  if (wrap) wrap.classList.toggle('signed', signed);
+}
 (function () {
   const c = document.getElementById('sigCanvas');
   if (!c) return;
@@ -1103,16 +1114,17 @@ let _sigDrawn = false, _pen = false;
   function pt(e) { const r = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [(t.clientX - r.left) * c.width / r.width, (t.clientY - r.top) * c.height / r.height]; }
   c.addEventListener('mousedown', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
   c.addEventListener('mousemove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
-  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
+  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _stampDate(); _setSigWrapSigned(true); _updateSign(); });
   c.addEventListener('mouseleave', () => { _pen = false; });
   c.addEventListener('touchstart', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
   c.addEventListener('touchmove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
-  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
+  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _stampDate(); _setSigWrapSigned(true); _updateSign(); });
 })();
 
 function clearSig() {
   const c = document.getElementById('sigCanvas');
   c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  _setSigWrapSigned(false);
   _sigDrawn = false;
   const d = document.getElementById('sigDate');
   if (d) d.textContent = '';
