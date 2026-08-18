@@ -1679,6 +1679,10 @@ function loadFromURL() {
   state.sinpCandidates     = +(p.get('sn') || 1);
   state.specialAssist      = p.get('sa')  === '1';
   state.visaSpouse         = p.get('vs')  === '1';
+  (SEQUENCES[state.service] || []).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.style.display = 'block'; el.style.opacity = '1'; }
+  });
   calculate();
 }
 
