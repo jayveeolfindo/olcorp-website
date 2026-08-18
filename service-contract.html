@@ -227,7 +227,6 @@
 <body>
 
 <div class="action-bar no-print">
-  <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
   <button class="btn-close" onclick="window.close()">Close</button>
   <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
 </div>
@@ -636,11 +635,11 @@
   </div>
       <div id="sendingMsg" style="display:none;align-items:center;gap:12px;justify-content:center;padding:18px 20px;background:#f0f3f8;border-radius:10px;border:1px solid #d0d8e8;margin-top:14px;">
         <div style="width:20px;height:20px;border:2.5px solid #1a2e5a;border-top-color:transparent;border-radius:50%;animation:scSpin 0.75s linear infinite;flex-shrink:0;"></div>
-        <span style="font-size:14px;color:#1a2e5a;font-weight:600;">Preparing and sending your agreementâ¦</span>
+        <span style="font-size:14px;color:#1a2e5a;font-weight:600;">Preparing and sending your agreement...</span>
       </div>
       <div id="sendSuccessMsg" style="display:none;margin:24px auto;max-width:520px;background:#eafaf1;border:1.5px solid #6dba8d;border-radius:12px;padding:20px 24px;text-align:center;">
         <div style="display:flex;align-items:flex-start;gap:14px;padding:20px;background:#eef6ee;border-radius:12px;border:1px solid #b8d8b8;">
-        <div style="font-size:24px;line-height:1;flex-shrink:0;">â</div>
+        <div style="font-size:24px;line-height:1;flex-shrink:0;">&#x2705;</div>
         <div>
           <div style="font-weight:700;font-size:15px;color:#1a4a1a;margin-bottom:6px;">Agreement sent successfully</div>
           <div style="font-size:13.5px;color:#2a4a2a;line-height:1.65;">Your consultant will review the agreement and countersign it shortly. Once the agreement has been accepted and signed, a fully executed copy will be attached to your first invoice, which will initiate the legal representation.</div>
@@ -1049,193 +1048,6 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
     return rows.join('');
   }
 
-  rows.push(`<tr class="subtotal-row"><td><strong>Estimated Government Total</strong></td><td class="amt"><strong>$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></td></tr>`);
-  return rows.join('');
-}
-
-
-// ── Contract title map (for PDF filename) ───────────────────────────────────
-
-// ── Electronic Signature ──────────────────────────────────────────────────────
-const _initDone = new Set();
-const _REQUIRED = 0;
-function _stampDate() {
-  const d = document.getElementById('sigDate');
-  if (!d || d.textContent) return;
-  const now = new Date();
-  const mo = ['January','February','March','April','May','June','July','August','September','October','November','December'][now.getMonth()];
-  d.textContent = mo + ' ' + now.getDate() + ', ' + now.getFullYear();
-}
-
-function doInitial(id) {
-  if (_initDone.has(id)) {
-    if (!confirm('Replace this initial?')) return;
-    _initDone.delete(id);
-    const el = document.getElementById(id);
-    el.textContent = '';
-    el.classList.remove('done');
-    _updateSign();
-    return;
-  }
-  const val = prompt('Type your initials:');
-  if (!val || !val.trim()) return;
-  const el = document.getElementById(id);
-  el.textContent = val.trim().toUpperCase().substring(0, 4);
-  el.classList.add('done');
-  _initDone.add(id);
-  _updateSign();
-}
-
-let _sigDrawn = false, _pen = false;
-(function () {
-  const c = document.getElementById('sigCanvas');
-  if (!c) return;
-  const x = c.getContext('2d');
-  x.strokeStyle = '#1a3e6e'; x.lineWidth = 2.5; x.lineCap = 'round'; x.lineJoin = 'round';
-  function pt(e) { const r = c.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return [t.clientX - r.left, t.clientY - r.top]; }
-  c.addEventListener('mousedown', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
-  c.addEventListener('mousemove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); });
-  c.addEventListener('mouseup', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
-  c.addEventListener('mouseleave', () => { _pen = false; });
-  c.addEventListener('touchstart', e => { _pen = true; x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
-  c.addEventListener('touchmove', e => { if (!_pen) return; x.lineTo(...pt(e)); x.stroke(); x.beginPath(); x.moveTo(...pt(e)); e.preventDefault(); }, { passive: false });
-  c.addEventListener('touchend', () => { _pen = false; _sigDrawn = true; _stampDate(); _updateSign(); });
-})();
-
-function clearSig() {
-  const c = document.getElementById('sigCanvas');
-  c.getContext('2d').clearRect(0, 0, c.width, c.height);
-  _sigDrawn = false;
-  const d = document.getElementById('sigDate');
-  if (d) d.textContent = '';
-  _updateSign();
-}
-
-
-function generatePDF() {
-  window.print();
-  window.addEventListener('afterprint', function() {
-    var b = document.getElementById('sendBtn');
-    if (b) b.style.display = 'inline-block';
-  }, { once: true });
-}
-
-function doSend() {
-  var instArr = [];
-  if (typeof installMilestones !== 'undefined' && installMilestones && installMilestones.length > 1) {
-    var iAmt = typeof installAmt !== 'undefined' ? installAmt : 0;
-    installMilestones.forEach(function(m) { instArr.push({ label: m, amount: iAmt }); });
-  }
-  var endpoint = (document.querySelector('meta[name="sc-api"]') || {}).content || '';
-  var payload = {
-    secret: 'OLCORP_INTAKE_2026',
-    clientFirstName: fn || '', clientLastName: ln || '',
-    clientEmail: em || '', clientPhone: phone || '', clientAddress: addr || '',
-    serviceType: svc || '',
-    serviceLabel: (typeof TITLES !== 'undefined' && TITLES[svc]) || svc || '',
-    chargeGST: true, gstRate: 5,
-    gstAmount: typeof gst !== 'undefined' ? gst : 0,
-    professionalTotal: typeof profTotal !== 'undefined' ? profTotal : 0,
-    grandTotal: typeof grandTotal !== 'undefined' ? grandTotal : 0,
-    discountAmt: typeof discountAmt !== 'undefined' ? discountAmt : 0,
-    creditAmt: typeof creditAmt !== 'undefined' ? creditAmt : 0,
-    installments: instArr,
-  };
-  var sp = document.getElementById('sigPrompt');
-  var sm = document.getElementById('sendSuccessMsg');
-  var sg = document.getElementById('sendingMsg');
-  var sb = document.getElementById('sendBtn');
-
-  // Show sending animation immediately
-  if (sp) sp.style.display = 'none';
-  if (sg) sg.style.display = 'flex';
-  if (sb) { sb.disabled = true; sb.textContent = 'Sendingâ¦'; }
-
-  if (!endpoint) {
-    if (sg) sg.style.display = 'none';
-    if (sp) sp.style.display = 'block';
-    if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
-    alert('Configuration error. Please contact consulting@olcorp.ca.');
-    return;
-  }
-
-  function doXHR(pdfB64) {
-    if (pdfB64) payload.contractPdfB64 = pdfB64;
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', endpoint);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function() {
-      if (sg) sg.style.display = 'none';
-      try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { window._contractSent = true; if (sm) { sm.style.display = 'block'; sm.scrollIntoView({behavior:'smooth', block:'center'}); } if (sp) sp.style.display = 'none'; return; } } catch(e) {}
-      if (sp) sp.style.display = 'block';
-      if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
-      alert('Error sending contract. Please contact consulting@olcorp.ca.');
-    };
-    xhr.onerror = function() {
-      if (sg) sg.style.display = 'none';
-      if (sp) sp.style.display = 'block';
-      if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
-      alert('Could not connect. Please try again or contact consulting@olcorp.ca.');
-    };
-    xhr.send(JSON.stringify(payload));
-  }
-
-  // Capture the signed contract as a multi-page PDF, then POST
-  try {
-    var pageEl = document.querySelector('.page') || document.body;
-    window.html2canvas(pageEl, {
-      scale: 1.5, useCORS: true, allowTaint: false,
-      scrollX: 0, scrollY: -window.scrollY,
-      windowWidth: document.documentElement.scrollWidth,
-      windowHeight: document.documentElement.scrollHeight,
-    }).then(function(canvas) {
-      try {
-        var imgW = 595.28;
-        var imgH = canvas.height * imgW / canvas.width;
-        var jsPDFCls = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-        var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-        var pageH = doc.internal.pageSize.getHeight();
-        var pages = Math.ceil(imgH / pageH);
-        for (var i = 0; i < pages; i++) {
-          if (i > 0) doc.addPage();
-          doc.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, -i * pageH, imgW, imgH);
-        }
-        doXHR(doc.output('datauristring').split(',')[1]);
-      } catch (pdfErr) {
-        console.warn('PDF generation error (non-fatal):', pdfErr);
-        doXHR(null);
-      }
-    }).catch(function(canvasErr) {
-      console.warn('html2canvas error (non-fatal):', canvasErr);
-      doXHR(null);
-    });
-  } catch (e) {
-    console.warn('PDF capture failed (non-fatal):', e);
-    doXHR(null);
-  }
-}
-
-function _updateSign() {
-  const n = _initDone.size, ok = _sigDrawn;
-  const btn = document.getElementById('pdfBtn');
-  const st = document.getElementById('signStatus');
-  if (btn) btn.disabled = !ok;
-  if (st) st.textContent = ok
-    ? ((window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? '\u2713 Ready \u2014 tap Share to send' : '\u2713 Document ready \u2014 click Generate PDF')
-    : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
-  var sp = document.getElementById('sigPrompt'); if (sp && !window._contractSent) sp.style.display = ok ? 'block' : 'none';
-}
-_updateSign();
-
-
-
-</script>
-
-<!-- Signed contract image modal (fallback for browsers without navigator.share+files) -->
-<div id="imgModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:9999;flex-direction:column;align-items:center;justify-content:center;padding:20px;gap:14px;">
-  <p style="color:#fff;font-size:16px;font-weight:600;text-align:center;margin:0;">Hold the image below and tap <strong>'Save Image'</strong> — then send it to your consultant.</p>
-  <img id="imgPreview" style="max-width:100%;max-height:68vh;border:3px solid #fff;border-radius:4px;" />
-  <button onclick="document.getElementById('imgModal').style.display='none'" style="padding:12px 32px;background:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">Close</button>
-</div>
+  rows.push(`<tr class="subtotal-row"><td><strong>Estimated Government Total</strong></td><td class="amt"><strong>$${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></td></div>
 </body>
 </html>
