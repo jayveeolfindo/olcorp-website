@@ -115,7 +115,6 @@
     }
     @media print {
       .sign-bar { display:none !important; }
-      .page { margin-top:40px !important; }
       .init-field { cursor:default !important; border-bottom:1px solid #000 !important; }
       .init-field::after { display:none !important; }
       .clear-sig-btn,.sig-hint-text { display:none !important; }
@@ -206,13 +205,26 @@
     .page-break { page-break-before: always; }
 
     /* Print */
+    /* @page margin is what actually creates a safe margin on EVERY physical
+       printed/PDF page for multi-page content — the .page div's own padding
+       below only ever applies to the top of the first flowed page and the
+       bottom of the last one, not to page breaks in between. Without this,
+       any interior page (page 2, 3, ...) printed with zero top/bottom
+       margin, which is exactly why text was running right up to the paper
+       edge on pages after the first. Left/right margin still comes from
+       .page's own padding since box content doesn't reflow horizontally
+       across a page break the same way. */
+    @page {
+      size: letter;
+      margin: 0.75in 0.9in;
+    }
     @media print {
       body { background: #fff; }
       .action-bar { display: none !important; }
       .page {
         margin: 0;
         box-shadow: none;
-        padding: 0.8in 0.9in;
+        padding: 0 0.9in;
         width: 100%;
         min-height: auto;
       }
