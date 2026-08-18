@@ -219,7 +219,9 @@
       }
       .section { page-break-inside: avoid; }
     }
-  </style>
+  
+      @keyframes scSpin { to { transform: rotate(360deg); } }
+    </style>
   <meta name="sc-api" content="https://app.olcorp.ca/api/queue-contract">
 </head>
 <body>
@@ -230,7 +232,7 @@
   <span>Review carefully before printing. This contract is generated from your fee estimator selections.</span>
 </div>
 
-<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="generatePDF()">Generate PDF</button><button class="sign-bar-btn" id="sendBtn" style="display:none;margin-left:10px;background:#2e7d32;" onclick="doSend()">Send to Consultant</button></div>
+<div class="sign-bar" id="signBar"><span class="sign-bar-status" id="signStatus">Draw your signature below to unlock PDF</span><button class="sign-bar-btn" id="pdfBtn" disabled onclick="generatePDF()">Generate PDF</button><button class="sign-bar-btn" id="sendBtn" style="display:none;margin-left:10px;background:#2e7d32;" id="sendBtn" onclick="doSend()">Send to Consultant</button></div>
 <div class="page">
 
   <!-- Header -->
@@ -632,9 +634,18 @@
       <button onclick="document.getElementById('sigPrompt').style.display='none'" style="background:#fff;color:#333;border:1.5px solid #bbb;border-radius:8px;padding:10px 22px;font-size:14px;cursor:pointer;">Review Further</button>
     </div>
   </div>
+      <div id="sendingMsg" style="display:none;align-items:center;gap:12px;justify-content:center;padding:18px 20px;background:#f0f3f8;border-radius:10px;border:1px solid #d0d8e8;margin-top:14px;">
+        <div style="width:20px;height:20px;border:2.5px solid #1a2e5a;border-top-color:transparent;border-radius:50%;animation:scSpin 0.75s linear infinite;flex-shrink:0;"></div>
+        <span style="font-size:14px;color:#1a2e5a;font-weight:600;">Preparing and sending your agreementâ¦</span>
+      </div>
       <div id="sendSuccessMsg" style="display:none;margin:24px auto;max-width:520px;background:#eafaf1;border:1.5px solid #6dba8d;border-radius:12px;padding:20px 24px;text-align:center;">
-        <p style="font-weight:600;font-size:15px;margin:0 0 8px;color:#1a5c38;">&#x2705; Your signed contract has been sent!</p>
-        <p style="font-size:13px;color:#2d6a4f;margin:0;">Your consultant will countersign shortly. You'll receive your invoice and document checklist by email.</p>
+        <div style="display:flex;align-items:flex-start;gap:14px;padding:20px;background:#eef6ee;border-radius:12px;border:1px solid #b8d8b8;">
+        <div style="font-size:24px;line-height:1;flex-shrink:0;">â</div>
+        <div>
+          <div style="font-weight:700;font-size:15px;color:#1a4a1a;margin-bottom:6px;">Agreement sent successfully</div>
+          <div style="font-size:13.5px;color:#2a4a2a;line-height:1.65;">Your consultant will review the agreement and countersign it shortly. Once the agreement has been accepted and signed, a fully executed copy will be attached to your first invoice, which will initiate the legal representation.</div>
+        </div>
+      </div>
       </div>
 
 
@@ -1132,8 +1143,21 @@ function doSend() {
   };
   var sp = document.getElementById('sigPrompt');
   var sm = document.getElementById('sendSuccessMsg');
+  var sg = document.getElementById('sendingMsg');
+  var sb = document.getElementById('sendBtn');
+
+  // Show sending animation immediately
   if (sp) sp.style.display = 'none';
-  if (!endpoint) { alert('Configuration error. Please contact consulting@olcorp.ca.'); return; }
+  if (sg) sg.style.display = 'flex';
+  if (sb) { sb.disabled = true; sb.textContent = 'Sendingâ¦'; }
+
+  if (!endpoint) {
+    if (sg) sg.style.display = 'none';
+    if (sp) sp.style.display = 'block';
+    if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
+    alert('Configuration error. Please contact consulting@olcorp.ca.');
+    return;
+  }
 
   function doXHR(pdfB64) {
     if (pdfB64) payload.contractPdfB64 = pdfB64;
@@ -1141,11 +1165,18 @@ function doSend() {
     xhr.open('POST', endpoint);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload = function() {
+      if (sg) sg.style.display = 'none';
       try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { window._contractSent = true; if (sm) { sm.style.display = 'block'; sm.scrollIntoView({behavior:'smooth', block:'center'}); } if (sp) sp.style.display = 'none'; return; } } catch(e) {}
       if (sp) sp.style.display = 'block';
+      if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
       alert('Error sending contract. Please contact consulting@olcorp.ca.');
     };
-    xhr.onerror = function() { if (sp) sp.style.display = 'block'; alert('Could not connect. Please try again or contact consulting@olcorp.ca.'); };
+    xhr.onerror = function() {
+      if (sg) sg.style.display = 'none';
+      if (sp) sp.style.display = 'block';
+      if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
+      alert('Could not connect. Please try again or contact consulting@olcorp.ca.');
+    };
     xhr.send(JSON.stringify(payload));
   }
 
