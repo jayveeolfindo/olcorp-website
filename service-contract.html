@@ -1188,8 +1188,24 @@ function doSend() {
     xhr.send(JSON.stringify(payload));
   }
 
+  // html2canvas captures the live "screen" DOM, not the @media print rules,
+  // so UI chrome (Clear button, hint text, the sending spinner) that print
+  // already hides would otherwise get baked permanently into the PDF. Hide
+  // it just for the capture, then restore it right after so the user still
+  // sees the normal sending animation.
+  var _captureHideEls = [
+    document.querySelector('.clear-sig-btn'),
+    document.querySelector('.sig-hint-text'),
+    document.getElementById('sendingMsg'),
+  ].filter(Boolean);
+  var _captureHidePrev = _captureHideEls.map(function(el) { return el.style.display; });
+  function _restoreCaptureChrome() {
+    _captureHideEls.forEach(function(el, idx) { el.style.display = _captureHidePrev[idx]; });
+  }
+
   // Capture the signed contract as a multi-page PDF, then POST
   try {
+    _captureHideEls.forEach(function(el) { el.style.display = 'none'; });
     var pageEl = document.querySelector('.page') || document.body;
     window.html2canvas(pageEl, {
       scale: 1.5, useCORS: true, allowTaint: false,
@@ -1197,6 +1213,7 @@ function doSend() {
       windowWidth: document.documentElement.scrollWidth,
       windowHeight: document.documentElement.scrollHeight,
     }).then(function(canvas) {
+      _restoreCaptureChrome();
       try {
         var jsPDFCls = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
@@ -1227,10 +1244,12 @@ function doSend() {
         doXHR(null);
       }
     }).catch(function(canvasErr) {
+      _restoreCaptureChrome();
       console.warn('html2canvas error (non-fatal):', canvasErr);
       doXHR(null);
     });
   } catch (e) {
+    _restoreCaptureChrome();
     console.warn('PDF capture failed (non-fatal):', e);
     doXHR(null);
   }
