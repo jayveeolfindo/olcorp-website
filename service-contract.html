@@ -622,6 +622,16 @@
     </div>
   </div>
 
+  <div id="sigPrompt" style="display:none;margin:24px auto;max-width:520px;background:#f0f4ff;border:1.5px solid #c5d0e8;border-radius:12px;padding:20px 24px;text-align:center;">
+    <p style="font-weight:600;font-size:15px;margin:0 0 6px;">Your signature has been recorded.</p>
+    <p style="font-size:13px;color:#555;margin:0 0 18px;">Would you like to send this contract to your consultant, or continue reviewing?</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button onclick="doSend()" style="background:#1a2e5a;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;cursor:pointer;">📧 Send to Consultant</button>
+      <button onclick="document.getElementById('sigPrompt').style.display='none'" style="background:#fff;color:#333;border:1.5px solid #bbb;border-radius:8px;padding:10px 22px;font-size:14px;cursor:pointer;">Review Further</button>
+    </div>
+  </div>
+
+
   <p style="text-align:center;margin-top:32px;font-size:9pt;color:#777;">
     IN WITNESS THEREOF this Agreement has been duly executed by the parties hereto on the date first above written.
   </p>
@@ -1115,6 +1125,7 @@ function _updateSign() {
   if (st) st.textContent = ok
     ? ((window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? '\u2713 Ready \u2014 tap Share to send' : '\u2713 Document ready \u2014 click Generate PDF')
     : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
+  var sp = document.getElementById('sigPrompt'); if (sp) sp.style.display = ok ? 'block' : 'none';
 }
 _updateSign();
 
