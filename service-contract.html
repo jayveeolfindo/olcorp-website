@@ -1160,6 +1160,17 @@ function doSend() {
     discountAmt: typeof discountAmt !== 'undefined' ? discountAmt : 0,
     creditAmt: typeof creditAmt !== 'undefined' ? creditAmt : 0,
     installments: instArr,
+    // Breakdown of professionalTotal (Section 5's "Professional Fees" plus its
+    // "Add: ..." lines) — sent separately so the consultant's own app can
+    // render the exact same itemized breakdown shown on the signed contract,
+    // instead of only the combined total.
+    professionalBase: typeof professionalBase !== 'undefined' ? professionalBase : 0,
+    spouseFee: typeof spouseFee !== 'undefined' ? spouseFee : 0,
+    childrenFee: typeof childrenFee !== 'undefined' ? childrenFee : 0,
+    childrenCount: typeof totalChildren !== 'undefined' ? totalChildren : 0,
+    childFeeRate: (typeof fees !== 'undefined' && fees.child) ? fees.child : 0,
+    ocFee: typeof ocFee !== 'undefined' ? ocFee : 0,
+    clientStatus: clientStatus || 'new',
   };
   var sp = document.getElementById('sigPrompt');
   var sm = document.getElementById('sendSuccessMsg');
