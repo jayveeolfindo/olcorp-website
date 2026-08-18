@@ -1198,15 +1198,28 @@ function doSend() {
       windowHeight: document.documentElement.scrollHeight,
     }).then(function(canvas) {
       try {
-        var imgW = 595.28;
-        var imgH = canvas.height * imgW / canvas.width;
         var jsPDFCls = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        var pageW = doc.internal.pageSize.getWidth();
         var pageH = doc.internal.pageSize.getHeight();
-        var pages = Math.ceil(imgH / pageH);
+        // Printer-safe margins matching the print-CSS version: 0.75in top/bottom, 0.9in sides.
+        var marginX = 0.9 * 72;
+        var marginTop = 0.75 * 72;
+        var marginBottom = 0.75 * 72;
+        var imgW = pageW - marginX * 2;
+        var scale = imgW / canvas.width; // canvas px -> PDF pt
+        var contentH = pageH - marginTop - marginBottom; // usable height per page, in pt
+        var sliceH = Math.max(1, Math.floor(contentH / scale)); // canvas px per page slice
+        var pages = Math.max(1, Math.ceil(canvas.height / sliceH));
         for (var i = 0; i < pages; i++) {
           if (i > 0) doc.addPage();
-          doc.addImage(canvas.toDataURL('image/jpeg', 0.85), 'JPEG', 0, -i * pageH, imgW, imgH);
+          var startPx = i * sliceH;
+          var thisSliceH = Math.min(sliceH, canvas.height - startPx);
+          var sliceCanvas = document.createElement('canvas');
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = thisSliceH;
+          sliceCanvas.getContext('2d').drawImage(canvas, 0, startPx, canvas.width, thisSliceH, 0, 0, canvas.width, thisSliceH);
+          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.85), 'JPEG', marginX, marginTop, imgW, thisSliceH * scale);
         }
         doXHR(doc.output('datauristring').split(',')[1]);
       } catch (pdfErr) {
