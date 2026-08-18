@@ -1136,7 +1136,7 @@ function doSend() {
         xhr.open('POST', endpoint);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onload = function() {
-          try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { if (sm) sm.style.display = 'block'; return; } } catch(e) {}
+          try { var d = JSON.parse(xhr.responseText); if (d && d.ok) { window._contractSent = true; if (sm) { sm.style.display = 'block'; sm.scrollIntoView({behavior:'smooth', block:'center'}); } if (sp) sp.style.display = 'none'; return; } } catch(e) {}
           if (sp) sp.style.display = 'block';
           alert('Error sending contract. Please contact consulting@olcorp.ca.');
         };
@@ -1153,7 +1153,7 @@ function _updateSign() {
   if (st) st.textContent = ok
     ? ((window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? '\u2713 Ready \u2014 tap Share to send' : '\u2713 Document ready \u2014 click Generate PDF')
     : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
-  var sp = document.getElementById('sigPrompt'); if (sp) sp.style.display = ok ? 'block' : 'none';
+  var sp = document.getElementById('sigPrompt'); if (sp && !window._contractSent) sp.style.display = ok ? 'block' : 'none';
 }
 _updateSign();
 
