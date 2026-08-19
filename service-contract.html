@@ -1299,12 +1299,40 @@ function doSend() {
           return desiredY;
         }
 
+        // The `.page` div has min-height:11in and its own bottom padding, so
+        // the captured canvas can run well past the last real line of text
+        // (e.g. "IN WITNESS THEREOF..."). Combined with the blank-row
+        // snapping above, that trailing dead space could get pushed onto
+        // its own page — a short closing line stranded above a huge blank
+        // area. Trim trailing blank rows off the bottom of the canvas
+        // before paginating so that dead space is dropped instead of
+        // becoming a page of its own.
+        var contentBottom = canvas.height;
+        var trimOk = true;
+        (function trimTrailingBlank() {
+          var coarseStep = 40;
+          while (contentBottom - coarseStep > 0) {
+            var b = isRowBlank(contentBottom - coarseStep);
+            if (b === null) { trimOk = false; return; }
+            if (!b) break;
+            contentBottom -= coarseStep;
+          }
+          while (contentBottom > 0) {
+            var b2 = isRowBlank(contentBottom - 1);
+            if (b2 === null) { trimOk = false; return; }
+            if (!b2) break;
+            contentBottom -= 2;
+          }
+        })();
+        if (!trimOk) contentBottom = canvas.height;
+        contentBottom = Math.min(canvas.height, contentBottom + 12); // small buffer for descenders
+
         var cuts = [];
         var pos = 0;
-        while (pos < canvas.height) {
-          var naiveEnd = Math.min(pos + sliceH, canvas.height);
+        while (pos < contentBottom) {
+          var naiveEnd = Math.min(pos + sliceH, contentBottom);
           var cutY = naiveEnd;
-          if (naiveEnd < canvas.height) {
+          if (naiveEnd < contentBottom) {
             var snapped = findSafeCut(naiveEnd, Math.round(sliceH * 0.2));
             if (snapped - pos > sliceH * 0.5) cutY = snapped; // guard against an over-eager snap-back
           }
