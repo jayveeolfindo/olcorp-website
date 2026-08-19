@@ -624,19 +624,24 @@
   </div>
 
   <!-- Signature -->
+  <!-- Only the Client signs here. The Firm's countersignature used to be a
+       blank line on this same page (never actually filled in — the firm
+       side was always signed separately) which made the contract look
+       incomplete at the moment the client sent it in. Now that the firm's
+       countersignature is generated automatically as its own page once the
+       consultant's system receives this agreement, that blank placeholder
+       is gone; a short note here just points to where it will appear. -->
   <div class="signature-section" style="margin-top:50px;">
-    <div class="sig-block">
+    <div class="sig-block" style="flex:none;width:60%;">
       <div class="sig-canvas-wrap"><canvas id="sigCanvas" width="700" height="200"></canvas><button class="clear-sig-btn" onclick="clearSig()">Clear</button></div>
       <span class="sig-hint-text">Draw signature above with mouse or touch</span>
       <div class="sig-label"><strong>Signature of Client – Principal Applicant</strong></div>
       <div class="sig-label" style="margin-top:4px;">Date: <span id="sigDate" style="font-style:italic;"></span></div>
     </div>
-    <div class="sig-block">
-      <div class="sig-line"></div>
-      <div class="sig-label"><strong>Jayvee Olfindo, RCIC R711813 | SK 000996</strong></div>
-      <div class="sig-label" style="margin-top:4px;">Signature of Firm's RCIC &amp; License No.</div>
-    </div>
   </div>
+  <p style="font-size:9pt;color:#777;font-style:italic;margin-top:18px;">
+    The Firm's countersignature is affixed on the final page of this Agreement.
+  </p>
 
   <div id="sigPrompt" style="display:none;margin:24px auto;max-width:520px;background:#f0f4ff;border:1.5px solid #c5d0e8;border-radius:12px;padding:20px 24px;text-align:center;">
     <p style="font-weight:600;font-size:15px;margin:0 0 6px;">Your signature has been recorded.</p>
