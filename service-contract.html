@@ -1357,17 +1357,47 @@ function doSend() {
           pos = cutY;
         }
 
-        for (var i = 0; i < cuts.length; i++) {
-          if (i > 0) doc.addPage();
-          var startPx = i === 0 ? 0 : cuts[i - 1];
-          var thisSliceH = cuts[i] - startPx;
-          var sliceCanvas = document.createElement('canvas');
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = thisSliceH;
-          sliceCanvas.getContext('2d').drawImage(canvas, 0, startPx, canvas.width, thisSliceH, 0, 0, canvas.width, thisSliceH);
-          doc.addImage(sliceCanvas.toDataURL('image/jpeg', 0.85), 'JPEG', marginX, marginTop, imgW, thisSliceH * scale);
+        // Vercel's serverless functions hard-cap the request body at
+        // ~4.5MB (FUNCTION_PAYLOAD_TOO_LARGE beyond that). A desktop
+        // capture of this same multi-page contract comfortably fits; a
+        // phone's higher-resolution capture of the identical page can push
+        // the base64-encoded PDF over that limit — which Vercel rejects
+        // before our code ever runs, and which the browser can't
+        // distinguish from a dropped connection. That's what was actually
+        // behind every "Could not connect" seen on mobile. Rather than
+        // gamble on one fixed JPEG quality that happens to fit on desktop,
+        // build the PDF, check its real size, and step the quality down
+        // until it's safely under the limit.
+        function buildPdfBase64(jpegQuality) {
+          var d = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+          for (var i = 0; i < cuts.length; i++) {
+            if (i > 0) d.addPage();
+            var startPx = i === 0 ? 0 : cuts[i - 1];
+            var thisSliceH = cuts[i] - startPx;
+            var sliceCanvas = document.createElement('canvas');
+            sliceCanvas.width = canvas.width;
+            sliceCanvas.height = thisSliceH;
+            sliceCanvas.getContext('2d').drawImage(canvas, 0, startPx, canvas.width, thisSliceH, 0, 0, canvas.width, thisSliceH);
+            d.addImage(sliceCanvas.toDataURL('image/jpeg', jpegQuality), 'JPEG', marginX, marginTop, imgW, thisSliceH * scale);
+          }
+          return d.output('datauristring').split(',')[1];
         }
-        doXHR(doc.output('datauristring').split(',')[1]);
+
+        var SAFE_BASE64_LIMIT = 3800000; // ~3.6MB raw, comfortably under Vercel's 4.5MB cap
+        var qualitySteps = [0.85, 0.6, 0.4];
+        var pdfB64 = null;
+        for (var qi = 0; qi < qualitySteps.length; qi++) {
+          var candidate = buildPdfBase64(qualitySteps[qi]);
+          if (candidate.length <= SAFE_BASE64_LIMIT) { pdfB64 = candidate; break; }
+        }
+        if (!pdfB64) {
+          // Still too large even at the lowest quality tried — send the
+          // record without the PDF rather than fail outright. It still
+          // queues normally; the "Attach a document" fallback in the app
+          // covers this rare case.
+          console.warn('Contract PDF still too large after quality reduction — sending without it.');
+        }
+        doXHR(pdfB64);
       } catch (pdfErr) {
         console.warn('PDF generation error (non-fatal):', pdfErr);
         doXHR(null);
