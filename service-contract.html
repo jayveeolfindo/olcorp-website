@@ -1225,7 +1225,24 @@ function doSend() {
       if (sg) sg.style.display = 'none';
       if (sp) sp.style.display = 'block';
       if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
-      alert('Could not connect. Please try again or contact consulting@olcorp.ca.');
+      // Diagnostic only, doesn't change the outcome: a no-cors GET can't be
+      // read by JS either way, but if it doesn't throw, the device DID
+      // reach the server over HTTPS — meaning the failure above is a CORS/
+      // firewall-level rejection, not a real connectivity problem. If this
+      // also throws, the device genuinely couldn't reach the server at all.
+      // Surfacing which one happened turns the next report into a concrete
+      // signal instead of another guess.
+      try {
+        fetch(endpoint, { method: 'GET', mode: 'no-cors', cache: 'no-store' })
+          .then(function() {
+            alert('Could not connect (device reached the server, but the response was blocked — most likely CORS or a firewall/bot-protection rule). Please try again or contact consulting@olcorp.ca.');
+          })
+          .catch(function() {
+            alert('Could not connect (device could not reach the server at all — check your network connection). Please try again or contact consulting@olcorp.ca.');
+          });
+      } catch (probeErr) {
+        alert('Could not connect. Please try again or contact consulting@olcorp.ca.');
+      }
     };
     xhr.send(JSON.stringify(payload));
   }
