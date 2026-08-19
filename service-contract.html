@@ -1259,12 +1259,54 @@ function doSend() {
         var imgW = pageW - marginX * 2;
         var scale = imgW / canvas.width; // canvas px -> PDF pt
         var contentH = pageH - marginTop - marginBottom; // usable height per page, in pt
-        var sliceH = Math.max(1, Math.floor(contentH / scale)); // canvas px per page slice
-        var pages = Math.max(1, Math.ceil(canvas.height / sliceH));
-        for (var i = 0; i < pages; i++) {
+        var sliceH = Math.max(1, Math.floor(contentH / scale)); // nominal canvas px per page slice
+
+        // Naive fixed-height slicing cuts wherever the pixel count lands,
+        // which can land mid-line — a sliver of glyphs shows at the foot of
+        // one page and the same line then renders again, whole, at the top
+        // of the next, which reads as duplicated/garbled text. Snap each cut
+        // point up to the nearest mostly-blank row (a gap between lines or
+        // paragraphs) within a search window instead, so a break never
+        // falls inside a line of text.
+        var srcCtx = canvas.getContext('2d');
+        function isRowBlank(y) {
+          try {
+            var row = srcCtx.getImageData(0, y, canvas.width, 1).data;
+            for (var xx = 0; xx < row.length; xx += 16) { // sample every 4th px (4 bytes/px)
+              if (row[xx] < 235 || row[xx + 1] < 235 || row[xx + 2] < 235) return false;
+            }
+            return true;
+          } catch (e) {
+            return null; // canvas read blocked (tainted) — caller should skip snapping entirely
+          }
+        }
+        function findSafeCut(desiredY, maxRise) {
+          var minY = Math.max(1, desiredY - maxRise);
+          for (var yy = desiredY; yy > minY; yy--) {
+            var blank = isRowBlank(yy);
+            if (blank === null) return desiredY;
+            if (blank) return yy;
+          }
+          return desiredY;
+        }
+
+        var cuts = [];
+        var pos = 0;
+        while (pos < canvas.height) {
+          var naiveEnd = Math.min(pos + sliceH, canvas.height);
+          var cutY = naiveEnd;
+          if (naiveEnd < canvas.height) {
+            var snapped = findSafeCut(naiveEnd, Math.round(sliceH * 0.2));
+            if (snapped - pos > sliceH * 0.5) cutY = snapped; // guard against an over-eager snap-back
+          }
+          cuts.push(cutY);
+          pos = cutY;
+        }
+
+        for (var i = 0; i < cuts.length; i++) {
           if (i > 0) doc.addPage();
-          var startPx = i * sliceH;
-          var thisSliceH = Math.min(sliceH, canvas.height - startPx);
+          var startPx = i === 0 ? 0 : cuts[i - 1];
+          var thisSliceH = cuts[i] - startPx;
           var sliceCanvas = document.createElement('canvas');
           sliceCanvas.width = canvas.width;
           sliceCanvas.height = thisSliceH;
