@@ -930,6 +930,11 @@ function fmtDate(d) {
   document.getElementById('svc2Points').innerHTML = pts;
 
   // Section 5 — Payment Terms
+  // Order mirrors how the totals are actually computed above: the discount
+  // is taken off profTotal first (-> discountedProf), then the consultation
+  // credit is taken off that (-> afterCredit), so "Total Before Tax" has to
+  // come after both of those rows and show afterCredit — not profTotal —
+  // or the printed subtotal doesn't match what GST is actually charged on.
   const payRows = [];
   payRows.push(`<tr><td>Professional Fees:</td><td class="amt">${fmt(professionalBase)}</td></tr>`);
   if (hasSpouse && fees.spouse > 0) {
@@ -941,14 +946,14 @@ function fmtDate(d) {
   if (ocFee > 0) {
     payRows.push(`<tr><td style="padding-left:24px">Add: Outside Canada Representation Fee</td><td class="amt">${fmt(ocFee)}</td></tr>`);
   }
-  if (creditAmt > 0) {
-    payRows.push(`<tr><td style="color:#2e8b57;">Consultation Fee Credit</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(creditAmt)}</td></tr>`);
-  }
-  payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(profTotal)}</td></tr>`);
   if (discountAmt > 0) {
     const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
     payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
   }
+  if (creditAmt > 0) {
+    payRows.push(`<tr><td style="color:#2e8b57;">Consultation Fee Credit</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(creditAmt)}</td></tr>`);
+  }
+  payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(afterCredit)}</td></tr>`);
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
   payRows.push(`<tr class="grand-row"><td>Total Contract Payable:</td><td class="amt">${fmt(grandTotal)}</td></tr>`);
   document.getElementById('paymentTable').innerHTML = payRows.join('');
@@ -984,7 +989,7 @@ const TITLES = {
 };
   document.title = (`${ln} - ${fn} - Service Agreement ${TITLES[svc] || ''}`).trimEnd();
   // expose contract data for doSend()
-  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.TITLES=TITLES; window.clientStatus=clientStatus;
+  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.TITLES=TITLES; window.clientStatus=clientStatus; window.professionalBase=professionalBase; window.spouseFee=spouseFee; window.childrenFee=childrenFee; window.totalChildren=totalChildren; window.ocFee=ocFee; window.fees=fees;
 })();
 
 function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
