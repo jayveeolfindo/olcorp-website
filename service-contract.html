@@ -1275,11 +1275,21 @@ function doSend() {
       _restoreCaptureChrome();
       try {
         var jsPDFCls = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-        var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+        // Letter (8.5x11in), matching the `.page` div's own CSS size exactly
+        // (was 'a4', which is narrower than 8.5in). That match matters: the
+        // captured screenshot already has the .page div's 1in CSS padding
+        // baked into its pixels on every side, so at this exact page size an
+        // extra placement inset isn't needed on the sides at all -- adding
+        // one on top of the baked-in padding was stacking to ~1.66in of
+        // visible margin in the emailed PDF vs. the 1in the client actually
+        // saw on the live page while signing. Vertically only page 1 has
+        // that same baked-in top padding (interior page breaks land at an
+        // arbitrary cut point with no padding of their own), so marginTop is
+        // still applied everywhere except the first slice below.
+        var doc = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'letter' });
         var pageW = doc.internal.pageSize.getWidth();
         var pageH = doc.internal.pageSize.getHeight();
-        // Printer-safe margins matching the print-CSS version: 0.75in top/bottom, 0.9in sides.
-        var marginX = 0.9 * 72;
+        var marginX = 0;
         var marginTop = 0.75 * 72;
         var marginBottom = 0.75 * 72;
         var imgW = pageW - marginX * 2;
@@ -1369,7 +1379,7 @@ function doSend() {
         // build the PDF, check its real size, and step the quality down
         // until it's safely under the limit.
         function buildPdfBase64(jpegQuality) {
-          var d = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'a4' });
+          var d = new jsPDFCls({ orientation: 'portrait', unit: 'pt', format: 'letter' });
           for (var i = 0; i < cuts.length; i++) {
             if (i > 0) d.addPage();
             var startPx = i === 0 ? 0 : cuts[i - 1];
@@ -1378,7 +1388,12 @@ function doSend() {
             sliceCanvas.width = canvas.width;
             sliceCanvas.height = thisSliceH;
             sliceCanvas.getContext('2d').drawImage(canvas, 0, startPx, canvas.width, thisSliceH, 0, 0, canvas.width, thisSliceH);
-            d.addImage(sliceCanvas.toDataURL('image/jpeg', jpegQuality), 'JPEG', marginX, marginTop, imgW, thisSliceH * scale);
+            // Page 1's slice already starts with the .page div's own 1in
+            // top padding baked in, so it needs no extra top inset -- every
+            // later slice starts at an arbitrary mid-content cut point and
+            // does need marginTop for breathing room.
+            var thisMarginTop = i === 0 ? 0 : marginTop;
+            d.addImage(sliceCanvas.toDataURL('image/jpeg', jpegQuality), 'JPEG', marginX, thisMarginTop, imgW, thisSliceH * scale);
           }
           return d.output('datauristring').split(',')[1];
         }
