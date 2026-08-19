@@ -984,7 +984,7 @@ const TITLES = {
 };
   document.title = (`${ln} - ${fn} - Service Agreement ${TITLES[svc] || ''}`).trimEnd();
   // expose contract data for doSend()
-  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.TITLES=TITLES;
+  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.TITLES=TITLES; window.clientStatus=clientStatus;
 })();
 
 function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
