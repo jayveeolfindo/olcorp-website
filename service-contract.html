@@ -1200,7 +1200,8 @@ function doSend() {
     return;
   }
 
-  function doXHR(pdfB64) {
+  function doXHR(pdfB64, attempt) {
+    attempt = attempt || 1;
     if (pdfB64) payload.contractPdfB64 = pdfB64;
     var xhr = new XMLHttpRequest();
     xhr.open('POST', endpoint);
@@ -1212,7 +1213,15 @@ function doSend() {
       if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
       alert('Error sending contract. Please contact consulting@olcorp.ca.');
     };
+    // A single dropped connection on a shaky mobile network shouldn't force
+    // the client to retype/retry by hand — retry silently a couple of times
+    // (keeping the "Sending..." state up) before surfacing the "Could not
+    // connect" alert, which used to fire on the very first blip.
     xhr.onerror = function() {
+      if (attempt < 3) {
+        setTimeout(function() { doXHR(pdfB64, attempt + 1); }, attempt * 1200);
+        return;
+      }
       if (sg) sg.style.display = 'none';
       if (sp) sp.style.display = 'block';
       if (sb) { sb.disabled = false; sb.textContent = 'Send to Consultant'; }
