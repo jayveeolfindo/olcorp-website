@@ -1729,8 +1729,8 @@ function renderReview(card){
       doc.setFont(undefined,'bold'); doc.setFontSize(17);
       doc.text('Olcorp Immigration Consulting', marginX, y); y += 22;
     }
-    doc.setFont(undefined,'bold'); doc.setFontSize(20);
-    doc.text('Client Information Form', marginX, y); y += 22;
+    doc.setFont(undefined,'bold'); doc.setFontSize(15); // reduced to 75% of previous 20pt
+    doc.text('Client Information Form', marginX, y); y += 18;
     doc.setFont(undefined,'normal');
     doc.setFontSize(9); doc.setTextColor(100);
     doc.text(`Record ID: ${data._recordId || recordId}   ·   Generated: ${new Date(data._generatedAt || Date.now()).toLocaleString('en-CA')}`, marginX, y);
