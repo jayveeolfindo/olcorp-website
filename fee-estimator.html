@@ -352,6 +352,9 @@
     .fee-line.subtotal .fa { font-size: 21px; font-weight: 700; letter-spacing: -0.5px; }
     .fee-note-inline { font-size: 11px; color: #86868b; margin: 5px 0 2px; line-height: 1.5; }
     .installment-note { font-size: 11px; color: #86868b; margin-top: 8px; line-height: 1.7; }
+    .milestone-list { margin-top: 5px; }
+    .milestone-item { display: flex; gap: 6px; font-size: 11px; color: #86868b; line-height: 1.5; margin-top: 3px; }
+    .milestone-num { min-width: 14px; font-weight: 600; color: #555; flex-shrink: 0; }
 
     /* ── REP FEE HERO ── */
     .rep-hero { scroll-margin-top: 20px; }
@@ -518,6 +521,7 @@
     .sc-field input { width:100%; padding:9px 12px; border:1px solid #d1d1d6; border-radius:8px; font-size:14px; font-family:inherit; }
     .sc-actions { display:flex; gap:10px; margin-top:18px; }
     .sc-cancel { flex:1; padding:11px; border:1px solid #d1d1d6; border-radius:8px; background:#fff; font-size:14px; cursor:pointer; }
+    .sc-copy { flex:1; padding:11px; border:1px solid #0077cc; border-radius:8px; background:#fff; font-size:14px; color:#0077cc; cursor:pointer; }
     .sc-generate { flex:2; padding:11px; background:#1d1d1f; color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:500; cursor:pointer; }
   </style>
 </head>
@@ -1389,12 +1393,41 @@ function addNote(container, text) {
   p.textContent = text;
   container.appendChild(p);
 }
+const MILESTONES = {
+  sinp_employer: [
+    'Signing of Service Agreement and to start representation',
+    'Receiving of Certificate of Registration from SINP Application',
+    'Preparation of one SINP Employer Position Assessment (EPA) Application',
+  ],
+  study_permit: [
+    'Signing of Service Agreement and to start representation',
+    'Submission of Study Permit Application to IRCC',
+    'Issuance of Study Permit by IRCC',
+  ],
+  family_sponsorship: [
+    'Signing of Service Agreement and to start representation',
+    'Submission of Sponsorship Application to IRCC',
+    'Permanent Residence approval',
+  ],
+  work_permit_employer: [
+    'Signing of Service Agreement and to start representation',
+    'Submission of Work Permit / LMIA Application',
+    'Issuance of Work Permit by IRCC',
+  ],
+};
 function addInstallNote(container, svc) {
   if (INSTALLMENTS[svc]) {
     const p = document.createElement('p');
     p.className = 'installment-note';
     p.innerHTML = INSTALLMENTS[svc];
     container.appendChild(p);
+    const ms = MILESTONES[svc];
+    if (ms && ms.length) {
+      const mDiv = document.createElement('div');
+      mDiv.className = 'milestone-list';
+      mDiv.innerHTML = ms.map((m, i) => '<div class="milestone-item"><span class="milestone-num">' + (i+1) + '.</span><span>' + m + '</span></div>').join('');
+      container.appendChild(mDiv);
+    }
   }
 }
 
@@ -1724,6 +1757,35 @@ function updateSocialProof(svc) {
     closeContractModal();
   }
 
+  function copyContractLink() {
+    const fn = document.getElementById('scFn').value.trim();
+    const ln = document.getElementById('scLn').value.trim();
+    const addr = document.getElementById('scAddr').value.trim();
+    const phone = document.getElementById('scPhone').value.trim();
+    const em = document.getElementById('scEm').value.trim();
+    if (!fn || !ln) { alert('Please enter at least the client name.'); return; }
+    const p = new URLSearchParams({
+      svc: state.service,
+      fn, ln, addr, phone, em,
+      family: state.family,
+      childrenYoung: state.childrenYoung || 0,
+      childrenOlder: state.childrenOlder || 0,
+      wpLocation: state.wpLocation || 'inside',
+      wpType: state.wpType || 'employer',
+      clientStatus: state.clientStatus,
+      consultationPaid: state.consultationPaid ? '1' : '0',
+      consultationAmount: state.consultationAmount || 0,
+    });
+    const url = location.origin + '/service-contract.html?' + p;
+    navigator.clipboard.writeText(url).then(function() {
+      const btn = document.getElementById('copyLinkBtn');
+      const orig = btn.textContent;
+      btn.textContent = 'Copied!';
+      btn.disabled = true;
+      setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 2500);
+    });
+  }
+
 setTimeout(loadFromURL, 100);
 </script>
 
@@ -1738,6 +1800,7 @@ setTimeout(loadFromURL, 100);
       <div class="sc-field"><label>Email Address</label><input id="scEm" placeholder="client@email.com"></div>
       <div class="sc-actions">
         <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
+        <button id="copyLinkBtn" class="sc-copy" onclick="copyContractLink()">Copy Link</button>
         <button class="sc-generate" onclick="openContract()">Generate Contract</button>
       </div>
     </div>
