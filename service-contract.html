@@ -511,7 +511,7 @@
     <div class="sig-block" style="flex:none;width:60%;">
       <div class="sig-canvas-wrap"><canvas id="sigCanvas" width="700" height="200"></canvas><button class="clear-sig-btn" onclick="clearSig()">Clear</button></div>
       <span class="sig-hint-text">Draw signature above with mouse or touch</span>
-      <div class="sig-label"><strong>Signature of Client – Principal Applicant</strong></div>
+      <div class="sig-label"><strong>Signature of Client – <span id="clientSigLabel">Principal Applicant</span></strong></div>
       <div class="sig-label" style="margin-top:4px;">Date: <span id="sigDate" style="font-style:italic;"></span></div>
     </div>
   </div>
@@ -738,6 +738,7 @@ function fmtDate(d) {
 (function () {
   const p = new URLSearchParams(location.search);
   const svc     = p.get('svc') || '';
+  if (svc === 'sinp_employer') { const _l = document.getElementById('clientSigLabel'); if (_l) _l.textContent = 'Authorized Signatory of the Company'; }
   const fn      = p.get('fn') || '';
   const ln      = p.get('ln') || '';
   const addr    = p.get('addr') || '';
