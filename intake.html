@@ -1104,6 +1104,18 @@ function renderChildren(card){
 }
 
 function renderParents(card){
+  function wireDobUnknown(who, grid){
+    const key = who+'Dob';
+    const input = grid.querySelector('#p_'+key);
+    const lbl = input.closest('label');
+    lbl.insertAdjacentHTML('beforeend', '<span style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;font-weight:400;color:#8a97a1;"><input type="checkbox" id="p_'+key+'Unknown" style="width:14px;height:14px;cursor:pointer;" '+(data.parents[key]==='1900-01-01'?'checked':'')+'>Unknown</span>');
+    if(data.parents[key]==='1900-01-01') input.disabled = true;
+    grid.querySelector('#p_'+key+'Unknown').addEventListener('change', e=>{
+      data.parents[key] = e.target.checked ? '1900-01-01' : '';
+      if(who==='mother') drawMother(); else drawFather();
+      refreshSidebar();
+    });
+  }
   card.innerHTML = `
     <div class="step-title">Parents & Siblings</div>
     <h4 style="font-family:var(--display);font-size:14px;margin:14px 0 8px;">Mother</h4>
@@ -1148,6 +1160,7 @@ function renderParents(card){
       mGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
     });
     bindDate(mGrid.querySelector('#p_motherDob'), data.parents, 'motherDob', 'full');
+    wireDobUnknown('mother', mGrid);
     motherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'motherOccupation', {id:'p_motherOccupation'});
     motherOccGrid.querySelector('#p_motherOccupation').addEventListener('input', e=>{ data.parents.motherOccupation=e.target.value; refreshSidebar(); });
     motherAddrWrap.innerHTML = renderAddressBlock('p_motherAddress', data.parents.motherAddress, false);
@@ -1170,6 +1183,7 @@ function renderParents(card){
       fGrid.querySelector('#p_'+k).addEventListener('input', e=>{ data.parents[k]=e.target.value; refreshSidebar(); });
     });
     bindDate(fGrid.querySelector('#p_fatherDob'), data.parents, 'fatherDob', 'full');
+    wireDobUnknown('father', fGrid);
     fatherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'fatherOccupation', {id:'p_fatherOccupation'});
     fatherOccGrid.querySelector('#p_fatherOccupation').addEventListener('input', e=>{ data.parents.fatherOccupation=e.target.value; refreshSidebar(); });
     fatherAddrWrap.innerHTML = renderAddressBlock('p_fatherAddress', data.parents.fatherAddress, data.parents.fatherSameAddrAsMother);
@@ -1178,8 +1192,16 @@ function renderParents(card){
   function drawDeceasedDate(who){
     const wrap = card.querySelector('#'+who+'DeceasedWrap');
     const key = who+'Deceased', dateKey = who+'DeceasedDate';
-    wrap.innerHTML = data.parents[key] ? fieldText('Date of Death', data.parents, dateKey, {id:'p_'+dateKey, type:'date'}) : '';
-    if(data.parents[key]) bindDate(wrap.querySelector('#p_'+dateKey), data.parents, dateKey, 'full');
+    wrap.innerHTML = data.parents[key] ? fieldText('Date of Death', data.parents, dateKey, {id:'p_'+dateKey, type:'date'}) + '<span style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;font-weight:400;color:#8a97a1;"><input type="checkbox" id="p_'+dateKey+'Unknown" style="width:14px;height:14px;cursor:pointer;" '+(data.parents[dateKey]==='1900-01-01'?'checked':'')+'>Unknown</span>' : '';
+    if(data.parents[key]){
+      const dInput = wrap.querySelector('#p_'+dateKey);
+      if(data.parents[dateKey]==='1900-01-01') dInput.disabled = true;
+      bindDate(dInput, data.parents, dateKey, 'full');
+      wrap.querySelector('#p_'+dateKey+'Unknown').addEventListener('change', e=>{
+        data.parents[dateKey] = e.target.checked ? '1900-01-01' : '';
+        drawDeceasedDate(who); refreshSidebar();
+      });
+    }
   }
   drawMother(); drawFather();
   drawDeceasedDate('mother'); drawDeceasedDate('father');
@@ -1792,14 +1814,14 @@ function renderReview(card){
     row('Place of Birth', [data.parents.motherPobCity, data.parents.motherPobCountry].filter(Boolean).join(', '));
     row('Occupation', data.parents.motherOccupation);
     row('Address', formatAddress(data.parents.motherAddress));
-    row('Deceased', data.parents.motherDeceased ? `Yes (${data.parents.motherDeceasedDate||'date not provided'})` : 'No');
+    row('Deceased', data.parents.motherDeceased ? (data.parents.motherDeceasedDate==='1900-01-01' ? `Deceased - ${data.parents.motherPobCountry||'Unknown Country'} - DOD: 1900-01-01` : `Yes (${data.parents.motherDeceasedDate||'date not provided'})`) : 'No');
     subheading('Father');
     row('Full Name', data.parents.fatherName);
     row('Date of Birth', data.parents.fatherDob);
     row('Place of Birth', [data.parents.fatherPobCity, data.parents.fatherPobCountry].filter(Boolean).join(', '));
     row('Occupation', data.parents.fatherOccupation);
     row('Address', formatAddress(data.parents.fatherAddress));
-    row('Deceased', data.parents.fatherDeceased ? `Yes (${data.parents.fatherDeceasedDate||'date not provided'})` : 'No');
+    row('Deceased', data.parents.fatherDeceased ? (data.parents.fatherDeceasedDate==='1900-01-01' ? `Deceased - ${data.parents.fatherPobCountry||'Unknown Country'} - DOD: 1900-01-01` : `Yes (${data.parents.fatherDeceasedDate||'date not provided'})`) : 'No');
     subheading('Siblings');
     if(data.siblingsNone || data.siblings.length===0){
       row('Siblings', 'None declared');
