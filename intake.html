@@ -1039,6 +1039,8 @@ function renderChildren(card){
         <label class="field"><span>Full Name</span><input type="text" data-k="name" data-idx="${idx}" value="${(row.name||'').replace(/"/g,'&quot;')}"></label>
         <label class="field"><span>Date of Birth</span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="dob" data-type="date" data-idx="${idx}" value="${row.dob||''}"></label>
         <label class="field" style="grid-column:1/-1;"><span>Relationship</span><div class="rel-choice"></div></label>
+        <label class="field" style="grid-column:1/-1;"><span>Marital Status</span><div class="civil-choice"></div></label>
+        <label class="field"><span>Present Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
         <label class="field" style="grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <input type="checkbox" data-k="sameAsMyAddress" data-idx="${idx}" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${row.sameAsMyAddress?'checked':''}>
           <span style="margin:0;">Same as your address</span>
@@ -1053,6 +1055,12 @@ function renderChildren(card){
       relWrap.appendChild(choiceRow(
         [{value:'Son',label:'Son'},{value:'Daughter',label:'Daughter'},{value:'Step-Son',label:'Step-Son'},{value:'Step-Daughter',label:'Step-Daughter'}],
         row.relationship, v=>{ row.relationship=v; draw(); refreshSidebar(); }
+      ));
+      const civilWrap = block.querySelector('.civil-choice');
+      civilWrap?.appendChild(choiceRow(
+        [{value:'single',label:'Single'},{value:'married',label:'Married'},{value:'common-law',label:'Common-Law'},
+         {value:'divorced',label:'Divorced'},{value:'widowed',label:'Widowed'},{value:'separated',label:'Separated'}],
+        row.civilStatus, v=>{ row.civilStatus=v; refreshSidebar(); }
       ));
       const eyeWrap = block.querySelector('.eye-choice');
       eyeWrap?.appendChild(choiceRow(
@@ -1097,7 +1105,7 @@ function renderChildren(card){
     });
   }
   card.querySelector('#addRow').addEventListener('click', ()=>{
-    data.children.push({name:'',dob:'',relationship:'',address:blankAddr(),sameAsMyAddress:false,eyeColor:'',heightCm:'',heightFtIn:''});
+    data.children.push({name:'',dob:'',relationship:'',civilStatus:'',occupation:'',address:blankAddr(),sameAsMyAddress:false,eyeColor:'',heightCm:'',heightFtIn:''});
     draw(); refreshSidebar();
   });
   draw();
@@ -1801,6 +1809,8 @@ function renderReview(card){
         row('Full Name', ch.name);
         row('Date of Birth', ch.dob);
         row('Relationship', ch.relationship);
+        row('Marital Status', ch.civilStatus);
+        row('Occupation', ch.occupation);
         row('Current Address', formatAddress(ch.address));
         row('Eye Color', ch.eyeColor);
         row('Height', `${ch.heightCm||'—'} cm (${ch.heightFtIn||'—'})`);
