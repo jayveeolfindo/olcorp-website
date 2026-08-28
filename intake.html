@@ -1051,7 +1051,7 @@ function renderChildren(card){
       </div>`;
       const relWrap = block.querySelector('.rel-choice');
       relWrap.appendChild(choiceRow(
-        [{value:'Son',label:'Son'},{value:'Daughter',label:'Daughter'},{value:'Son-in-law',label:'Son-in-law'},{value:'Daughter-in-law',label:'Daughter-in-law'}],
+        [{value:'Son',label:'Son'},{value:'Daughter',label:'Daughter'},{value:'Step-Son',label:'Step-Son'},{value:'Step-Daughter',label:'Step-Daughter'}],
         row.relationship, v=>{ row.relationship=v; draw(); refreshSidebar(); }
       ));
       const eyeWrap = block.querySelector('.eye-choice');
