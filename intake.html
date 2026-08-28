@@ -607,7 +607,7 @@ function requiredHistoryStart(years){
 
 function historyRequirements(appType){
   const TEMP_TYPES = ['tourist-visa','work-permit','study-permit'];
-  if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 0 };
+  if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 10 };
   if(appType === 'citizenship') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
@@ -898,7 +898,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
     ${opts.subtitle ? `<div class="step-sub">${opts.subtitle}</div>` : ''}
     ${opts.panelId ? `<div id="${opts.panelId}"></div>` : ''}
     <div id="repWrap"></div>
-    <button class="add-btn" id="addRow">+ Add entry</button>
+    ${(opts.maxEntries && (data[listKey]||[]).length >= opts.maxEntries) ? '' : '<button class="add-btn" id="addRow">+ Add entry</button>'}
     ${opts.bottomPanelId ? `<div id="${opts.bottomPanelId}" style="margin-top:22px;"></div>` : ''}
   `;
   const wrap = card.querySelector('#repWrap');
@@ -983,7 +983,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
       });
     });
   }
-  card.querySelector('#addRow').addEventListener('click', ()=>{
+  card.querySelector('#addRow')?.addEventListener('click', ()=>{
     const blank={}; fieldsDef.forEach(f=>blank[f.key] = f.type==='addressBlock' ? blankAddr() : '');
     data[listKey].push(blank); draw(); refreshSidebar();
     if(opts.onChange) opts.onChange();
@@ -1045,9 +1045,9 @@ function renderChildren(card){
         </label>
         <label class="field" style="grid-column:1/-1;"><span>Complete Address (up to the country)</span></label>
         <div style="grid-column:1/-1;" class="addr-block"></div>
-        <label class="field" style="grid-column:1/-1;"><span>Eye Color</span><div class="eye-choice"></div></label>
+        ${['tourist-visa','work-permit','study-permit'].includes(data.applicationType) ? '' : `<label class="field" style="grid-column:1/-1;"><span>Eye Color</span><div class="eye-choice"></div></label>
         <label class="field"><span>Height (cm)</span><input type="text" data-k="heightCm" data-idx="${idx}" value="${(row.heightCm||'').toString().replace(/"/g,'&quot;')}"></label>
-        <label class="field"><span>Height (ft &amp; in) <small>e.g. 5'7"</small></span><input type="text" data-k="heightFtIn" data-idx="${idx}" value="${(row.heightFtIn||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>Height (ft &amp; in) <small>e.g. 5'7"</small></span><input type="text" data-k="heightFtIn" data-idx="${idx}" value="${(row.heightFtIn||'').replace(/"/g,'&quot;')}"></label>`}
       </div>`;
       const relWrap = block.querySelector('.rel-choice');
       relWrap.appendChild(choiceRow(
@@ -1055,7 +1055,7 @@ function renderChildren(card){
         row.relationship, v=>{ row.relationship=v; draw(); refreshSidebar(); }
       ));
       const eyeWrap = block.querySelector('.eye-choice');
-      eyeWrap.appendChild(choiceRow(
+      eyeWrap?.appendChild(choiceRow(
         [{value:'Black',label:'Black'},{value:'Brown',label:'Brown'},{value:'Blue',label:'Blue'},{value:'Others',label:'Others'}],
         row.eyeColor, v=>{ row.eyeColor=v; draw(); refreshSidebar(); }
       ));
@@ -1394,6 +1394,7 @@ function eduYearsFor(entries){
 function renderEduYearsPanel(){
   const panel = document.getElementById('eduYearsPanel');
   if(!panel) return;
+  if(['tourist-visa','work-permit','study-permit'].includes(data.applicationType)){ panel.innerHTML = ''; return; }
   if(!data.education.length){ panel.innerHTML = ''; return; }
   const y = eduYearsFor(data.education);
   data.eduYears.secondary = y.secondary;
@@ -1425,6 +1426,7 @@ function renderEducation(card){
   ], {
     subtitle: 'Please list your education starting from your Secondary (High School) level. Do not include any education or training that was not completed.',
     bottomPanelId: 'eduYearsPanel',
+    maxEntries: ['tourist-visa','work-permit','study-permit'].includes(data.applicationType) ? 1 : undefined,
     onFieldChange: (row, key)=>{
       if(key==='level' && row.level==='Secondary Level'){
         row.fieldOfStudy = 'Secondary Level';
