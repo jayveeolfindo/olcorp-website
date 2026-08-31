@@ -2031,7 +2031,7 @@ function validateStep(key){
         return 'Please add at least one education entry before continuing.';
       if(data.education.some(r=>!isFilled(r.from) || !isFilled(r.institution)))
         return 'Please fill in the From date and Institution for each education entry before continuing.';
-      if(!isFilled(data.eduYears.elementary))
+      if(!['tourist-visa','work-permit','study-permit'].includes(data.applicationType) && !isFilled(data.eduYears.elementary))
         return 'Please fill in the number of years completed for Primary before continuing.';
       return null;
     case 'address': {
