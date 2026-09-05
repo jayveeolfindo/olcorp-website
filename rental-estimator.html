@@ -270,7 +270,7 @@ transition: color .15s;
 
 /* Social proof */
 .social-proof { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #e5e5ea; border-radius: 10px; padding: 11px 13px; margin-bottom: 14px; }
-.st-icon { width: 22px; height: 22px; background: #1d1d1f; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+.sp-icon { width: 22px; height: 22px; background: #1d1d1f; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
 .sp-text { font-size: 12px; color: #48484a; line-height: 1.4; }
 .sp-text strong { color: #1d1d1f; font-weight: 600; }
 
@@ -658,7 +658,7 @@ onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
 <!-- CTA -->
 <div class="cta-wrap" id="ctaWrap">
 <button class="result-cta" id="quoteCta" onclick="openCallModal()" disabled>
-Check Availability →
+Check Availability ₒ
 </button>
 </div>
 <p class="result-cta-note" id="ctaNote">
@@ -808,6 +808,13 @@ if (!selStartDt) {
   return;
 }
 selEndDt = dates[0];
+// Enforce 2-day minimum rental
+if ((selEndDt - selStartDt) < 48 * 3600 * 1000) {
+  selEndDt = null;
+  endPicker.clear();
+  document.getElementById('minRentalModal').style.display = 'flex';
+  return;
+}
 const card = document.getElementById('endCard');
 card.classList.add('filled');
 document.getElementById('endDateDisplay').className = 'dc-date';
@@ -1032,6 +1039,19 @@ if (e.key === 'Escape') closeCallModal();
 });
 </script>
 <!-- 24-hour booking notice modal -->
+<!-- 2-day minimum rental modal -->
+<div id="minRentalModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#fff; border-radius:20px; padding:36px 28px; max-width:360px; width:100%; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,0.25);">
+    <div style="font-size:44px; margin-bottom:14px;">📅</div>
+    <h3 style="font-size:18px; font-weight:600; color:#1d1d1f; margin-bottom:10px;">Minimum 2-Day Rental</h3>
+    <p style="font-size:14px; color:#6e6e73; line-height:1.5; margin-bottom:24px;">We require a minimum rental period of 2 days. Please choose a drop-off time at least 48 hours after your pick-up.</p>
+    <button onclick="document.getElementById('minRentalModal').style.display='none'; endPicker.open();"
+      style="background:#1d1d1f; color:#fff; border:none; border-radius:980px; padding:12px 28px; font-size:15px; font-weight:600; cursor:pointer; width:100%;">
+      Choose Drop-off Time
+    </button>
+  </div>
+</div>
+
 <div id="earlyBookingModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:9999; align-items:center; justify-content:center; padding:20px;">
   <div style="background:#fff; border-radius:20px; padding:36px 28px; max-width:360px; width:100%; text-align:center; box-shadow:0 24px 60px rgba(0,0,0,0.25);">
     <div style="font-size:44px; margin-bottom:14px;">⏰</div>
