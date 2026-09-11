@@ -609,7 +609,7 @@ function historyRequirements(appType){
   const TEMP_TYPES = ['tourist-visa','work-permit','study-permit'];
   if(TEMP_TYPES.includes(appType)) return { addressYears: 0, travelRequired: false, employmentYears: 10 };
   if(appType === 'citizenship') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
-  if(appType === 'pr-application' || appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 0 };
+  if(appType === 'pr-application') return { addressYears: 10, travelRequired: true, employmentYears: 0 }; if(appType === 'sponsored-applicant') return { addressYears: 10, travelRequired: true, employmentYears: 10 };
   if(appType === 'pr-card-renewal') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'sponsor') return { addressYears: 5, travelRequired: false, employmentYears: 5 };
   if(appType === 'history-only'){ const sel = data.historyUpdateSections || {}; const yrs = data.historyUpdateYears || 10; return { addressYears: sel.address ? yrs : 0, travelRequired: !!sel.travel, employmentYears: sel.employment ? yrs : 0 }; }
