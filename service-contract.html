@@ -896,7 +896,8 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
     rows.push(line('Principal Applicant PR Fee + RPRF', IRCC.pr_pa + IRCC.rprf));
     if (hasSpouse) rows.push(line('Spouse PR Fee + RPRF', IRCC.pr_spouse + IRCC.rprf));
     if (cyoung + colder > 0) rows.push(line(`PR Child Fee × ${cyoung + colder}`, IRCC.pr_child * (cyoung + colder), true));
-    rows.push(line('Family Biometrics', IRCC.bio_fam));
+    const isBioFamily = hasSpouse || (cyoung + colder) > 0;
+    rows.push(line(isBioFamily ? 'Family Biometrics' : 'Biometrics Fee', isBioFamily ? IRCC.bio_fam : IRCC.bio_single));
     const prTotal = total; total = wpSubtotal + prTotal;
   } else if (svc === 'work_permit') {
     rows.push(line('Work Permit Application Fee', IRCC.work_permit));
