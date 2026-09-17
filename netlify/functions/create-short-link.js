@@ -68,15 +68,29 @@ exports.handler = async function (event) {
 
   const store = getShortLinkStore();
 
-  // Collision check is a formality at this id length, but cheap insurance.
-  let id;
-  for (let attempt = 0; attempt < 5; attempt++) {
-    id = randomId(7);
-    const existing = await store.get(id);
-    if (!existing) break;
+  // Optional update-in-place: if the caller passes the id of an existing
+  // short link (e.g. a client detail was corrected after the link was
+  // already sent out), overwrite that record's target URL instead of
+  // minting a new id -- so the link the client already has keeps working
+  // and now points at the corrected contract.
+  let id = typeof payload.id === "string" ? payload.id.trim() : "";
+  let createdAt = new Date().toISOString();
+  if (id) {
+    const existing = await store.get(id, { type: "json" });
+    if (!existing) {
+      return { statusCode: 404, headers: cors, body: "No existing short link with that id" };
+    }
+    createdAt = existing.createdAt || createdAt;
+  } else {
+    // Collision check is a formality at this id length, but cheap insurance.
+    for (let attempt = 0; attempt < 5; attempt++) {
+      id = randomId(7);
+      const existingCheck = await store.get(id);
+      if (!existingCheck) break;
+    }
   }
 
-  await store.setJSON(id, { url, createdAt: new Date().toISOString() });
+  await store.setJSON(id, { url, createdAt, updatedAt: new Date().toISOString() });
 
   return {
     statusCode: 200,
