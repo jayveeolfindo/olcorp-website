@@ -811,6 +811,22 @@ function fmtDate(d) {
     grandTotal -= installAmt;
   }
 
+  // Optional full override of the contract's total professional fee — used
+  // when the price for this specific engagement was negotiated directly
+  // rather than derived from the standard fee schedule above (e.g. a flat
+  // reduced fee once a milestone is waived). ?customTotal is the final
+  // GST-inclusive Total Contract Payable and replaces afterCredit/gst/
+  // grandTotal outright; the remaining (non-waived) milestones then split
+  // that total evenly rather than keeping their formula-derived amount.
+  const customTotal = parseFloat(p.get('customTotal') || '');
+  if (customTotal > 0) {
+    grandTotal = customTotal;
+    afterCredit = customTotal / 1.05;
+    gst = customTotal - afterCredit;
+    const billableCount = installMilestones.length - (waivedIndex >= 0 ? 1 : 0);
+    installAmt = billableCount > 0 ? grandTotal / billableCount : 0;
+  }
+
   // Subtitle
   let subtitle = SUBTITLES[svc] || 'Immigration Services';
   if (svc === 'work_permit' && isPgwp) subtitle = 'Post-Graduate Work Permit (PGWP) — Temporary Residence Application';
@@ -837,22 +853,31 @@ function fmtDate(d) {
   // come after both of those rows and show afterCredit — not profTotal —
   // or the printed subtotal doesn't match what GST is actually charged on.
   const payRows = [];
-  payRows.push(`<tr><td>Professional Fees:</td><td class="amt">${fmt(professionalBase)}</td></tr>`);
-  if (hasSpouse && fees.spouse > 0) {
-    payRows.push(`<tr><td style="padding-left:24px">Add: Spouse Fee</td><td class="amt">${fmt(spouseFee)}</td></tr>`);
-  }
-  if (totalChildren > 0 && fees.child > 0) {
-    payRows.push(`<tr><td style="padding-left:24px">Add: Dependent Children (${totalChildren} × ${fmt(fees.child).replace(' CAD','')})</td><td class="amt">${fmt(childrenFee)}</td></tr>`);
-  }
-  if (ocFee > 0) {
-    payRows.push(`<tr><td style="padding-left:24px">Add: Outside Canada Representation Fee</td><td class="amt">${fmt(ocFee)}</td></tr>`);
-  }
-  if (discountAmt > 0) {
-    const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
-    payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
-  }
-  if (creditAmt > 0) {
-    payRows.push(`<tr><td style="color:#2e8b57;">Consultation Fee Credit</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(creditAmt)}</td></tr>`);
+  if (customTotal > 0) {
+    // The itemized formula breakdown (base fee, spouse/child add-ons,
+    // discount, consultation credit) doesn't apply to a directly-negotiated
+    // flat fee — showing it would print numbers that don't reconcile with
+    // the overridden total below. One row, at the actual agreed pre-tax
+    // amount, is what a manually-priced contract should show instead.
+    payRows.push(`<tr><td>Professional Fees:</td><td class="amt">${fmt(afterCredit)}</td></tr>`);
+  } else {
+    payRows.push(`<tr><td>Professional Fees:</td><td class="amt">${fmt(professionalBase)}</td></tr>`);
+    if (hasSpouse && fees.spouse > 0) {
+      payRows.push(`<tr><td style="padding-left:24px">Add: Spouse Fee</td><td class="amt">${fmt(spouseFee)}</td></tr>`);
+    }
+    if (totalChildren > 0 && fees.child > 0) {
+      payRows.push(`<tr><td style="padding-left:24px">Add: Dependent Children (${totalChildren} × ${fmt(fees.child).replace(' CAD','')})</td><td class="amt">${fmt(childrenFee)}</td></tr>`);
+    }
+    if (ocFee > 0) {
+      payRows.push(`<tr><td style="padding-left:24px">Add: Outside Canada Representation Fee</td><td class="amt">${fmt(ocFee)}</td></tr>`);
+    }
+    if (discountAmt > 0) {
+      const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
+      payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
+    }
+    if (creditAmt > 0) {
+      payRows.push(`<tr><td style="color:#2e8b57;">Consultation Fee Credit</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(creditAmt)}</td></tr>`);
+    }
   }
   payRows.push(`<tr class="total-row"><td>Total Before Tax:</td><td class="amt">${fmt(afterCredit)}</td></tr>`);
   payRows.push(`<tr><td>GST 5%</td><td class="amt">${fmt(gst)}</td></tr>`);
