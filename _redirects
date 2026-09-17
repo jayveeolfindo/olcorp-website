@@ -9,4 +9,4 @@
 /etaform	/eta-intake.html	200
 /rentalprep	/car-rental-checklist.html	200
 /turnover /car-rental-checklist.html 200
-/l/*	/.netlify/functions/go?id=:splat	200
+/l/:id	/.netlify/functions/go?id=:id	200
