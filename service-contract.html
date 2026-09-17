@@ -770,9 +770,11 @@ function fmtDate(d) {
   const discountAmt     = Math.round(profTotal * discountPct * 100) / 100;
   const discountedProf  = profTotal - discountAmt;
   const creditAmt         = (consultPaid && consultAmt > 0) ? Math.min(consultAmt, discountedProf) : 0;
-  const afterCredit       = discountedProf - creditAmt;
-  const gst               = afterCredit * 0.05;
-  const grandTotal        = afterCredit + gst;
+  // let, not const — a waived milestone (below) forgives its slice of these
+  // three straight off the top, so the printed totals and the schedule agree.
+  let afterCredit       = discountedProf - creditAmt;
+  let gst               = afterCredit * 0.05;
+  let grandTotal        = afterCredit + gst;
 
   const TR_2INST = ['work_permit','francophone_wp','study_permit','visitor_visa','super_visa','stay_extension','status_restoration'];
   const isTR2 = TR_2INST.includes(svc);
@@ -790,6 +792,23 @@ function fmtDate(d) {
       'Upon submission of the application',
     ];
     installAmt = grandTotal / installMilestones.length;
+  }
+
+  // One-off concession: forgive a specific billing milestone entirely (e.g.
+  // the client already holds an active/certified SINP employer account, so
+  // the "upon receiving Certificate of Registration" step doesn't apply to
+  // them) rather than discounting the whole engagement. ?waiveMilestone=2 is
+  // 1-based into installMilestones above. Since installAmt is an even slice
+  // of the same tax-inclusive grandTotal, waiving one milestone forgives that
+  // same fraction of afterCredit/gst/grandTotal, keeping Section 5's totals
+  // and the Section 6 schedule consistent with each other.
+  const waiveMilestone = parseInt(p.get('waiveMilestone') || '0', 10);
+  const waivedIndex = (waiveMilestone >= 1 && waiveMilestone <= installMilestones.length) ? waiveMilestone - 1 : -1;
+  if (waivedIndex >= 0) {
+    const waivedFraction = installAmt / grandTotal;
+    afterCredit -= afterCredit * waivedFraction;
+    gst -= gst * waivedFraction;
+    grandTotal -= installAmt;
   }
 
   // Subtitle
@@ -843,8 +862,12 @@ function fmtDate(d) {
   // Section 6 — Payment Schedule
   let schedRows;
   schedRows = `<tr><th>Billing Installment</th><th class="amt">Professional Fee (CAD)</th></tr>`;
-    installMilestones.forEach(m => {
-      schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installAmt)} <span class="note">incl. 5% GST</span></td></tr>`;
+    installMilestones.forEach((m, idx) => {
+      if (idx === waivedIndex) {
+        schedRows += `<tr><td>${m} <span class="note">(Waived)</span></td><td class="amt">${fmt(0)}</td></tr>`;
+      } else {
+        schedRows += `<tr><td>${m}</td><td class="amt">${fmt(installAmt)} <span class="note">incl. 5% GST</span></td></tr>`;
+      }
     });
     schedRows += `<tr class="total-row"><td>Total</td><td class="amt">${fmt(grandTotal)} Tax Inclusive</td></tr>`;
   document.getElementById('scheduleTable').innerHTML = schedRows;
@@ -871,7 +894,7 @@ const TITLES = {
 };
   document.title = (`${ln} - ${fn} - Service Agreement ${TITLES[svc] || ''}`).trimEnd();
   // expose contract data for doSend()
-  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.TITLES=TITLES; window.clientStatus=clientStatus; window.professionalBase=professionalBase; window.spouseFee=spouseFee; window.childrenFee=childrenFee; window.totalChildren=totalChildren; window.ocFee=ocFee; window.fees=fees;
+  window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.waivedIndex=waivedIndex; window.TITLES=TITLES; window.clientStatus=clientStatus; window.professionalBase=professionalBase; window.spouseFee=spouseFee; window.childrenFee=childrenFee; window.totalChildren=totalChildren; window.ocFee=ocFee; window.fees=fees;
 })();
 
 function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
@@ -1032,7 +1055,8 @@ function doSend() {
   var instArr = [];
   if (typeof installMilestones !== 'undefined' && installMilestones && installMilestones.length > 1) {
     var iAmt = typeof installAmt !== 'undefined' ? installAmt : 0;
-    installMilestones.forEach(function(m) { instArr.push({ label: m, amount: iAmt }); });
+    var wIdx = typeof waivedIndex !== 'undefined' ? waivedIndex : -1;
+    installMilestones.forEach(function(m, idx) { instArr.push({ label: idx === wIdx ? (m + ' (Waived)') : m, amount: idx === wIdx ? 0 : iAmt }); });
   }
   var endpoint = (document.querySelector('meta[name="sc-api"]') || {}).content || '';
   var payload = {
