@@ -987,8 +987,10 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
   } else if (svc === 'status_restoration') {
     rows.push(line('Status Restoration Application Fee', IRCC.status_restore));
   } else if (svc === 'sinp_employer') {
+    // The EPA engages only the employer — the employee's own work permit
+    // application (and its fee) is a separate matter handled under their
+    // own retainer, so it doesn't belong on the employer's fee schedule.
     rows.push(line('SINP Employer Application Fee (by Employer)', IRCC.sinp_employer));
-    rows.push(line('Work Permit Application Fee (Employee)', IRCC.work_permit));
   } else {
     rows.push(`<tr><td colspan="2" style="font-style:italic;color:#555;font-size:9pt;">Government fees will be confirmed and advised prior to application submission.</td></tr>`);
     return rows.join('');
