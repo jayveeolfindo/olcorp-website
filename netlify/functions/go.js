@@ -6,12 +6,12 @@
 // emailed contract link several times before signing), so this does NOT
 // delete on read -- it just looks the id up and redirects every time.
 //
-// The id is forwarded from _redirects as a trailing PATH segment
-// (/l/* -> /.netlify/functions/go/:splat), not a query string param --
-// Netlify's :splat/:id substitution into a destination query string was
-// unreliable in testing. The old ?id= query param is kept as a fallback
-// for direct testing.
-
+// IMPORTANT: when this function is invoked via the /l/* rewrite rule in
+// _redirects, event.path reflects the ORIGINAL request path (/l/<id>),
+// not the function's own path -- Netlify does not rewrite event.path for
+// a 200 proxy/rewrite rule. So the id is parsed straight out of the
+// original /l/<id> path. The /.netlify/functions/go/<id> form is also
+// accepted so the function can still be tested directly.
 function getShortLinkStore() {
   const { getStore } = require("@netlify/blobs");
   const siteID = process.env.BLOBS_SITE_ID;
@@ -23,34 +23,18 @@ function getShortLinkStore() {
 }
 
 exports.handler = async function (event) {
-  const pathId = (event.path || "").replace(/^\/.netlify\/functions\/go\/?/, "").trim();
+  const rawPath = event.path || "";
+  const pathId = rawPath
+    .replace(/^\/\.netlify\/functions\/go\/?/, "")
+    .replace(/^\/l\//, "")
+    .trim();
   const id = pathId || (event.queryStringParameters && event.queryStringParameters.id);
   if (!id) {
     return { statusCode: 400, body: "Missing id" };
   }
 
-  let record;
-  try {
-    const store = getShortLinkStore();
-    record = await store.get(id, { type: "json" });
-  } catch (err) {
-    // Temporary diagnostic: surface exactly what happened rather than a
-    // bare 502, so we can see whether this is an id-parsing issue or a
-    // Blobs-context issue when invoked via the /l/* redirect vs directly.
-    return {
-      statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        debug: true,
-        id,
-        eventPath: event.path,
-        rawUrl: event.rawUrl || null,
-        hasSiteEnv: !!process.env.BLOBS_SITE_ID,
-        hasTokenEnv: !!process.env.BLOBS_TOKEN,
-        errMessage: err && err.message,
-      }),
-    };
-  }
+  const store = getShortLinkStore();
+  const record = await store.get(id, { type: "json" });
 
   if (!record || !record.url) {
     return {
