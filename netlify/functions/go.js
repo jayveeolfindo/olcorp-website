@@ -5,6 +5,14 @@
 // short link is meant to be opened more than once (a client may reopen an
 // emailed contract link several times before signing), so this does NOT
 // delete on read -- it just looks the id up and redirects every time.
+//
+// The id is forwarded from _redirects as a trailing PATH segment
+// (/l/* -> /.netlify/functions/go/:splat), not a query string param --
+// Netlify's :splat/:id substitution into a destination query string was
+// unreliable in testing (the function was invoked but queryStringParameters
+// came back empty). Forwarding into the destination path is the documented,
+// reliable pattern, so this reads the id from event.path instead. The old
+// ?id= query param is still accepted as a fallback for direct testing.
 
 function getShortLinkStore() {
   const { getStore } = require("@netlify/blobs");
@@ -17,7 +25,8 @@ function getShortLinkStore() {
 }
 
 exports.handler = async function (event) {
-  const id = event.queryStringParameters && event.queryStringParameters.id;
+  const pathId = (event.path || "").replace(/^\/.netlify\/functions\/go\/?/, "").trim();
+  const id = pathId || (event.queryStringParameters && event.queryStringParameters.id);
   if (!id) {
     return { statusCode: 400, body: "Missing id" };
   }
