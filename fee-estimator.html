@@ -611,6 +611,7 @@
           <button class="svc-card" onclick="selectService('citizenship', this)">Citizenship</button>
           <button class="svc-card" onclick="selectService('school_enrollment', this)">School Enrollment to Canadian DLI</button>
           <button class="svc-card" onclick="selectService('sinp_employer', this)">SINP Employer Certification</button>
+          <button class="svc-card" onclick="selectService('sinp_employer_epa', this)">SINP Employer – EPA Only (Already Certified)</button>
         </div>
       </div>
 
@@ -1032,6 +1033,7 @@ const REP = {
   citizenship:        { base: 890,  spouse: 0,   child: 0   },
   school_enrollment:  { base: 890,  spouse: 0,   child: 0   },
   sinp_employer:      { base: 2590, spouse: 0,   child: 0   },
+  sinp_employer_epa:  { base: 1500, spouse: 0,   child: 0   },
 };
 const IRCC = {
   pr_pa: 990, pr_spouse: 990, pr_child: 270, rprf: 600,
@@ -1056,6 +1058,7 @@ const INSTALLMENTS = {
   super_visa: 'Payable in 2 installments',
   status_restoration: 'Payable in 2 equal installments',
   school_enrollment: 'Payable in 2 equal installments',
+  sinp_employer_epa: 'Payable in 2 equal installments',
 };
 
 // Social proof data from olcorp.ca homepage (updated Dec 2021 — to date)
@@ -1075,6 +1078,7 @@ const SOCIAL_PROOF = {
   citizenship:        { n: '3',   label: 'Citizenship applications approved' },
   school_enrollment:  { n: '36',  label: 'Study Permits approved' },
   sinp_employer:      { n: '11',  label: 'Employer SINP Certifications completed' },
+  sinp_employer_epa:  { n: '11',  label: 'Employer SINP Certifications completed' },
 };
 
 // ─────────────────────────────────────────────
@@ -1096,6 +1100,7 @@ const SEQUENCES = {
   citizenship:        ['returningClientGroup', 'citizenshipTypeGroup', 'consultationCreditGroup'],
   school_enrollment:  ['returningClientGroup', 'consultationCreditGroup'],
   sinp_employer:      ['returningClientGroup', 'sinpCandidatesGroup', 'consultationCreditGroup'],
+  sinp_employer_epa:  ['returningClientGroup', 'consultationCreditGroup'],
 };
 
 const ALL_CONDITIONAL = [
@@ -1399,6 +1404,10 @@ const MILESTONES = {
     'Receiving of Certificate of Registration from SINP Application',
     'Preparation of one SINP Employer Position Assessment (EPA) Application',
   ],
+  sinp_employer_epa: [
+    'Signing of Service Agreement and to start representation',
+    'Preparation and submission of one SINP Employer Position Assessment (EPA) Application',
+  ],
   study_permit: [
     'Signing of Service Agreement and to start representation',
     'Submission of Study Permit Application to IRCC',
@@ -1503,6 +1512,9 @@ function calculate() {
     const extra = Math.max(0, sinpCand - 1);
     addLine(repDiv, `SINP Employer Certification (${sinpCand} Candidate${sinpCand > 1 ? 's' : ''})`, REP[svc].base + extra * 990);
     repSub = REP[svc].base + extra * 990;
+  } else if (svc === 'sinp_employer_epa') {
+    addLine(repDiv, 'SINP Employer Position Assessment (EPA) — Already Certified', REP[svc].base);
+    repSub = REP[svc].base;
   } else if (svc === 'stay_extension') {
     const t = REP[svc].base * numApp;
     addLine(repDiv, numApp > 1 ? `${numApp} Applicants × ${fmt(REP[svc].base)}` : 'Principal Applicant', t);
@@ -1614,6 +1626,8 @@ function calculate() {
     addNote(govDiv, 'School fees vary by institution. Study permit is separate.');
   } else if (svc === 'sinp_employer') {
     addNote(govDiv, 'No IRCC fees — this is a provincial SINP application.');
+  } else if (svc === 'sinp_employer_epa') {
+    addNote(govDiv, 'No additional SINP government fee — this employer is already registered and certified under the SINP Employer stream.');
   }
 
   if (govTotal > 0) addLine(govDiv, 'Government Fees Subtotal', govTotal, true);
@@ -1624,7 +1638,7 @@ function calculate() {
 
   // Determine first installment amount
   const threeInstall = ['sinp_pr','family_sponsorship','study_permit','sinp_employer'];
-  const twoInstall   = ['work_permit','pgwp','francophone_wp','stay_extension','visitor_visa','super_visa','status_restoration','school_enrollment'];
+  const twoInstall   = ['work_permit','pgwp','francophone_wp','stay_extension','visitor_visa','super_visa','status_restoration','school_enrollment','sinp_employer_epa'];
   let firstInstall;
   if (threeInstall.includes(svc))    firstInstall = repTotal / 3;
   else if (twoInstall.includes(svc)) firstInstall = repTotal / 2;

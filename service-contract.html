@@ -562,6 +562,7 @@ const REP = {
   citizenship:       { base: 890,  spouse: 0,   child: 0   },
   school_enrollment: { base: 890,  spouse: 0,   child: 0   },
   sinp_employer:     { base: 2590, spouse: 0,   child: 0   },
+  sinp_employer_epa: { base: 1500, spouse: 0,   child: 0   },
 };
 
 const IRCC = {
@@ -589,6 +590,7 @@ const SUBTITLES = {
   citizenship:       'Canadian Citizenship Application',
   school_enrollment: 'School Enrollment Support',
   sinp_employer:     'Saskatchewan Immigrant Nominee Program — Employer Position Assessment (EPA)',
+  sinp_employer_epa: 'Saskatchewan Immigrant Nominee Program — Employer Position Assessment (EPA) for an Already-Certified Employer',
 };
 
 const MILESTONES = {
@@ -657,6 +659,10 @@ const MILESTONES = {
     'Upon receiving of Certificate of Registration from SINP Application',
     'Upon preparation of one SINP Employer Position Assessment (EPA) Application',
   ],
+  sinp_employer_epa: [
+    'Signing of Service Agreement and to start representation',
+    'Upon preparation and submission of the SINP Employer Position Assessment (EPA) Application',
+  ],
 };
 
 const SEC2 = {
@@ -714,6 +720,15 @@ const SEC2 = {
       'To represent the Client in the EPA application process and respond to any SINP correspondence.',
     ],
   },
+  sinp_employer_epa: {
+    purpose: 'obtaining a Saskatchewan Immigrant Nominee Program Employer Position Assessment (EPA) for an employer already registered and certified under the SINP Employer stream',
+    points: [
+      'To review the employer\'s job offer and assess eligibility for the SINP Employer Position Assessment (EPA), on the basis of the employer\'s existing active SINP Employer registration;',
+      'To prepare and compile all required documentation for the SINP Employer Position Assessment (EPA) application;',
+      'To submit the EPA application to the Saskatchewan Immigrant Nominee Program on behalf of the Client;',
+      'To represent the Client in the EPA application process and respond to any SINP correspondence.',
+    ],
+  },
   default: {
     purpose: 'processing the immigration application for the client',
     points: [
@@ -738,7 +753,7 @@ function fmtDate(d) {
 (function () {
   const p = new URLSearchParams(location.search);
   const svc     = p.get('svc') || '';
-  if (svc === 'sinp_employer') { const _l = document.getElementById('clientSigLabel'); if (_l) _l.textContent = 'Authorized Signatory of the Company'; }
+  if (svc === 'sinp_employer' || svc === 'sinp_employer_epa') { const _l = document.getElementById('clientSigLabel'); if (_l) _l.textContent = 'Authorized Signatory of the Company'; }
   const fn      = p.get('fn') || '';
   const ln      = p.get('ln') || '';
   const addr    = p.get('addr') || '';
@@ -916,6 +931,7 @@ const TITLES = {
   citizenship:       'Citizenship',
   school_enrollment: 'School Enrollment',
   sinp_employer:     'SINP Employer',
+  sinp_employer_epa: 'SINP Employer EPA',
 };
   document.title = (`${ln} - ${fn} - Service Agreement ${TITLES[svc] || ''}`).trimEnd();
   // expose contract data for doSend()
@@ -991,6 +1007,12 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
     // application (and its fee) is a separate matter handled under their
     // own retainer, so it doesn't belong on the employer's fee schedule.
     rows.push(line('SINP Employer Application Fee (by Employer)', IRCC.sinp_employer));
+  } else if (svc === 'sinp_employer_epa') {
+    // This employer already paid the SINP Employer Application Fee when it
+    // was first registered/certified -- an EPA-only engagement doesn't
+    // repeat that fee, so there is no separate government fee line here.
+    rows.push(`<tr><td colspan="2" style="font-style:italic;color:#555;font-size:9pt;">No additional SINP government fee applies — this employer is already registered and certified under the SINP Employer stream.</td></tr>`);
+    return rows.join('');
   } else {
     rows.push(`<tr><td colspan="2" style="font-style:italic;color:#555;font-size:9pt;">Government fees will be confirmed and advised prior to application submission.</td></tr>`);
     return rows.join('');
