@@ -9,10 +9,8 @@
 // The id is forwarded from _redirects as a trailing PATH segment
 // (/l/* -> /.netlify/functions/go/:splat), not a query string param --
 // Netlify's :splat/:id substitution into a destination query string was
-// unreliable in testing (the function was invoked but queryStringParameters
-// came back empty). Forwarding into the destination path is the documented,
-// reliable pattern, so this reads the id from event.path instead. The old
-// ?id= query param is still accepted as a fallback for direct testing.
+// unreliable in testing. The old ?id= query param is kept as a fallback
+// for direct testing.
 
 function getShortLinkStore() {
   const { getStore } = require("@netlify/blobs");
@@ -31,8 +29,28 @@ exports.handler = async function (event) {
     return { statusCode: 400, body: "Missing id" };
   }
 
-  const store = getShortLinkStore();
-  const record = await store.get(id, { type: "json" });
+  let record;
+  try {
+    const store = getShortLinkStore();
+    record = await store.get(id, { type: "json" });
+  } catch (err) {
+    // Temporary diagnostic: surface exactly what happened rather than a
+    // bare 502, so we can see whether this is an id-parsing issue or a
+    // Blobs-context issue when invoked via the /l/* redirect vs directly.
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        debug: true,
+        id,
+        eventPath: event.path,
+        rawUrl: event.rawUrl || null,
+        hasSiteEnv: !!process.env.BLOBS_SITE_ID,
+        hasTokenEnv: !!process.env.BLOBS_TOKEN,
+        errMessage: err && err.message,
+      }),
+    };
+  }
 
   if (!record || !record.url) {
     return {
