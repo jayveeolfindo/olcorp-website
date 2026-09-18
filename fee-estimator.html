@@ -1748,14 +1748,14 @@ function updateSocialProof(svc) {
   function closeContractModal() {
     document.getElementById('scModal').classList.remove('open');
   }
-  function openContract() {
+  function buildContractParams() {
     const fn = document.getElementById('scFn').value.trim();
     const ln = document.getElementById('scLn').value.trim();
     const addr = document.getElementById('scAddr').value.trim();
     const phone = document.getElementById('scPhone').value.trim();
     const em = document.getElementById('scEm').value.trim();
-    if (!fn || !ln) { alert('Please enter at least the client name.'); return; }
-    const p = new URLSearchParams({
+    if (!fn || !ln) { alert('Please enter at least the client name.'); return null; }
+    return new URLSearchParams({
       svc: state.service,
       fn, ln, addr, phone, em,
       family: state.family,
@@ -1767,37 +1767,63 @@ function updateSocialProof(svc) {
       consultationPaid: state.consultationPaid ? '1' : '0',
       consultationAmount: state.consultationAmount || 0,
     });
-    window.open('/service-contract.html?' + p, '_blank');
-    closeContractModal();
   }
 
-  function copyContractLink() {
-    const fn = document.getElementById('scFn').value.trim();
-    const ln = document.getElementById('scLn').value.trim();
-    const addr = document.getElementById('scAddr').value.trim();
-    const phone = document.getElementById('scPhone').value.trim();
-    const em = document.getElementById('scEm').value.trim();
-    if (!fn || !ln) { alert('Please enter at least the client name.'); return; }
-    const p = new URLSearchParams({
-      svc: state.service,
-      fn, ln, addr, phone, em,
-      family: state.family,
-      childrenYoung: state.childrenYoung || 0,
-      childrenOlder: state.childrenOlder || 0,
-      wpLocation: state.wpLocation || 'inside',
-      wpType: state.wpType || 'employer',
-      clientStatus: state.clientStatus,
-      consultationPaid: state.consultationPaid ? '1' : '0',
-      consultationAmount: state.consultationAmount || 0,
+  async function makeShortLink(longUrl) {
+    const r = await fetch('/.netlify/functions/create-short-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: 'F-M_ckm_ncuZZotMNLabAL2a5sdhVK0t', url: longUrl })
     });
-    const url = location.origin + '/service-contract.html?' + p;
-    navigator.clipboard.writeText(url).then(function() {
-      const btn = document.getElementById('copyLinkBtn');
-      const orig = btn.textContent;
+    const d = await r.json();
+    return d.shortUrl;
+  }
+
+  function showLinkToast(shortUrl) {
+    let t = document.getElementById('shortlinkToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'shortlinkToast';
+      t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;z-index:9999;display:flex;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:opacity .3s;white-space:nowrap;';
+      document.body.appendChild(t);
+    }
+    t.innerHTML = '\u{1F517} Short link copied: <strong style="margin-left:4px">' + shortUrl.replace('https://','') + '</strong>';
+    t.style.opacity = '1';
+    clearTimeout(t._hide);
+    t._hide = setTimeout(() => { t.style.opacity = '0'; }, 4500);
+  }
+
+  async function openContract() {
+    const p = buildContractParams();
+    if (!p) return;
+    const longUrl = location.origin + '/service-contract.html?' + p;
+    window.open(longUrl, '_blank');
+    closeContractModal();
+    try {
+      const shortUrl = await makeShortLink(longUrl);
+      await navigator.clipboard.writeText(shortUrl);
+      showLinkToast(shortUrl);
+    } catch (e) {}
+  }
+
+  async function copyContractLink() {
+    const p = buildContractParams();
+    if (!p) return;
+    const longUrl = location.origin + '/service-contract.html?' + p;
+    const btn = document.getElementById('copyLinkBtn');
+    const orig = btn.textContent;
+    btn.textContent = 'Shortening…';
+    btn.disabled = true;
+    try {
+      const shortUrl = await makeShortLink(longUrl);
+      await navigator.clipboard.writeText(shortUrl);
       btn.textContent = 'Copied!';
-      btn.disabled = true;
-      setTimeout(function() { btn.textContent = orig; btn.disabled = false; }, 2500);
-    });
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    } catch (e) {
+      await navigator.clipboard.writeText(longUrl);
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
+    }
   }
 
 setTimeout(loadFromURL, 100);
@@ -1821,3 +1847,4 @@ setTimeout(loadFromURL, 100);
   </div>
 </body>
 </html>
+ 
