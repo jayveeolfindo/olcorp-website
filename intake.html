@@ -2015,8 +2015,8 @@ function validateStep(key){
         return 'Please fill in each child\'s Full Name and Date of Birth before continuing.';
       return null;
     case 'parents':
-      if(!isFilled(data.parents.motherName) || !isFilled(data.parents.fatherName))
-        return 'Please provide both your mother\'s and father\'s full names before continuing.';
+      if(!isFilled(data.parents.motherName) || !isFilled(data.parents.fatherName) || !isFilled(data.parents.motherPobCity) || !isFilled(data.parents.fatherPobCity))
+        return 'Please provide both your mother\'s and father\'s full names and places of birth (city) before continuing.';
       if(!data.siblingsNone && data.siblings.length===0)
         return 'Please add at least one sibling, or check "I have no siblings" before continuing.';
       if(!data.siblingsNone && data.siblings.some(r=>!isFilled(r.name) || !isFilled(r.dob)))
