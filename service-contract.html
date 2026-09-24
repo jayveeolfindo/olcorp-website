@@ -986,10 +986,11 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
     if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
     if (colder > 0) rows.push(line(`Study Permit × ${colder} (children age 6–18)`, IRCC.study_permit * colder, true));
   } else if (svc === 'family_sponsorship') {
-    rows.push(line('Sponsorship Application Fee', 1260));
-    rows.push(line('Sponsored Person PR Application', IRCC.pr_pa));
-    rows.push(line('Right of Permanent Residence Fee (RPRF)', IRCC.rprf));
-    if (cyoung + colder > 0) rows.push(line(`PR Child × ${cyoung + colder}`, IRCC.pr_child * (cyoung + colder), true));
+    rows.push(line('Sponsorship + PR Application (incl. RPRF)', 1260));
+    if (cyoung + colder > 0) rows.push(line(`PR Child × ${cyoung + colder}`, 180 * (cyoung + colder), true));
+    const bioFeeFS = (cyoung + colder > 0) ? IRCC.bio_fam : IRCC.bio_single;
+    const bioLabelFS = (cyoung + colder > 0) ? 'Biometrics – Sponsored Spouse + Children (family rate)' : 'Biometrics – Sponsored Spouse';
+    rows.push(line(bioLabelFS, bioFeeFS));
   } else if (svc === 'visitor_visa') {
     rows.push(line('Visitor Visa Application Fee', IRCC.visitor_visa));
   } else if (svc === 'super_visa') {
