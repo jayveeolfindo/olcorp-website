@@ -519,6 +519,11 @@
       padding: 12px 0; border-bottom: 1px solid var(--bg);
     }
     .case-item:last-child { border-bottom: none; padding-bottom: 0; }
+    a.case-link { text-decoration: none; color: inherit; border-radius: 10px; transition: background .15s; }
+    a.case-link:hover { background: rgba(0,0,0,.035); }
+    a.case-link:hover .case-name { text-decoration: underline; text-underline-offset: 3px; }
+    .case-more { display: inline-block; font-weight: 600; color: var(--dark); margin-left: 4px; white-space: nowrap; }
+    .inline-link { color: var(--dark); font-weight: 600; text-underline-offset: 3px; }
     .case-dot {
       width: 6px; height: 6px; background: var(--gold); border-radius: 50%; flex-shrink: 0;
     }
@@ -853,6 +858,7 @@
     </div>
     <div class="nav-links">
       <a href="#services">Services</a>
+      <a href="/sinp-immigration-consultant">SINP</a>
       <a href="#process">How It Works</a>
       <a href="#complex">Complex Cases</a>
       <a href="/fee-estimator" onclick="openFeeModal(event)">Fee Estimator</a>
@@ -865,6 +871,7 @@
   <!-- ══ NAV DROPDOWN ══ -->
   <div class="nav-dropdown" id="navDropdown">
     <a href="#services" onclick="closeNavMenu()">Services</a>
+    <a href="/sinp-immigration-consultant" onclick="closeNavMenu()">SINP</a>
     <a href="#process" onclick="closeNavMenu()">How It Works</a>
     <a href="#complex" onclick="closeNavMenu()">Complex Cases</a>
     <a href="/fee-estimator" onclick="closeNavMenu(); openFeeModal(event)">Fee Estimator</a>
@@ -972,7 +979,7 @@
         <div class="tc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <div>
           <div class="tc-title">Saskatchewan Specialist</div>
-          <div class="tc-desc">Deep expertise in SINP pathways, Saskatchewan employer certification, and provincial immigration strategy that a national or online-only firm can't replicate.</div>
+          <div class="tc-desc">Deep expertise in SINP pathways, Saskatchewan employer certification, and provincial immigration strategy that a national or online-only firm can't replicate. <a class="inline-link" href="/sinp-immigration-consultant">Read our SINP guide</a></div>
         </div>
       </div>
       <div class="trust-card">
@@ -1014,11 +1021,11 @@
     <div class="cases-grid">
       <div class="cases-col">
         <div class="cases-col-title">Permanent Residence &amp; Other</div>
-        <div class="case-item"><span class="case-dot"></span><div><div class="case-name">SINP Nomination &amp; PR</div><div class="case-desc">Full SINP pathway from nomination to PR</div></div></div>
+        <a class="case-item case-link" href="/sinp-immigration-consultant"><span class="case-dot"></span><div><div class="case-name">SINP Nomination &amp; PR</div><div class="case-desc">Full SINP pathway from nomination to PR <span class="case-more">SINP guide →</span></div></div></a>
         <div class="case-item"><span class="case-dot"></span><div><div class="case-name">Family Sponsorship</div><div class="case-desc">Sponsor spouse, common-law partner, or children</div></div></div>
         <div class="case-item"><span class="case-dot"></span><div><div class="case-name">Citizenship Application</div><div class="case-desc">Citizenship for eligible permanent residents</div></div></div>
-        <div class="case-item"><span class="case-dot"></span><div><div class="case-name">SINP Employer Certification</div><div class="case-desc">Employer registration so Saskatchewan employers can hire through SINP</div></div></div>
-        <div class="case-item"><span class="case-dot"></span><div><div class="case-name">Employer Position Assessment (EPA)</div><div class="case-desc">Approval of a specific SINP job offer for a foreign worker</div></div></div>
+        <a class="case-item case-link" href="/sinp-immigration-consultant#employer-certification"><span class="case-dot"></span><div><div class="case-name">SINP Employer Certification</div><div class="case-desc">Employer registration so Saskatchewan employers can hire through SINP <span class="case-more">How it works →</span></div></div></a>
+        <a class="case-item case-link" href="/sinp-immigration-consultant#epa"><span class="case-dot"></span><div><div class="case-name">Employer Position Assessment (EPA)</div><div class="case-desc">Approval of a specific SINP job offer for a foreign worker <span class="case-more">EPA rules →</span></div></div></a>
         <div class="case-item"><span class="case-dot"></span><div><div class="case-name">School Enrollment</div><div class="case-desc">Enrollment assistance at Canadian DLIs</div></div></div>
       </div>
       <div class="cases-col">
@@ -1381,10 +1388,10 @@
           </div>
           <div class="footer-col">
             <div class="col-title">Permanent Residence</div>
-            <a href="#services">SINP Nomination &amp; PR</a>
+            <a href="/sinp-immigration-consultant#nomination">SINP Nomination &amp; PR</a>
             <a href="#services">Family Sponsorship</a>
             <a href="#services">Citizenship</a>
-            <a href="#services">SINP Employer</a>
+            <a href="/sinp-immigration-consultant#employers">SINP for Employers</a>
             <a href="#services">School Enrollment</a>
           </div>
           <div class="footer-col">

@@ -1,5 +1,14 @@
 # olcorp.ca SEO Changelog
 
+## 2026-09-27 (Phase 2, page 1: SINP pillar page)
+- [Content] sinp-immigration-consultant.html: new pillar page at /sinp-immigration-consultant (about 3,500 words). Sections: overview (2026 allocation and sector tiers), who SINP is for, pathways, Employer Certification (#employer-certification), EPA (#epa), nomination (#nomination), work permit (#work-permit), permanent residence (#permanent-residence), help for applicants (#applicants) and employers (#employers), common mistakes (#mistakes), representation (#representation), credentials (#credentials), FAQ (#faq), official sources (#sources)
+- [Content] Every policy statement cites saskatchewan.ca or canada.ca; visible "Last reviewed: September 27, 2026"; Entrepreneur and Farm pathways shown as closed since March 27, 2025
+- [E-E-A-T] Credentials card and verification section (CICC R711813, SK licence 000996, CICC and CAPIC, both offices); SINP counts taken from the homepage Proven Results grid (62, 50, 23, 11) with outcome disclaimer
+- [SEO] Title "SINP Immigration Consultant in Saskatchewan | OLCORP", unique meta description, H1 "Licensed SINP Immigration Consultant in Saskatchewan", self-referencing canonical, robots index/follow, Open Graph and Twitter tags
+- [Schema] ProfessionalService, Person, WebSite, WebPage (author, reviewedBy, lastReviewed), Service and BreadcrumbList. No FAQPage markup (Google limits FAQ rich results to government and health sites) and no review markup
+- [Internal links] index.html: "SINP" added to the main menu and mobile menu; SINP Nomination & PR, SINP Employer Certification and EPA service cards now link to the pillar (page, #employer-certification, #epa); contextual link in the Saskatchewan Specialist card; footer SINP links now go to #nomination and #employers
+- [Technical] sitemap.xml: added /sinp-immigration-consultant
+
 ## 2026-09-27 (Phase 1: technical foundation and homepage)
 - [Technical] robots.txt: created; allows crawling, blocks /.netlify/ and /l/ short links, points to the sitemap
 - [Technical] sitemap.xml: created with /, /fee-estimator, /book, /rental-estimator
