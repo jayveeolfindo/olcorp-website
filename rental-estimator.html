@@ -3,16 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rental Car Quotation | Olcorp Vehicle Rentals</title>
-<meta property="og:title" content="Rental Car Quotation | Olcorp Vehicle Rentals">
-<meta property="og:description" content="Get an instant rental car quote — Kia Carnival 8-seater, unlimited KMs, fully insured. Regina, SK.">
-<meta property="og:image" content="https://www.olcorp.ca/car-carnival.jpg">
+<title>Car Rental in Regina, SK | Olcorp Vehicle Rentals</title>
+<meta name="description" content="Rent a Kia Carnival 8-seater or Jeep Wrangler in Regina, Saskatchewan. Unlimited kilometres, fully insured. Get an instant quote from Olcorp Vehicle Rentals.">
+<link rel="canonical" href="https://olcorp.ca/rental-estimator">
+<meta property="og:title" content="Car Rental in Regina, SK | Olcorp Vehicle Rentals">
+<meta property="og:description" content="Rent a Kia Carnival 8-seater or Jeep Wrangler in Regina, Saskatchewan. Unlimited kilometres, fully insured. Get an instant quote from Olcorp Vehicle Rentals.">
+<meta property="og:image" content="https://olcorp.ca/car-carnival.jpg">
 <meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:url" content="https://www.olcorp.ca/rentalcar">
+<meta property="og:image:height" content="822">
+<meta property="og:url" content="https://olcorp.ca/rental-estimator">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://www.olcorp.ca/car-carnival.jpg">
+<meta name="twitter:image" content="https://olcorp.ca/car-carnival.jpg">
 <link rel="icon" type="image/png" href="logo.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
 <style>
@@ -370,7 +372,7 @@ onerror="this.src='https://static.wixstatic.com/media/49d109_2e888f8378134d64a75
 <div class="vehicle-cards">
 
 <button class="vehicle-card" id="card_carnival" onclick="selectVehicle('carnival')">
-<img class="vc-img" src="car-carnival.jpg" alt="2025 Kia Carnival"
+<img class="vc-img" src="car-carnival.avif" alt="2025 Kia Carnival"
 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 <div class="vc-img-placeholder" style="display:none">🚐</div>
 <div class="vc-body">
@@ -385,7 +387,7 @@ onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
 </button>
 
 <button class="vehicle-card" id="card_wrangler" onclick="selectVehicle('wrangler')">
-<img class="vc-img" src="car-wrangler.jpg" alt="2021 Jeep Wrangler Sahara"
+<img class="vc-img" src="car-wrangler.avif" alt="2021 Jeep Wrangler Sahara"
 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 <div class="vc-img-placeholder" style="display:none">🚙</div>
 <div class="vc-body">
@@ -571,7 +573,7 @@ onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
 
 <!-- Vehicle chip -->
 <div class="selected-vehicle-chip">
-<img class="svc-chip-img" id="chipImg" src="car-carnival.jpg" alt=""
+<img class="svc-chip-img" id="chipImg" src="car-carnival.avif" alt=""
 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
 <div class="svc-chip-img-placeholder" id="chipIcon" style="display:none">🚐</div>
 <div>
@@ -708,8 +710,8 @@ See all reviews on <a href="https://www.google.com/maps/place/Olcorp.ca+Immigrat
 
 <script>
 const VEHICLES = {
-carnival: { name: '2025 Kia Carnival Hybrid', meta: '$129/day · 8-seater', img: 'car-carnival.jpg', icon: '🚐', rate: 129 },
-wrangler: { name: '2021 Jeep Wrangler Sahara', meta: '$89/day · 5-seater · 4x4', img: 'car-wrangler.jpg', icon: '🚙', rate: 89 }
+carnival: { name: '2025 Kia Carnival Hybrid', meta: '$129/day · 8-seater', img: 'car-carnival.avif', icon: '🚐', rate: 129 },
+wrangler: { name: '2021 Jeep Wrangler Sahara', meta: '$89/day · 5-seater · 4x4', img: 'car-wrangler.avif', icon: '🚙', rate: 89 }
 };
 const DEST_ADDON = { sk: 0, abmb: 59, canada: 99 };
 const DEST_LABEL = { sk: 'Within Saskatchewan', abmb: 'Alberta & Manitoba add-on', canada: 'Canada-wide add-on' };

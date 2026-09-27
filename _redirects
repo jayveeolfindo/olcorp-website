@@ -1,12 +1,20 @@
-/index.html	/				301
-/consultant	/				301
-/rentalcar	/rental-estimator.html		200
-/feeestimator	/fee-estimator.html		200
-/services	/				301
+# Canonical homepage
+/index.html	/	301!
+/olcorp-landing	/	301!
+/olcorp-landing.html	/	301!
+
+# Old Wix URLs (add more from the Search Console Pages report)
+/consultant	/	301
+/services	/	301
+/employer	/	301
+/carrental	/rental-estimator	301
+
+# Short, shareable paths (rewrites, URL stays the same; canonical tags point to the main URL)
+/rentalcar	/rental-estimator.html	200
+/feeestimator	/fee-estimator.html	200
 /form	/intake.html	200
 /book	/book.html	200
-/employer	/	301
 /etaform	/eta-intake.html	200
 /rentalprep	/car-rental-checklist.html	200
-/turnover /car-rental-checklist.html 200
+/turnover	/car-rental-checklist.html	200
 /l/*	/.netlify/functions/go/:splat	200
