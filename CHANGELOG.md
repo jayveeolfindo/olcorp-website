@@ -1,5 +1,12 @@
 # olcorp.ca SEO Changelog
 
+## 2026-09-28 (Phase 2, page 2: About page + portrait link + portrait brightness fix)
+- [Content] jayvee-olfindo.html: new About page at /jayvee-olfindo. Sections: hero (portrait, name, credentials, stats), bio, credentials table with CICC and SK licence verification links, SINP track record grid, languages, offices, CTA
+- [E-E-A-T] ProfilePage schema with Person @id matching the organization graph; credentials include CICC R711813, SK licence 000996, CAPIC, Foreign Worker Recruiter, Notary Public
+- [SEO] Title "Jayvee Olfindo, RCIC | SINP Immigration Consultant | OLCORP" (59 chars), unique meta description, self-referencing canonical, BreadcrumbList schema, robots index/follow
+- [Internal links] index.html: portrait "View Full Profile" now links to /jayvee-olfindo (was an onclick modal); sitemap.xml: added /jayvee-olfindo
+- [Fix] index.html: removed brightness(0.70) filter on portrait image
+
 ## 2026-09-27 (Phase 2, page 1: SINP pillar page)
 - [Content] sinp-immigration-consultant.html: new pillar page at /sinp-immigration-consultant (about 3,500 words). Sections: overview (2026 allocation and sector tiers), who SINP is for, pathways, Employer Certification (#employer-certification), EPA (#epa), nomination (#nomination), work permit (#work-permit), permanent residence (#permanent-residence), help for applicants (#applicants) and employers (#employers), common mistakes (#mistakes), representation (#representation), credentials (#credentials), FAQ (#faq), official sources (#sources)
 - [Content] Every policy statement cites saskatchewan.ca or canada.ca; visible "Last reviewed: September 27, 2026"; Entrepreneur and Farm pathways shown as closed since March 27, 2025
