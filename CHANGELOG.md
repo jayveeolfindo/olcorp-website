@@ -40,3 +40,6 @@
 - [Technical] car-carnival and car-wrangler: AVIF files renamed to .avif for display; real 1200px JPEGs created for Facebook link previews (Facebook does not read AVIF)
 - [Technical] eta-intake.html, car-rental-checklist.html, service-contract.html: noindex, nofollow
 - [Technical] Internal fee estimator links use /fee-estimator
+
+## 2026-09-30
+- [Branding] index.html: added "Built by Olcorp Technologies" credit with OT logo in footer-bottom, linking to olcorptech.ca
