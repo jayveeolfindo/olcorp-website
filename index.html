@@ -842,6 +842,37 @@
       /* Hero wrap gap tighter */
       .hero-wrap { gap: 24px; padding: 40px 20px 40px; }
     }
+  
+    /* ════ SCROLL FADE-IN ════ */
+    [data-aos] {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    [data-aos].aos-in { opacity: 1; transform: none; }
+    [data-aos][data-delay="1"] { transition-delay: .12s; }
+    [data-aos][data-delay="2"] { transition-delay: .24s; }
+    [data-aos][data-delay="3"] { transition-delay: .36s; }
+
+    /* ════ COUNTER FLASH ════ */
+    /* Brief gold highlight when counter finishes */
+    @keyframes count-done {
+      0%   { color: #fff; }
+      40%  { color: #c9a84c; }
+      100% { color: #fff; }
+    }
+    .stats-big.count-finished { animation: count-done 1s ease forwards; }
+
+    @keyframes snum-done {
+      0%   { color: #fff; }
+      50%  { color: #c9a84c; }
+      100% { color: #fff; }
+    }
+    .s-num.count-finished { animation: snum-done .7s ease forwards; }
+
+    /* ════ HERO CURSOR ════ */
+
+
   </style>
 </head>
 <body>
@@ -864,6 +895,7 @@
       <a href="/fee-estimator" onclick="openFeeModal(event)">Fee Estimator</a>
       <a href="#reviews">Reviews</a>
       <a href="https://tracker.olcorp.ca" target="_blank">Client Tracker</a>
+      <a href="/rental-estimator">Car Rental</a>
     </div>
     <a href="/book" target="_blank" class="nav-cta">Book Consultation</a>
   </nav>
@@ -877,6 +909,7 @@
     <a href="/fee-estimator" onclick="closeNavMenu(); openFeeModal(event)">Fee Estimator</a>
     <a href="#reviews" onclick="closeNavMenu()">Reviews</a>
     <a href="https://tracker.olcorp.ca" target="_blank" onclick="closeNavMenu()">Client Tracker</a>
+    <a href="/rental-estimator" onclick="closeNavMenu()">Car Rental</a>
     <div class="nav-dd-divider"></div>
     <a href="/book" target="_blank" class="nav-dd-cta" onclick="closeNavMenu()">Book Consultation</a>
   </div>
@@ -921,7 +954,7 @@
   </div>
 
   <!-- ══ TRUST BAR ══ -->
-  <div class="trust-bar">
+  <div class="trust-bar" data-aos>
     <div class="trust-item"><span class="ti-icon">✦</span> RCIC · CICC &amp; CAPIC Member</div>
     <div class="trust-item"><span class="ti-icon">✦</span> SINP Licensed Immigration Consultant</div>
     <div class="trust-item"><span class="ti-icon">✦</span> Notary Public &amp; Commissioner of Oaths</div>
@@ -934,29 +967,29 @@
   <div class="stats-strip">
     <div class="stats-inner">
       <div class="stats-headline">
-        <div class="stats-eyebrow">Proven Results · Dec 2021 to September 2026</div>
-        <div class="stats-big">391</div>
+        <div class="stats-eyebrow">Proven Results · Dec 2021 to <span id="stats-month">October 2026</span></div>
+        <div class="stats-big" data-count="391">0</div>
         <div class="stats-big-label">Total Approved Represented Applications</div>
       </div>
       <div class="stats-grid">
-                <div class="stat-card"><div class="s-num">70</div><div class="s-desc">Work Permits incl. PGWP &amp; SINP-based</div></div>
-        <div class="stat-card"><div class="s-num">62</div><div class="s-desc">SINP Nominations</div></div>
-        <div class="stat-card"><div class="s-num">49</div><div class="s-desc">Visitor Visas incl. Artists &amp; Business</div></div>
-        <div class="stat-card"><div class="s-num">50</div><div class="s-desc">Permanent Residents via SINP</div></div>
-        <div class="stat-card"><div class="s-num">39</div><div class="s-desc">Study Permits</div></div>
-        <div class="stat-card"><div class="s-num">23</div><div class="s-desc">Employer Position Assessment</div></div>
-        <div class="stat-card"><div class="s-num">23</div><div class="s-desc">Stay Extensions (Visitor Record)</div></div>
-        <div class="stat-card"><div class="s-num">18</div><div class="s-desc">eTAs</div></div>
-        <div class="stat-card"><div class="s-num">13</div><div class="s-desc">Status Restorations</div></div>
-        <div class="stat-card"><div class="s-num">11</div><div class="s-desc">Employer SINP Certifications</div></div>
-        <div class="stat-card"><div class="s-num">7</div><div class="s-desc">Spousal &amp; Common Law Sponsorships</div></div>
-        <div class="stat-card"><div class="s-num">5</div><div class="s-desc">Dependent Child Sponsorships</div></div>
-        <div class="stat-card"><div class="s-num">7</div><div class="s-desc">Super Visas</div></div>
-        <div class="stat-card"><div class="s-num">4</div><div class="s-desc">Citizenship Applications</div></div>
-        <div class="stat-card"><div class="s-num">3</div><div class="s-desc">Employer SINP Renewals</div></div>
-        <div class="stat-card"><div class="s-num">3</div><div class="s-desc">PR Card Renewals</div></div>
-        <div class="stat-card"><div class="s-num">3</div><div class="s-desc">Express Entry Profile Invitations</div></div>
-        <div class="stat-card"><div class="s-num">1</div><div class="s-desc">PR Travel Document</div></div>
+                <div class="stat-card"><div class="s-num" data-count="70">0</div><div class="s-desc">Work Permits incl. PGWP &amp; SINP-based</div></div>
+        <div class="stat-card"><div class="s-num" data-count="62">0</div><div class="s-desc">SINP Nominations</div></div>
+        <div class="stat-card"><div class="s-num" data-count="49">0</div><div class="s-desc">Visitor Visas incl. Artists &amp; Business</div></div>
+        <div class="stat-card"><div class="s-num" data-count="50">0</div><div class="s-desc">Permanent Residents via SINP</div></div>
+        <div class="stat-card"><div class="s-num" data-count="39">0</div><div class="s-desc">Study Permits</div></div>
+        <div class="stat-card"><div class="s-num" data-count="23">0</div><div class="s-desc">Employer Position Assessment</div></div>
+        <div class="stat-card"><div class="s-num" data-count="23">0</div><div class="s-desc">Stay Extensions (Visitor Record)</div></div>
+        <div class="stat-card"><div class="s-num" data-count="18">0</div><div class="s-desc">eTAs</div></div>
+        <div class="stat-card"><div class="s-num" data-count="13">0</div><div class="s-desc">Status Restorations</div></div>
+        <div class="stat-card"><div class="s-num" data-count="11">0</div><div class="s-desc">Employer SINP Certifications</div></div>
+        <div class="stat-card"><div class="s-num" data-count="7">0</div><div class="s-desc">Spousal &amp; Common Law Sponsorships</div></div>
+        <div class="stat-card"><div class="s-num" data-count="5">0</div><div class="s-desc">Dependent Child Sponsorships</div></div>
+        <div class="stat-card"><div class="s-num" data-count="7">0</div><div class="s-desc">Super Visas</div></div>
+        <div class="stat-card"><div class="s-num" data-count="4">0</div><div class="s-desc">Citizenship Applications</div></div>
+        <div class="stat-card"><div class="s-num" data-count="3">0</div><div class="s-desc">Employer SINP Renewals</div></div>
+        <div class="stat-card"><div class="s-num" data-count="3">0</div><div class="s-desc">PR Card Renewals</div></div>
+        <div class="stat-card"><div class="s-num" data-count="3">0</div><div class="s-desc">Express Entry Profile Invitations</div></div>
+        <div class="stat-card"><div class="s-num" data-count="1">0</div><div class="s-desc">PR Travel Document</div></div>
       </div>
       <p class="stats-footer">Your application receives the same care and strategy behind every one of these results.</p>
     </div>
@@ -964,8 +997,8 @@
 
   <!-- ══ WHY CLIENTS TRUST OLCORP ══ -->
   <div class="section">
-    <div class="section-eyebrow">Why Clients Trust Us</div>
-    <h2 class="section-title">Built on Authority. Driven by Results.</h2>
+    <div class="section-eyebrow" data-aos>Why Clients Trust Us</div>
+    <h2 class="section-title" data-aos data-delay="1">Built on Authority. Driven by Results.</h2>
     <p class="section-sub">When you're navigating Canadian immigration, who represents you matters. Here's what sets OLCORP apart.</p>
     <div class="trust-grid">
       <div class="trust-card">
@@ -1015,8 +1048,8 @@
 
   <!-- ══ CASES WE HANDLE ══ -->
   <div class="section" id="services" style="padding-top:0">
-    <div class="section-eyebrow">Immigration Services</div>
-    <h2 class="section-title">Cases We Handle</h2>
+    <div class="section-eyebrow" data-aos>Immigration Services</div>
+    <h2 class="section-title" data-aos data-delay="1">Cases We Handle</h2>
     <p class="section-sub">From your first temporary permit to permanent residency and citizenship, we cover the full immigration journey.</p>
     <div class="cases-grid">
       <div class="cases-col">
@@ -1064,7 +1097,7 @@
   <!-- ══ TESTIMONIALS ══ -->
   <div class="section" style="padding-top:0">
     <div class="section-eyebrow" id="reviews">Client Stories</div>
-    <h2 class="section-title">What Clients Say</h2>
+    <h2 class="section-title" data-aos data-delay="1">What Clients Say</h2>
     <p class="section-sub">Real outcomes from real people who trusted OLCORP with their Canadian immigration journey.</p>
     <div class="testimonials-grid">
       <!-- Facebook: April 2026 -->
@@ -1074,7 +1107,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Sealtiel Abulencia</div>
+            <div class="author-name">Sealtiel</div>
             <div class="author-tag">Permanent Residence · April 2026</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1087,7 +1120,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Donna Sunga</div>
+            <div class="author-name">Donna</div>
             <div class="author-tag">Permanent Residence · 3 months ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1100,7 +1133,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Rachel Ann Pendoro</div>
+            <div class="author-name">Rachel</div>
             <div class="author-tag">Permanent Residence · 3 months ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1113,7 +1146,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Carl General Dotillos</div>
+            <div class="author-name">Carl</div>
             <div class="author-tag">Work &amp; Study Permits · July 2025</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1126,7 +1159,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Hannah Lluisma</div>
+            <div class="author-name">Hannah</div>
             <div class="author-tag">Immigration Consultation · 11 months ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1139,7 +1172,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Ash Ley</div>
+            <div class="author-name">Ashley</div>
             <div class="author-tag">Permanent Residence · May 2025</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1152,7 +1185,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Joy Castro Manipud</div>
+            <div class="author-name">Joy</div>
             <div class="author-tag">Visitor Visa · February 2025</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1165,7 +1198,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">MP Lim</div>
+            <div class="author-name">MP</div>
             <div class="author-tag">Visitor Record Extension · 1 year ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1178,7 +1211,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Darec Dufour</div>
+            <div class="author-name">Darec</div>
             <div class="author-tag">Immigration Services · 1 year ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1191,7 +1224,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Jessa Uvero</div>
+            <div class="author-name">Jessa</div>
             <div class="author-tag">Immigration Services · August 2023</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1204,7 +1237,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Renee Rodulfo Tolod</div>
+            <div class="author-name">Renee</div>
             <div class="author-tag">Study &amp; Work Permit · August 2023</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
           </div>
@@ -1217,7 +1250,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Indra praja Wibawa</div>
+            <div class="author-name">Indra</div>
             <div class="author-tag">Immigration Services · 2 years ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1230,7 +1263,7 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Jeybi B.</div>
+            <div class="author-name">Jeybi</div>
             <div class="author-tag">Visitor Visa · 2 years ago</div>
             <span class="review-platform google">Google Review</span>
           </div>
@@ -1243,9 +1276,74 @@
         <div class="testi-author">
           <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
           <div>
-            <div class="author-name">Peter Jason Guerrero</div>
+            <div class="author-name">Peter</div>
             <div class="author-tag">Immigration Services · November 2022</div>
             <span class="review-platform facebook">Facebook Recommendation</span>
+          </div>
+        </div>
+      </div>
+      <!-- Google: a week ago -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"We highly recommend your services to anyone looking for a trustworthy, knowledgeable, and dedicated immigration consultant. May God bless you Jayvee abundantly for helping families like ours build a new future in Canada. We are truly grateful and thankful for all the help, guidance, and support you gave us throughout our Canadian PR application journey. You handled our application with care and made the whole process much easier for our family. Salamat sa pag assist samen all the way until we achieved this life-changing milestone."</div>
+        <div class="testi-author">
+          <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+          <div>
+            <div class="author-name">Paul</div>
+            <div class="author-tag">Permanent Residence · a week ago</div>
+            <span class="review-platform google">Google Review</span>
+          </div>
+        </div>
+      </div>
+      <!-- Google: a month ago -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"Olcorp has done a great job in helping us achieve our PR dream! A big thank you to Sir Jayvee who personally took care of our needs from employer's SINP to our PR journey. We greatly recommend his services. He's very knowledgeable in his field and answers all your immigration questions to the best of his knowledge! He even tells you the next steps! Thank you again, Olcorp and wishing you more success and more clients ahead!"</div>
+        <div class="testi-author">
+          <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+          <div>
+            <div class="author-name">Weisen</div>
+            <div class="author-tag">Permanent Residence · a month ago</div>
+            <span class="review-platform google">Google Review</span>
+          </div>
+        </div>
+      </div>
+      <!-- Google: a month ago -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"Super accommodating, very knowledgeable in immigration concerns. Superb service!!!"</div>
+        <div class="testi-author">
+          <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+          <div>
+            <div class="author-name">Pickard</div>
+            <div class="author-tag">Immigration Services · a month ago</div>
+            <span class="review-platform google">Google Review</span>
+          </div>
+        </div>
+      </div>
+      <!-- Google: 2 months ago -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"I had an excellent experience with Olcorp Immigration. Mr. Jayvee was professional, knowledgeable, and very responsive throughout the entire process. He explained every step clearly, answered all my questions with patience, and made the immigration process much less stressful. I truly appreciate his dedication and support. I highly recommend Olcorp Immigration."</div>
+        <div class="testi-author">
+          <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+          <div>
+            <div class="author-name">Aboy</div>
+            <div class="author-tag">Immigration Services · 2 months ago</div>
+            <span class="review-platform google">Google Review</span>
+          </div>
+        </div>
+      </div>
+      <!-- Google: 4 months ago -->
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-quote">"I'm very happy with the service I received for my work permit application. The entire process was handled professionally, clearly, and efficiently. My consultant was very supportive, answered all my questions patiently, and guided me through every step. Thanks to their hard work and dedication, I received my work permit successfully. I highly recommend their service to anyone looking for reliable immigration assistance."</div>
+        <div class="testi-author">
+          <div class="author-avatar"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#b0b0b8"/><path d="M4 20c0-3.866 3.582-7 8-7s8 3.134 8 7" fill="#b0b0b8"/></svg></div>
+          <div>
+            <div class="author-name">Kithukshan</div>
+            <div class="author-tag">Work Permit · 4 months ago</div>
+            <span class="review-platform google">Google Review</span>
           </div>
         </div>
       </div>
@@ -1257,8 +1355,8 @@
 
   <!-- ══ PROCESS ══ -->
   <div class="section" id="process" style="padding-top:0">
-    <div class="section-eyebrow">How It Works</div>
-    <h2 class="section-title">Simple. Transparent. Professional.</h2>
+    <div class="section-eyebrow" data-aos>How It Works</div>
+    <h2 class="section-title" data-aos data-delay="1">Simple. Transparent. Professional.</h2>
     <p class="section-sub">Our process is designed to keep you informed and confident at every milestone.</p>
     <div class="process-wrap">
       <div class="process-steps">
@@ -1330,17 +1428,17 @@
 
   <!-- ══ WHY CHOOSE OLCORP ══ -->
   <div class="section" style="padding-top:0">
-    <div class="section-eyebrow">Why OLCORP</div>
-    <h2 class="section-title">Why Choose OLCORP</h2>
+    <div class="section-eyebrow" data-aos>Why OLCORP</div>
+    <h2 class="section-title" data-aos data-delay="1">Why Choose OLCORP</h2>
     <p class="section-sub">What makes the difference between an approved file and a refused one is often the quality of representation.</p>
     <div class="why-grid">
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Direct RCIC Representation</div><div class="why-desc">Your file is handled by a licensed, regulated consultant, not staff. You always know who is responsible for your case.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Transparent Communication</div><div class="why-desc">No surprises. We keep you updated on your file status, requirements, and timelines throughout the entire process.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Saskatchewan Expertise</div><div class="why-desc">Specialized knowledge of SINP pathways, employer certification, and provincial immigration requirements that matter here.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Personalized Strategy</div><div class="why-desc">Every client situation is unique. We build an immigration strategy tailored to your specific circumstances and goals.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Ethical &amp; Compliant Practice</div><div class="why-desc">We only advise on pathways that are legally sound, ethical, and compliant with IRCC and provincial requirements.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Complex Case Experience</div><div class="why-desc">Refusals, restorations, SINP complications, urgent situations: we have the experience to navigate difficult files strategically.</div></div>
-      <div class="why-card"><div class="why-check">✦</div><div class="why-title">Multilingual Consultations</div><div class="why-desc">Consultations available in English, Filipino (Tagalog), and Bicol, so nothing gets lost in translation during your most important conversations.</div></div>
+      <div class="why-card" data-aos><div class="why-check">✦</div><div class="why-title">Direct RCIC Representation</div><div class="why-desc">Your file is handled by a licensed, regulated consultant, not staff. You always know who is responsible for your case.</div></div>
+      <div class="why-card" data-aos data-delay="1"><div class="why-check">✦</div><div class="why-title">Transparent Communication</div><div class="why-desc">No surprises. We keep you updated on your file status, requirements, and timelines throughout the entire process.</div></div>
+      <div class="why-card" data-aos data-delay="2"><div class="why-check">✦</div><div class="why-title">Saskatchewan Expertise</div><div class="why-desc">Specialized knowledge of SINP pathways, employer certification, and provincial immigration requirements that matter here.</div></div>
+      <div class="why-card" data-aos data-delay="3"><div class="why-check">✦</div><div class="why-title">Personalized Strategy</div><div class="why-desc">Every client situation is unique. We build an immigration strategy tailored to your specific circumstances and goals.</div></div>
+      <div class="why-card" data-aos><div class="why-check">✦</div><div class="why-title">Ethical &amp; Compliant Practice</div><div class="why-desc">We only advise on pathways that are legally sound, ethical, and compliant with IRCC and provincial requirements.</div></div>
+      <div class="why-card" data-aos data-delay="1"><div class="why-check">✦</div><div class="why-title">Complex Case Experience</div><div class="why-desc">Refusals, restorations, SINP complications, urgent situations: we have the experience to navigate difficult files strategically.</div></div>
+      <div class="why-card" data-aos data-delay="2"><div class="why-check">✦</div><div class="why-title">Multilingual Consultations</div><div class="why-desc">Consultations available in English, Filipino (Tagalog), and Bicol, so nothing gets lost in translation during your most important conversations.</div></div>
     </div>
   </div>
 
@@ -1495,13 +1593,91 @@
         <p>Together with his common-law partner, now his wife, Jayvee arrived in Canada in 2015. They both pursued careers working for government-owned corporations in Canada and Saskatchewan.</p>
         <p>Driven by his passion for immigration and helping others achieve their Canadian dream, Jayvee pursued further education in Canadian immigration law and practice. Through an accelerated pathway, he completed the Graduate Diploma in Immigration and Citizenship Law from the Canadian Society of Immigration Consultants (CSIC) e-Academy within one year, all while maintaining full-time employment at a federal Crown corporation and raising two children. During his studies, he also completed a course in Introduction to Legal Principles, Thinking and Reasoning through the University of Toronto School of Continuing Studies.</p>
         <p>Jayvee successfully passed the Entry-to-Practice Exam administered by the Immigration Consultants of Canada Regulatory Council (ICCRC), now known as the College of Immigration and Citizenship Consultants (CICC), in April 2021. He officially received his Authority to Practice in October 2021 after meeting all regulatory requirements to become a licensed Canadian immigration professional.</p>
-        <p>Today, Jayvee is a licensed Regulated Canadian Immigration Consultant (RCIC), Foreign Worker Recruiter, Notary Public, and Commissioner for Oaths in the Province of Saskatchewan. As of September 2026, he has represented 391 approved immigration applications, with extensive experience in SINP nominations, visitor visas, work permits, and permanent residence applications.</p>
+        <p>Today, Jayvee is a licensed Regulated Canadian Immigration Consultant (RCIC), Foreign Worker Recruiter, Notary Public, and Commissioner for Oaths in the Province of Saskatchewan. As of <span id="bio-month">October 2026</span>, he has represented 391 approved immigration applications, with extensive experience in SINP nominations, visitor visas, work permits, and permanent residence applications.</p>
         <p>Beyond his professional career, Jayvee also pursued one of his lifelong dreams in aviation. He completed a pilot training program at the Regina Flying Club Flight School and earned his Private Pilot Licence, allowing him to independently operate aircraft and carry passengers. Although becoming a pilot was once his dream profession, Jayvee ultimately chose a path that allowed him to prioritize family life and spend more quality time with his loved ones.</p>
         <p>Outside of work, he enjoys photography, content creation, and sharing knowledge through social media and video blogging. His YouTube channel, "WalkingJ Canada," reflects his passion for inspiring and helping others navigate their own journeys toward success.</p>
         <p class="bio-modal-quote">"Run for your goals because life is time-bounded. If you get tired, just walk to keep going — but never stop."</p>
       </div>
     </div>
   </div>
+
+
+  <script>
+  (function () {
+
+    /* ── Eased counter ── */
+    function countUp(el, target, duration) {
+      var start = null;
+      function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; } /* ease-in-out quad */
+      function step(ts) {
+        if (!start) start = ts;
+        var progress = Math.min((ts - start) / duration, 1);
+        el.textContent = Math.round(ease(progress) * target);
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          el.textContent = target;
+          el.classList.add('count-finished');
+        }
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ── Trigger counters when stats strip enters view ── */
+    var strip = document.querySelector('.stats-strip');
+    if (strip) {
+      var triggered = false;
+      var cObs = new IntersectionObserver(function (entries) {
+        if (!entries[0].isIntersecting || triggered) return;
+        triggered = true;
+        cObs.disconnect();
+
+        /* Big number: 2s */
+        var big = strip.querySelector('[data-count].stats-big');
+        if (big) countUp(big, parseInt(big.dataset.count), 2000);
+
+        /* Stat cards: stagger each, 1s each */
+        var cards = strip.querySelectorAll('.s-num[data-count]');
+        cards.forEach(function (el, i) {
+          setTimeout(function () {
+            countUp(el, parseInt(el.dataset.count), 900);
+          }, i * 60);
+        });
+      }, { threshold: 0.2 });
+      cObs.observe(strip);
+    }
+
+    /* ── Scroll fade-ins ── */
+    var fadeEls = document.querySelectorAll('[data-aos]');
+    if (fadeEls.length) {
+      var fObs = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          var delay = parseFloat(e.target.dataset.delay || 0) * 120;
+          setTimeout(function () { e.target.classList.add('aos-in'); }, delay);
+          fObs.unobserve(e.target);
+        });
+      }, { threshold: 0.15 });
+      fadeEls.forEach(function (el) { fObs.observe(el); });
+    }
+
+
+
+  })();
+  
+    /* ── Keep month references current ── */
+    (function () {
+      var months = ['January','February','March','April','May','June',
+                    'July','August','September','October','November','December'];
+      var d = new Date();
+      var label = months[d.getMonth()] + ' ' + d.getFullYear();
+      ['stats-month','bio-month'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = label;
+      });
+    })();
+
+  </script>
 
 </body>
 </html>
