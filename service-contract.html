@@ -810,6 +810,22 @@ function fmtDate(d) {
     installAmt = grandTotal / installMilestones.length;
   }
 
+  // One-off wording tweak: append extra text to one milestone's description
+  // (e.g. "with EPA Advisory" tacked onto the first milestone for a client
+  // bundling EPA advisory into the retainer step) without touching the
+  // standard MILESTONES table every other contract of this service type
+  // uses. ?milestoneSuffix=... appends to installMilestones[index], where
+  // index is 1-based via ?milestoneSuffixIndex (defaults to the first
+  // milestone). Purely cosmetic — doesn't affect installAmt/grandTotal.
+  const milestoneSuffix = p.get('milestoneSuffix') || '';
+  if (milestoneSuffix) {
+    const suffixIdx = parseInt(p.get('milestoneSuffixIndex') || '1', 10) - 1;
+    if (installMilestones[suffixIdx] !== undefined) {
+      installMilestones = installMilestones.slice();
+      installMilestones[suffixIdx] = `${installMilestones[suffixIdx]} ${milestoneSuffix}`;
+    }
+  }
+
   // One-off concession: forgive a specific billing milestone entirely (e.g.
   // the client already holds an active/certified SINP employer account, so
   // the "upon receiving Certificate of Registration" step doesn't apply to
