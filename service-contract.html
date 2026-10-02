@@ -491,8 +491,8 @@
       <p style="font-size:9pt;margin-top:8px;color:#555;font-style:italic;">(Note: Government application fees are not included above and are paid directly by the Client to the government or third party.)</p>
       <p style="margin-top:14px;font-weight:bold;font-size:10.5pt;">Payment Milestones:</p>
       <table class="schedule-table" id="scheduleTable"></table>
-          <p style="margin:8px 0 0;font-size:12px;color:#555;font-style:italic;">* If the company remains active, each additional EPA is billed at $990.00 + 5% GST ($1,039.50 incl. GST).</p>
-          <p style="margin:8px 0 0;font-size:12px;color:#555;font-style:italic;">* If the company remains active, each additional EPA application is billed at $990.00 + 5% GST ($1,039.50 incl. GST).</p>
+          <p id="epaNote1" style="margin:8px 0 0;font-size:12px;color:#555;font-style:italic;">* If the company remains active, each additional EPA is billed at $990.00 + 5% GST ($1,039.50 incl. GST).</p>
+          <p id="epaNote2" style="margin:8px 0 0;font-size:12px;color:#555;font-style:italic;">* If the company remains active, each additional EPA application is billed at $990.00 + 5% GST ($1,039.50 incl. GST).</p>
       <p style="margin-top:14px;font-weight:bold;font-size:10.5pt;">Government / Third-Party Fees:
         <span style="font-weight:400;font-size:9.5pt;font-style:italic;"> (paid directly by the Client &mdash; not collected by the RCIC)</span>
       </p>
@@ -817,6 +817,19 @@ function fmtDate(d) {
   // uses. ?milestoneSuffix=... appends to installMilestones[index], where
   // index is 1-based via ?milestoneSuffixIndex (defaults to the first
   // milestone). Purely cosmetic — doesn't affect installAmt/grandTotal.
+  // One-off: hide the standard "additional EPA" footnotes under the
+  // schedule table for a specific negotiated contract where they don't
+  // apply (e.g. a client whose fee structure is a special case rather than
+  // the default EPA-renewal billing these notes describe). ?hideEpaNote=1
+  // removes both lines; the default template for every other contract is
+  // unaffected.
+  if (p.get('hideEpaNote') === '1') {
+    const epaNote1 = document.getElementById('epaNote1');
+    const epaNote2 = document.getElementById('epaNote2');
+    if (epaNote1) epaNote1.remove();
+    if (epaNote2) epaNote2.remove();
+  }
+
   const milestoneSuffix = p.get('milestoneSuffix') || '';
   if (milestoneSuffix) {
     const suffixIdx = parseInt(p.get('milestoneSuffixIndex') || '1', 10) - 1;
