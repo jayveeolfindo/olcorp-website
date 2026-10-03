@@ -1505,7 +1505,7 @@ function renderEmployment(card){
       wrap.appendChild(block);
       const statusWrap = block.querySelector('.status-choice');
       statusWrap.appendChild(choiceRow(
-        [{value:'Citizen',label:'Citizen'},{value:'Work Permit',label:'Work Permit'},{value:'Study Permit',label:'Study Permit'},{value:'Visitor',label:'Visitor'},{value:'Out of Status',label:'Out of Status'}],
+        [{value:'Citizen',label:'Citizen'},{value:'Work Permit',label:'Work Permit'},{value:'Study Permit',label:'Study Permit'},{value:'Visitor',label:'Visitor'},{value:'Out of Status',label:'Out of Status'}].concat(data.applicationType==='sponsor'?[{value:'Permanent Resident',label:'Permanent Resident'}]:[]),
         row.statusInCountry, v=>{ row.statusInCountry=v; draw(); refreshSidebar(); onChange(); }
       ));
     });
