@@ -275,7 +275,7 @@ const data = {
   employment:[],
   background:{militaryPoliceGovt:'', criminal:'', medical:'', refusalsRemovals:'', details:''},
   status:{currentStatus:'',expiryDate:'',extensionType:'',reason:''},
-  consent:{accurate:false,authorizeRepresentative:false,authorizeSignature:false,signatureDataUrl:''}
+  consent:{accurate:false,authorizeRepresentative:false,authorizeSignature:false,signatureDataUrl:'',clientNotes:''}
 };
 
 const autofillNotice = {identity:false, contact:false, status:false};
@@ -1597,6 +1597,12 @@ function renderReview(card){
     <div id="gapSummary"></div>
     <div id="reviewBody"></div>
     <div class="review-block" style="margin-top:18px;">
+      <h4>Additional Notes</h4>
+      <label class="field"><span>Is there anything else you need us to know regarding this form completion? (Optional)</span>
+        <textarea id="clientNotes" rows="4" placeholder="Example: I was unemployed in the Philippines, but the form automatically addressed it as Canada.">${(data.consent.clientNotes||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+      </label>
+    </div>
+    <div class="review-block" style="margin-top:18px;">
       <h4>Consent & Signature</h4>
       <p class="note" style="margin:-4px 0 10px;">Fields marked <strong>*</strong> are mandatory.</p>
       <label class="field" style="display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;">
@@ -1691,6 +1697,7 @@ function renderReview(card){
   });
 
   // --- Consent checkboxes ---
+  card.querySelector('#clientNotes').addEventListener('input', e => { data.consent.clientNotes = e.target.value; if(typeof onChange==='function') onChange(); });
   card.querySelector('#consentAccurate').addEventListener('change', e=>{
     data.consent.accurate = e.target.checked; updateConsentGate();
   });
@@ -1897,6 +1904,8 @@ function renderReview(card){
     bgQs.forEach(([k,label])=>{ row(label, (data.background[k]||'—').toUpperCase()); });
     if(isFilled(data.background.details)) row('Additional Details', data.background.details);
     spacer();
+
+    if(isFilled(data.consent.clientNotes)){ heading('Additional Notes from Client'); row('Notes', data.consent.clientNotes); spacer(); }
 
     heading('Consent & Signature');
     row('Information confirmed accurate', data.consent.accurate ? 'Yes' : 'No');
