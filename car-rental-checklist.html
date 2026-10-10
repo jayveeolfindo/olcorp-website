@@ -363,6 +363,7 @@ const checkoutBtnLabel = document.getElementById('checkoutBtnLabel');
 const DEPOSIT_FULL = 100;
 const COVERAGE_RATE = 15;
 let quoteTotal = 0;
+let quoteHasCcFee = false; // true only when the quotation actually includes a Credit Card Fee line
 
 function parseQuotation(text){
   const m = text.match(/\bTOTAL:\s*\$?\s*([\d,]+(?:\.\d{1,2})?)/i);
@@ -455,7 +456,7 @@ function applyInsuranceVisibility(insuranceText){
 }
 
 if(params.get('total')){
-  quoteTotal = parseFloat(params.get('total')) || 0;
+  quoteTotal = parseFloat(params.get('total')) || 0; quoteHasCcFee = params.get('ccfee') !== '0';
   document.getElementById('quotePrefillBox').style.display = 'block';
   document.getElementById('dispVehicle').textContent = params.get('vehicle') || '—';
   document.getElementById('dispPickup').textContent = params.get('pickup') || '—';
@@ -472,7 +473,7 @@ if(params.get('total')){
     // A pasted reservation invoice/receipt has no "TOTAL:" quotation line --
     // its "Total" is just the deposit, not the full rental cost -- so only
     // overwrite quoteTotal when a real quotation total was actually found.
-    if(parsedTotal) quoteTotal = parsedTotal;
+    if(parsedTotal){ quoteTotal = parsedTotal; quoteHasCcFee = /credit\s*card\s*fee/i.test(text); }
     const d = parseDuration(text);
     if(d) rentalDays.value = d;
     applyInsuranceVisibility(parseInsurance(text));
@@ -506,7 +507,7 @@ function recalcTotals(){
   // calculating the balance — e-Transfer has no card fees, so the client shouldn't pay for one.
   let embeddedCcFee = 0;
   let adjustedQuoteTotal = quoteTotal;
-  if(paymentMethod === 'etransfer' && quoteTotal > 0){
+  if(paymentMethod === 'etransfer' && quoteTotal > 0 && quoteHasCcFee){
     const preFeeTotal = (quoteTotal - CC_FEE_FLAT) / (1 + CC_FEE_PCT);
     embeddedCcFee = quoteTotal - preFeeTotal;
     adjustedQuoteTotal = preFeeTotal;
