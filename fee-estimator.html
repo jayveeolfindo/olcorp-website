@@ -754,23 +754,27 @@
           <span class="step-val" id="childrenOlderVal">0</span>
           <button class="step-btn" onclick="adjustCount('childrenOlder', 1)">+</button>
         </div>
-        <div class="step-q" style="margin-top:16px">Children <strong>age 18 to 21</strong> – Visitor <span style="font-size:12px;color:#6e6e73;font-weight:400">(Visitor Record &middot; $100 gov fee each)</span></div>
+        <div class="step-q" style="margin-top:16px">Children <strong>age 18 to 21</strong></div>
         <div class="stepper">
-          <button class="step-btn" onclick="adjustCount('childrenAdultVisitor', -1)">−</button>
-          <span class="step-val" id="childrenAdultVisitorVal">0</span>
-          <button class="step-btn" onclick="adjustCount('childrenAdultVisitor', 1)">+</button>
+          <button class="step-btn" onclick="adjustCount('childrenAdult', -1)">−</button>
+          <span class="step-val" id="childrenAdultVal">0</span>
+          <button class="step-btn" onclick="adjustCount('childrenAdult', 1)">+</button>
         </div>
-        <div class="step-q" style="margin-top:16px">Children <strong>age 18 to 21</strong> – Study Permit <span style="font-size:12px;color:#6e6e73;font-weight:400">(DLI School &middot; $150 gov fee each)</span></div>
-        <div class="stepper">
-          <button class="step-btn" onclick="adjustCount('childrenAdultStudy', -1)">−</button>
-          <span class="step-val" id="childrenAdultStudyVal">0</span>
-          <button class="step-btn" onclick="adjustCount('childrenAdultStudy', 1)">+</button>
-        </div>
-        <div class="step-q" style="margin-top:16px">Children <strong>age 18 to 21</strong> – Open Work Permit <span style="font-size:12px;color:#6e6e73;font-weight:400">($255 gov fee each)</span></div>
-        <div class="stepper">
-          <button class="step-btn" onclick="adjustCount('childrenAdultOWP', -1)">−</button>
-          <span class="step-val" id="childrenAdultOWPVal">0</span>
-          <button class="step-btn" onclick="adjustCount('childrenAdultOWP', 1)">+</button>
+      </div>
+
+      <!-- Adult Child Permit Type -->
+      <div class="field-group" id="childAdultTypeGroup">
+        <div class="step-q">What permit are the adult children (18–21) applying for?</div>
+        <div class="opt-stack">
+          <button class="opt-card" onclick="selectOpt('childAdultType', 'visitor', this); revealAfter('childAdultTypeGroup')">
+            <div><div class="oc-title">Visitor</div><div class="oc-desc">Visitor Record · $100 gov fee each</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('childAdultType', 'study', this); revealAfter('childAdultTypeGroup')">
+            <div><div class="oc-title">Study Permit</div><div class="oc-desc">Enrolled in DLI school · $150 gov fee each</div></div>
+          </button>
+          <button class="opt-card" onclick="selectOpt('childAdultType', 'owp', this); revealAfter('childAdultTypeGroup')">
+            <div><div class="oc-title">Open Work Permit</div><div class="oc-desc">$255 gov fee each (WP $155 + OWP holder $100)</div></div>
+          </button>
         </div>
       </div>
 
@@ -1040,9 +1044,8 @@ const state = {
   children: 0,
   childrenYoung: 0,
   childrenOlder: 0,
-  childrenAdultVisitor: 0,
-  childrenAdultStudy: 0,
-  childrenAdultOWP: 0,
+  childrenAdult: 0,
+  childAdultType: '',
   childAdultBio: 'required',
   numApplicants: 1,
   wpType: 'employer',
@@ -1150,7 +1153,7 @@ const SEQUENCES = {
 };
 
 const ALL_CONDITIONAL = [
-  'consultationTypeGroup','familyGroup','sponsorFamilyGroup','childrenGroup','childAdultBioGroup',
+  'consultationTypeGroup','familyGroup','sponsorFamilyGroup','childrenGroup','childAdultTypeGroup','childAdultBioGroup',
   'numApplicantsGroup','wpTypeGroup','wpLocationGroup','statusTypeGroup','citizenshipTypeGroup',
   'sinpCandidatesGroup','visaSpouseGroup','commonLawGroup',
   'trBiometricsGroup','consultationCreditGroup','returningClientGroup'
@@ -1191,9 +1194,8 @@ function hideAllConditional() {
   // Reset defaults
   state.family = 'single';
   state.sponsorFamily = 'couple';
-  state.children = 0; state.childrenYoung = 0; state.childrenOlder = 0;
-  state.childrenAdultVisitor = 0; state.childrenAdultStudy = 0; state.childrenAdultOWP = 0;
-  state.childAdultBio = 'required';
+  state.children = 0; state.childrenYoung = 0; state.childrenOlder = 0; state.childrenAdult = 0;
+  state.childAdultType = ''; state.childAdultBio = 'required';
   state.numApplicants = 1;
   state.wpType = 'employer';
     state.wpLocation = 'inside';
@@ -1214,9 +1216,7 @@ function hideAllConditional() {
   // Reset stepper displays
   g('childrenYoungVal').textContent = 0;
   g('childrenOlderVal').textContent = 0;
-  g('childrenAdultVisitorVal').textContent = 0;
-  g('childrenAdultStudyVal').textContent = 0;
-  g('childrenAdultOWPVal').textContent = 0;
+  g('childrenAdultVal').textContent = 0;
   g('numApplicantsVal').textContent = 1;
   g('sinpCandidatesVal').textContent = 1;
   // Reset toggles
@@ -1352,17 +1352,15 @@ function toggleOpt(field, btn) {
 }
 
 function adjustCount(field, delta) {
-  const isAdult = field === 'childrenAdultVisitor' || field === 'childrenAdultStudy' || field === 'childrenAdultOWP';
-  const isChild = field === 'childrenYoung' || field === 'childrenOlder' || isAdult;
+  const isChild = field === 'childrenYoung' || field === 'childrenOlder' || field === 'childrenAdult';
   const min = isChild ? 0 : 1;
   const max = field === 'sinpCandidates' ? 20 : 10;
   state[field] = Math.max(min, Math.min(max, (state[field] === undefined ? min : state[field]) + delta));
   if (isChild) {
     state.children = (state.childrenYoung || 0) + (state.childrenOlder || 0);
-    if (isAdult) {
-      const totalAdult = (state.childrenAdultVisitor || 0) + (state.childrenAdultStudy || 0) + (state.childrenAdultOWP || 0);
-      if (totalAdult > 0) showField('childAdultBioGroup', 130);
-      else hideField('childAdultBioGroup');
+    if (field === 'childrenAdult') {
+      if ((state.childrenAdult || 0) > 0) showField('childAdultTypeGroup', 130);
+      else { hideField('childAdultTypeGroup'); hideField('childAdultBioGroup'); }
     }
   }
   const displayId = field === 'numApplicants' ? 'numApplicantsVal' : field + 'Val';
@@ -1385,6 +1383,7 @@ function onFamilyChange() {
     }
   } else {
     hideField('childrenGroup');
+    hideField('childAdultTypeGroup');
     hideField('childAdultBioGroup');
     if (hasBiometrics) {
       showField('trBiometricsGroup', 130);
@@ -1435,6 +1434,7 @@ function onSponsorFamilyChange() {
     showField('consultationCreditGroup', 700);
   } else {
     hideField('childrenGroup');
+    hideField('childAdultTypeGroup');
     hideField('childAdultBioGroup');
     showField('commonLawGroup', 130);
     showField('consultationCreditGroup', 500);
@@ -1524,10 +1524,8 @@ function calculate() {
   const children = needChildren ? numChild : 0;
   const childrenYoung = needChildren ? (state.childrenYoung || 0) : 0;
   const childrenOlder = needChildren ? (state.childrenOlder || 0) : 0;
-  const childrenAdultVisitor = needChildren ? (state.childrenAdultVisitor || 0) : 0;
-  const childrenAdultStudy  = needChildren ? (state.childrenAdultStudy  || 0) : 0;
-  const childrenAdultOWP    = needChildren ? (state.childrenAdultOWP    || 0) : 0;
-  const childrenAdult = childrenAdultVisitor + childrenAdultStudy + childrenAdultOWP;
+  const childrenAdult = needChildren ? (state.childrenAdult || 0) : 0;
+  const childAdultType = state.childAdultType || '';
   const childAdultBioReq = state.childAdultBio === 'required';
 
   if (!svc) {
@@ -1628,9 +1626,7 @@ function calculate() {
     addNote(govDiv, '📅 Due upon submission of SINP Nomination Application');
     addLine(govDiv, 'Work Permit – Principal', IRCC.work_permit); govTotal += IRCC.work_permit;
     if (hasSpouse) { addLine(govDiv, 'Work Permit – Spouse (Open)', IRCC.work_permit); govTotal += IRCC.work_permit; addLine(govDiv, 'Open WP Holder Fee – Spouse', IRCC.open_wp_holder); govTotal += IRCC.open_wp_holder; }
-    if (childrenAdultVisitor > 0) { addLine(govDiv, `Visitor Record × ${childrenAdultVisitor} – Adult Children (age 18–21)`, IRCC.visitor_record * childrenAdultVisitor); govTotal += IRCC.visitor_record * childrenAdultVisitor; }
-    if (childrenAdultStudy > 0) { addLine(govDiv, `Study Permit × ${childrenAdultStudy} – Adult Children (age 18–21)`, IRCC.study_permit * childrenAdultStudy); govTotal += IRCC.study_permit * childrenAdultStudy; }
-    if (childrenAdultOWP > 0) { addLine(govDiv, `Open WP × ${childrenAdultOWP} – Adult Children (age 18–21)`, (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP); govTotal += (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP; }
+    if (childrenAdult > 0 && childAdultType) { if (childAdultType === 'visitor') { addLine(govDiv, `Visitor Record × ${childrenAdult} – Adult Children (18–21)`, IRCC.visitor_record * childrenAdult); govTotal += IRCC.visitor_record * childrenAdult; } else if (childAdultType === 'study') { addLine(govDiv, `Study Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.study_permit * childrenAdult); govTotal += IRCC.study_permit * childrenAdult; } else if (childAdultType === 'owp') { addLine(govDiv, `Work Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.work_permit * childrenAdult); govTotal += IRCC.work_permit * childrenAdult; addLine(govDiv, `Open WP Holder Fee × ${childrenAdult} – Adult Children`, IRCC.open_wp_holder * childrenAdult); govTotal += IRCC.open_wp_holder * childrenAdult; } }
     if (childrenAdult > 0 && childAdultBioReq) { addLine(govDiv, `Biometrics × ${childrenAdult} (adult children 18–21)`, IRCC.bio_single * childrenAdult); govTotal += IRCC.bio_single * childrenAdult; }
     addNote(govDiv, '📅 Due upon completion of Work Permit requirements');
     addLine(govDiv, 'PR Application – Principal (incl. RPRF)', IRCC.pr_pa + IRCC.rprf); govTotal += IRCC.pr_pa + IRCC.rprf;
@@ -1655,9 +1651,7 @@ function calculate() {
     if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
     if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
     if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
-    if (childrenAdultVisitor > 0) { addLine(govDiv, `Visitor Record × ${childrenAdultVisitor} – Adult Children (age 18–21)`, IRCC.visitor_record * childrenAdultVisitor); govTotal += IRCC.visitor_record * childrenAdultVisitor; }
-    if (childrenAdultStudy > 0) { addLine(govDiv, `Study Permit × ${childrenAdultStudy} – Adult Children (age 18–21)`, IRCC.study_permit * childrenAdultStudy); govTotal += IRCC.study_permit * childrenAdultStudy; }
-    if (childrenAdultOWP > 0) { addLine(govDiv, `Open WP × ${childrenAdultOWP} – Adult Children (age 18–21)`, (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP); govTotal += (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP; }
+    if (childrenAdult > 0 && childAdultType) { if (childAdultType === 'visitor') { addLine(govDiv, `Visitor Record × ${childrenAdult} – Adult Children (18–21)`, IRCC.visitor_record * childrenAdult); govTotal += IRCC.visitor_record * childrenAdult; } else if (childAdultType === 'study') { addLine(govDiv, `Study Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.study_permit * childrenAdult); govTotal += IRCC.study_permit * childrenAdult; } else if (childAdultType === 'owp') { addLine(govDiv, `Work Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.work_permit * childrenAdult); govTotal += IRCC.work_permit * childrenAdult; addLine(govDiv, `Open WP Holder Fee × ${childrenAdult} – Adult Children`, IRCC.open_wp_holder * childrenAdult); govTotal += IRCC.open_wp_holder * childrenAdult; } }
     if (childrenAdult > 0 && childAdultBioReq) { addLine(govDiv, `Biometrics × ${childrenAdult} (adult children 18–21)`, IRCC.bio_single * childrenAdult); govTotal += IRCC.bio_single * childrenAdult; }
   } else if (svc === 'francophone_wp') {
     addLine(govDiv, 'Work Permit', IRCC.work_permit); govTotal += IRCC.work_permit;
@@ -1666,18 +1660,14 @@ function calculate() {
     if (trBioReq) { const b = hasSpouse ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (hasSpouse ? ' (family rate)' : ''), b); govTotal += b; }
     if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
     if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
-    if (childrenAdultVisitor > 0) { addLine(govDiv, `Visitor Record × ${childrenAdultVisitor} – Adult Children (age 18–21)`, IRCC.visitor_record * childrenAdultVisitor); govTotal += IRCC.visitor_record * childrenAdultVisitor; }
-    if (childrenAdultStudy > 0) { addLine(govDiv, `Study Permit × ${childrenAdultStudy} – Adult Children (age 18–21)`, IRCC.study_permit * childrenAdultStudy); govTotal += IRCC.study_permit * childrenAdultStudy; }
-    if (childrenAdultOWP > 0) { addLine(govDiv, `Open WP × ${childrenAdultOWP} – Adult Children (age 18–21)`, (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP); govTotal += (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP; }
+    if (childrenAdult > 0 && childAdultType) { if (childAdultType === 'visitor') { addLine(govDiv, `Visitor Record × ${childrenAdult} – Adult Children (18–21)`, IRCC.visitor_record * childrenAdult); govTotal += IRCC.visitor_record * childrenAdult; } else if (childAdultType === 'study') { addLine(govDiv, `Study Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.study_permit * childrenAdult); govTotal += IRCC.study_permit * childrenAdult; } else if (childAdultType === 'owp') { addLine(govDiv, `Work Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.work_permit * childrenAdult); govTotal += IRCC.work_permit * childrenAdult; addLine(govDiv, `Open WP Holder Fee × ${childrenAdult} – Adult Children`, IRCC.open_wp_holder * childrenAdult); govTotal += IRCC.open_wp_holder * childrenAdult; } }
     if (childrenAdult > 0 && childAdultBioReq) { addLine(govDiv, `Biometrics × ${childrenAdult} (adult children 18–21)`, IRCC.bio_single * childrenAdult); govTotal += IRCC.bio_single * childrenAdult; }
   } else if (svc === 'study_permit') {
     addLine(govDiv, 'Study Permit – Principal', IRCC.study_permit); govTotal += IRCC.study_permit;
     if (hasSpouse) { addLine(govDiv, 'Spouse Open Work Permit', IRCC.work_permit + IRCC.open_wp_holder); govTotal += IRCC.work_permit + IRCC.open_wp_holder; }
     if (childrenYoung > 0) { addLine(govDiv, `Visitor Record × ${childrenYoung} (age –5)`, IRCC.visitor_record * childrenYoung); govTotal += IRCC.visitor_record * childrenYoung; }
     if (childrenOlder > 0) { addLine(govDiv, `Study Permit × ${childrenOlder} (age 6–18)`, IRCC.study_permit * childrenOlder); govTotal += IRCC.study_permit * childrenOlder; }
-    if (childrenAdultVisitor > 0) { addLine(govDiv, `Visitor Record × ${childrenAdultVisitor} – Adult Children (age 18–21)`, IRCC.visitor_record * childrenAdultVisitor); govTotal += IRCC.visitor_record * childrenAdultVisitor; }
-    if (childrenAdultStudy > 0) { addLine(govDiv, `Study Permit × ${childrenAdultStudy} – Adult Children (age 18–21)`, IRCC.study_permit * childrenAdultStudy); govTotal += IRCC.study_permit * childrenAdultStudy; }
-    if (childrenAdultOWP > 0) { addLine(govDiv, `Open WP × ${childrenAdultOWP} – Adult Children (age 18–21)`, (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP); govTotal += (IRCC.work_permit + IRCC.open_wp_holder) * childrenAdultOWP; }
+    if (childrenAdult > 0 && childAdultType) { if (childAdultType === 'visitor') { addLine(govDiv, `Visitor Record × ${childrenAdult} – Adult Children (18–21)`, IRCC.visitor_record * childrenAdult); govTotal += IRCC.visitor_record * childrenAdult; } else if (childAdultType === 'study') { addLine(govDiv, `Study Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.study_permit * childrenAdult); govTotal += IRCC.study_permit * childrenAdult; } else if (childAdultType === 'owp') { addLine(govDiv, `Work Permit × ${childrenAdult} – Adult Children (18–21)`, IRCC.work_permit * childrenAdult); govTotal += IRCC.work_permit * childrenAdult; addLine(govDiv, `Open WP Holder Fee × ${childrenAdult} – Adult Children`, IRCC.open_wp_holder * childrenAdult); govTotal += IRCC.open_wp_holder * childrenAdult; } }
     if (childrenAdult > 0 && childAdultBioReq) { addLine(govDiv, `Biometrics × ${childrenAdult} (adult children 18–21)`, IRCC.bio_single * childrenAdult); govTotal += IRCC.bio_single * childrenAdult; }
     if (trBioReq) { const p = 1 + (hasSpouse ? 1 : 0) + children; const b = p >= 2 ? IRCC.bio_family : IRCC.bio_single; addLine(govDiv, 'TR Biometrics' + (p >= 2 ? ' (family rate)' : ''), b); govTotal += b; }
   } else if (svc === 'stay_extension') {
