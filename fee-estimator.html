@@ -765,12 +765,14 @@
       <!-- Adult Child Biometrics -->
       <div class="field-group" id="childAdultBioGroup">
         <div class="step-q">Have the adult children (age 18–21) already done biometrics?</div>
-        <div class="opt-row">
-          <button class="opt-card active" onclick="selectOpt('childAdultBio', 'required', this); revealAfter('childAdultBioGroup')">
-            <div><div class="oc-title">No</div><div class="oc-desc">Biometrics fee ($85/child) will be added</div></div>
+        <div class="opt-grid-2">
+          <button class="opt-card" onclick="selectOpt('childAdultBio', 'required', this); revealAfter('childAdultBioGroup')">
+            <div class="oc-title">No</div>
+            <div class="oc-desc">Biometrics fee ($85/child) will be added</div>
           </button>
           <button class="opt-card" onclick="selectOpt('childAdultBio', 'exempt', this); revealAfter('childAdultBioGroup')">
-            <div><div class="oc-title">Yes</div><div class="oc-desc">Biometrics already paid or exempt</div></div>
+            <div class="oc-title">Yes</div>
+            <div class="oc-desc">Biometrics already paid or exempt</div>
           </button>
         </div>
       </div>
