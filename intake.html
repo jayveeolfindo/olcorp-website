@@ -2048,8 +2048,8 @@ function validateStep(key){
       if(req.addressYears === 0) return null;
       if(data.addressHistory.length===0)
         return 'Please add at least one address entry before continuing.';
-      if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address)))
-        return 'Please fill in the From date and address (at least street/city and country) for each entry before continuing.';
+      if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address) || !(isFilled(r.address.streetName) || isFilled(r.address.poBox)) || !isFilled(r.address.city)))
+        return 'Please fill in the From date and the full address for each entry before continuing, including the street name (or P.O. box), city, and country. A city or town name alone is not enough.';
       return null;
     }
     case 'employment': {
