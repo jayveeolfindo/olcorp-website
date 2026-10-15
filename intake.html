@@ -1417,16 +1417,13 @@ function renderEduYearsPanel(){
   panel.innerHTML = `
     <label class="field"><span>Years of Education Completed<small>Matches IMM 5669 Question 7 — number of years successfully completed at each level.</small></span></label>
     <div class="grid4">
-      <label class="field"><span>Primary <small style="color:#b3432b;">*required</small></span><select id="edu_elementary" required><option value="">Select…</option><option value="6" ${String(data.eduYears.elementary)==='6'?'selected':''}>Finished Grade 6 (6 years)</option><option value="8" ${String(data.eduYears.elementary)==='8'?'selected':''}>Finished Grade 8 (8 years)</option></select></label>
+      <label class="field"><span>Primary <small style="color:#b3432b;">*required</small></span><div class="pill-row" id="edu_elementary" style="margin-top:8px;"><span class="pill ${String(data.eduYears.elementary)==='6'?'sel':''}" data-v="6">Finished Grade 6</span><span class="pill ${String(data.eduYears.elementary)==='8'?'sel':''}" data-v="8">Finished Grade 8</span></div></label>
       <label class="field"><span>Secondary</span><input type="text" value="${y.secondary}" disabled></label>
       <label class="field"><span>Post Secondary</span><input type="text" value="${y.university}" disabled></label>
       <label class="field"><span>Others</span><input type="text" value="${y.trade}" disabled></label>
     </div>
   `;
-  panel.querySelector('#edu_elementary').addEventListener('change', e=>{
-    data.eduYears.elementary = e.target.value;
-    refreshSidebar();
-  });
+  panel.querySelectorAll('#edu_elementary .pill').forEach(p=>{ p.addEventListener('click', ()=>{ data.eduYears.elementary = p.dataset.v; panel.querySelectorAll('#edu_elementary .pill').forEach(q=>q.classList.toggle('sel', q===p)); refreshSidebar(); }); });
 }
 function renderEducation(card){
   renderRepeatable(card, 'Education History', 'Institutions attended since secondary school. Only list schools where you graduated — if you did not complete or graduate from a program, you do not need to include it.', 'education', [
