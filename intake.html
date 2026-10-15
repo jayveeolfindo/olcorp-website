@@ -1117,6 +1117,17 @@ function renderChildren(card){
   draw();
 }
 
+function parentEmail(who){ if(data.parents[who+'Deceased']) return ''; return data.parents.emailMode==='mine' ? (data.contact.email||'') : (data.parents[who+'Email']||''); }
+function siblingEmail(r){ if(r.deceased) return ''; return data.siblingsEmailMode==='mine' ? (data.contact.email||'') : (r.email||''); }
+function parentEmailField(grid, who){ if(data.parents.emailMode!=='individual' || data.parents[who+'Deceased']) return; grid.insertAdjacentHTML('beforeend','<label class="field"><span>Email (optional)</span><input type="email" id="p_'+who+'Email" value="'+(data.parents[who+'Email']||'').replace(/"/g,'&quot;')+'"></label>'); grid.querySelector('#p_'+who+'Email').addEventListener('input', e=>{ data.parents[who+'Email']=e.target.value; refreshSidebar(); }); }
+function renderEmailPrompt(card, sel, title, getMode, setMode, redraw){
+  const el=card.querySelector(sel); if(!el) return;
+  const draw=()=>{ const m=getMode();
+    el.innerHTML='<div style="margin:6px 0 12px;"><div style="font-size:12.5px;font-weight:600;color:#3d4c58;">'+title+'</div><div class="pill-row"><span class="pill'+(m==='mine'?' sel':'')+'" data-m="mine">Use my email for all</span><span class="pill'+(m==='individual'?' sel':'')+'" data-m="individual">I will enter each email individually</span></div>'+((m==='mine' && !data.contact.email)?'<div style="font-size:11.5px;color:#b3432b;">Your own email is not filled in yet (Contact step).</div>':'')+'</div>';
+    el.querySelectorAll('.pill').forEach(p=>p.addEventListener('click',()=>{ setMode(p.dataset.m); draw(); redraw(); refreshSidebar(); }));
+  };
+  draw();
+}
 function renderParents(card){
   function wireDobUnknown(who, grid){
     const key = who+'Dob';
@@ -1132,6 +1143,7 @@ function renderParents(card){
   }
   card.innerHTML = `
     <div class="step-title">Parents & Siblings</div>
+    <div id="parentEmailPrompt"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:14px 0 8px;">Mother</h4>
     <div class="grid2" id="motherGrid"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;margin:4px 0 0;">
@@ -1157,6 +1169,7 @@ function renderParents(card){
     <label class="field"><span>Complete Address (up to the country)</span></label>
     <div id="fatherAddrBlock"></div>
     <h4 style="font-family:var(--display);font-size:14px;margin:18px 0 8px;">Siblings</h4>
+    <div id="sibEmailPrompt"></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noSiblings" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.siblingsNone?'checked':''}>
       <span style="margin:0;">I have no siblings</span>
@@ -1177,6 +1190,7 @@ function renderParents(card){
     wireDobUnknown('mother', mGrid);
     motherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'motherOccupation', {id:'p_motherOccupation'});
     motherOccGrid.querySelector('#p_motherOccupation').addEventListener('input', e=>{ data.parents.motherOccupation=e.target.value; refreshSidebar(); });
+    parentEmailField(motherOccGrid, 'mother');
     motherAddrWrap.innerHTML = renderAddressBlock('p_motherAddress', data.parents.motherAddress, false);
     bindAddressBlock(card, 'p_motherAddress', data.parents.motherAddress, ()=>{
       if(data.parents.fatherSameAddrAsMother){
@@ -1186,6 +1200,8 @@ function renderParents(card){
       refreshSidebar();
     });
   }
+  renderEmailPrompt(card,'#parentEmailPrompt','Parents\u2019 email addresses', ()=>data.parents.emailMode||'', m=>{ data.parents.emailMode=m; }, ()=>{ drawMother(); drawFather(); });
+  renderEmailPrompt(card,'#sibEmailPrompt','Siblings\u2019 email addresses', ()=>data.siblingsEmailMode||'', m=>{ data.siblingsEmailMode=m; }, ()=>{ drawSibs(); });
   const fGrid = card.querySelector('#fatherGrid');
   const fatherOccGrid = card.querySelector('#fatherOccGrid');
   const fatherAddrWrap = card.querySelector('#fatherAddrBlock');
@@ -1200,6 +1216,7 @@ function renderParents(card){
     wireDobUnknown('father', fGrid);
     fatherOccGrid.innerHTML = fieldText('Occupation', data.parents, 'fatherOccupation', {id:'p_fatherOccupation'});
     fatherOccGrid.querySelector('#p_fatherOccupation').addEventListener('input', e=>{ data.parents.fatherOccupation=e.target.value; refreshSidebar(); });
+    parentEmailField(fatherOccGrid, 'father');
     fatherAddrWrap.innerHTML = renderAddressBlock('p_fatherAddress', data.parents.fatherAddress, data.parents.fatherSameAddrAsMother);
     bindAddressBlock(card, 'p_fatherAddress', data.parents.fatherAddress, ()=> refreshSidebar());
   }
@@ -1260,7 +1277,7 @@ function renderParents(card){
         </label>
         ${row.deceased ? `<label class="field"><span>Date of Death</span><input type="text" inputmode="numeric" placeholder="yyyy-mm-dd" data-k="deceasedDate" data-type="date" data-idx="${idx}" value="${row.deceasedDate||''}"></label>` : '<div></div>'}
         <label class="field"><span>Occupation</span><input type="text" data-k="occupation" data-idx="${idx}" value="${(row.occupation||'').replace(/"/g,'&quot;')}"></label>
-        <div></div>
+        ${(data.siblingsEmailMode==='individual' && !row.deceased) ? `<label class="field"><span>Email (optional)</span><input type="email" data-k="email" data-idx="${idx}" value="${(row.email||'').replace(/"/g,'&quot;')}"></label>` : '<div></div>'}
         <label class="field" style="grid-column:1/-1;"><span>Complete Address (up to the country)</span></label>
         <div style="grid-column:1/-1;" class="addr-block"></div>
       </div>`;
@@ -1835,6 +1852,7 @@ function renderReview(card){
     row('Date of Birth', data.parents.motherDob);
     row('Place of Birth', [data.parents.motherPobCity, data.parents.motherPobCountry].filter(Boolean).join(', '));
     row('Occupation', data.parents.motherOccupation);
+    if(parentEmail('mother')) row('Email', parentEmail('mother'));
     row('Address', formatAddress(data.parents.motherAddress));
     row('Deceased', data.parents.motherDeceased ? (data.parents.motherDeceasedDate==='1900-01-01' ? `Deceased - ${data.parents.motherPobCountry||'Unknown Country'} - DOD: 1900-01-01` : `Yes (${data.parents.motherDeceasedDate||'date not provided'})`) : 'No');
     subheading('Father');
@@ -1842,6 +1860,7 @@ function renderReview(card){
     row('Date of Birth', data.parents.fatherDob);
     row('Place of Birth', [data.parents.fatherPobCity, data.parents.fatherPobCountry].filter(Boolean).join(', '));
     row('Occupation', data.parents.fatherOccupation);
+    if(parentEmail('father')) row('Email', parentEmail('father'));
     row('Address', formatAddress(data.parents.fatherAddress));
     row('Deceased', data.parents.fatherDeceased ? (data.parents.fatherDeceasedDate==='1900-01-01' ? `Deceased - ${data.parents.fatherPobCountry||'Unknown Country'} - DOD: 1900-01-01` : `Yes (${data.parents.fatherDeceasedDate||'date not provided'})`) : 'No');
     subheading('Siblings');
@@ -1850,6 +1869,7 @@ function renderReview(card){
     } else {
       data.siblings.forEach((s,i)=>{
         row(`Sibling ${i+1}`, `${s.relationship||'—'} · ${s.name||'—'} · DOB ${s.dob||'—'} · Civil Status: ${s.civilStatus||'—'} · ${s.occupation||'—'} · ${formatAddress(s.address)}${s.deceased? ' · Deceased ('+(s.deceasedDate||'date not provided')+')':''}`);
+        if(siblingEmail(s)) row(`Sibling ${i+1} Email`, siblingEmail(s));
       });
     }
     spacer();
@@ -2033,6 +2053,12 @@ function validateStep(key){
         return 'Please add at least one sibling, or check "I have no siblings" before continuing.';
       if(!data.siblingsNone && data.siblings.some(r=>!isFilled(r.name) || !isFilled(r.dob)))
         return 'Please fill in each sibling\'s Full Name and Date of Birth before continuing.';
+      if(data.parents.motherDeceased && (!isFilled(data.parents.motherDeceasedDate) || !isFilled(data.parents.motherAddress && data.parents.motherAddress.city)))
+        return 'Your mother is marked as deceased. Please provide the date of death and the last city where she lived before continuing.';
+      if(data.parents.fatherDeceased && (!isFilled(data.parents.fatherDeceasedDate) || !isFilled(data.parents.fatherAddress && data.parents.fatherAddress.city)))
+        return 'Your father is marked as deceased. Please provide the date of death and the last city where he lived before continuing.';
+      if(!data.siblingsNone && data.siblings.some(r=>r.deceased && (!isFilled(r.deceasedDate) || !isFilled(r.address && r.address.city))))
+        return 'A sibling is marked as deceased. Please provide the date of death and the last city where he or she lived before continuing.';
       return null;
     case 'entry':
       if(!data.entry.notYetTravelled && (!isFilled(data.entry.originalDate) || !isFilled(data.entry.originalPort)))
