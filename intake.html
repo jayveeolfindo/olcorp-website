@@ -332,7 +332,7 @@ function renderAddressBlock(prefix, addr, disabled){
       <label class="field"><span>City/Town</span><input type="text" ${d} id="${prefix}_city" value="${(addr.city||'').replace(/"/g,'&quot;')}"></label>
       <label class="field"><span>Country or Territory</span><input type="text" ${d} id="${prefix}_country" value="${(addr.country||'').replace(/"/g,'&quot;')}"></label>
       <label class="field"><span>Province</span><select ${d} id="${prefix}_province">${opt()}</select></label>
-      <label class="field"><span>Postal code</span><input type="text" ${d} id="${prefix}_postalCode" value="${(addr.postalCode||'').replace(/"/g,'&quot;')}"></label>
+      <div><label class="field"><span>Postal code</span><input type="text" ${d} ${addr.noPostal?'disabled':''} id="${prefix}_postalCode" value="${(addr.postalCode||'').replace(/"/g,'&quot;')}"></label><label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-top:4px;cursor:pointer;"><input type="checkbox" ${d} ${addr.noPostal?'checked':''} id="${prefix}_noPostal" style="width:auto;margin:0;"> No postal code</label></div>
     </div>
   `;
 }
@@ -344,6 +344,8 @@ function bindAddressBlock(card, prefix, addr, onChange){
   });
   const provEl = card.querySelector(`#${prefix}_province`);
   if(provEl) provEl.addEventListener('change', e=>{ addr.province=e.target.value; onChange && onChange(); });
+  const npEl = card.querySelector(`#${prefix}_noPostal`);
+  if(npEl) npEl.addEventListener('change', e=>{ addr.noPostal=e.target.checked; const pc=card.querySelector(`#${prefix}_postalCode`); if(addr.noPostal){ addr.postalCode=''; if(pc){ pc.value=''; pc.disabled=true; } } else if(pc){ pc.disabled=false; } onChange && onChange(); });
 }
 
 function setAddressBlockValues(card, prefix, addr){
@@ -353,9 +355,13 @@ function setAddressBlockValues(card, prefix, addr){
   });
   const provEl = card.querySelector(`#${prefix}_province`);
   if(provEl) provEl.value = addr.province||'';
+  const npEl = card.querySelector(`#${prefix}_noPostal`);
+  if(npEl) npEl.checked = !!addr.noPostal;
+  const pcEl = card.querySelector(`#${prefix}_postalCode`);
+  if(pcEl) pcEl.disabled = !!addr.noPostal;
 }
 
-function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''}; }
+function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:'',noPostal:false}; }
 function formatAddress(addr){
   if(!addr) return '—';
   const line1 = [addr.streetNo, addr.streetName].filter(Boolean).join(' ');
@@ -902,7 +908,7 @@ function renderRepeatable(card, title, sub, listKey, fieldsDef, opts={}){
     ${opts.bottomPanelId ? `<div id="${opts.bottomPanelId}" style="margin-top:22px;"></div>` : ''}
   `;
   const wrap = card.querySelector('#repWrap');
-  function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''}; }
+  function blankAddr(){ return {poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:'',noPostal:false}; }
   function draw(){
     wrap.innerHTML='';
     data[listKey].forEach((row,idx)=>{
@@ -2048,8 +2054,8 @@ function validateStep(key){
       if(req.addressYears === 0) return null;
       if(data.addressHistory.length===0)
         return 'Please add at least one address entry before continuing.';
-      if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address) || !(isFilled(r.address.streetName) || isFilled(r.address.poBox)) || !isFilled(r.address.city)))
-        return 'Please fill in the From date and the full address for each entry before continuing, including the street name (or P.O. box), city, and country. A city or town name alone is not enough.';
+      if(data.addressHistory.some(r=>!isFilled(r.from) || !addressHasContent(r.address) || !(isFilled(r.address.streetName) || isFilled(r.address.poBox)) || !isFilled(r.address.city) || !(isFilled(r.address.postalCode) || r.address.noPostal)))
+        return 'Please fill in the From date and the full address for each entry before continuing, including the street name (or P.O. box), city, country, and postal code (tick No postal code if the address has none). A city or town name alone is not enough.';
       return null;
     }
     case 'employment': {
