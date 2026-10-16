@@ -68,7 +68,7 @@ exports.handler = async function (event) {
     //    record of truth, so it must succeed or the whole request fails.
     const staffResp = await sendViaResend({
       from: from,
-      to: ["consulting@olcorp.ca"],
+      to: ["jayveeolfindo@olcorp.ca"],
       subject: "New Client Intake — " + (clientName || "Unnamed Applicant"),
       html:
         "<p>A new Client Information Form was submitted" +
