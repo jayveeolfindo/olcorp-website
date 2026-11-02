@@ -783,7 +783,10 @@ function fmtDate(d) {
   const childrenFee       = totalChildren * fees.child;
   const ocFee             = (svc === 'work_permit' && wpLocation === 'outside') ? 300 : 0;
   const profTotal         = professionalBase + spouseFee + childrenFee + ocFee;
-  const discountPct     = clientStatus === 'returning' ? 0.20 : clientStatus === 'family' ? 0.10 : 0;
+  // ?discountPct=50 (optional) overrides the status-based discount for a one-off
+  // negotiated percentage; ?discountLabel=... names it on the fee table.
+  const customDiscountPct = parseFloat(p.get('discountPct') || '');
+  const discountPct     = customDiscountPct > 0 ? customDiscountPct / 100 : (clientStatus === 'returning' ? 0.20 : clientStatus === 'family' ? 0.10 : 0);
   const discountAmt     = Math.round(profTotal * discountPct * 100) / 100;
   const discountedProf  = profTotal - discountAmt;
   const creditAmt         = (consultPaid && consultAmt > 0) ? Math.min(consultAmt, discountedProf) : 0;
@@ -926,7 +929,7 @@ function fmtDate(d) {
       payRows.push(`<tr><td style="padding-left:24px">Add: Outside Canada Representation Fee</td><td class="amt">${fmt(ocFee)}</td></tr>`);
     }
     if (discountAmt > 0) {
-      const discLabel = clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)';
+      const discLabel = customDiscountPct > 0 ? `${p.get('discountLabel') || 'Discount'} (\u2212${customDiscountPct}%)` : (clientStatus === 'returning' ? 'Returning Client Discount (−20%)' : 'Family of Client Discount (−10%)');
       payRows.push(`<tr><td style="color:#2e8b57;">${discLabel}</td><td class="amt" style="color:#2e8b57;">&#8722;${fmt(discountAmt)}</td></tr>`);
     }
     if (creditAmt > 0) {
