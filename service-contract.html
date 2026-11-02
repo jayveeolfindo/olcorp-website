@@ -831,6 +831,14 @@ function fmtDate(d) {
     if (epaNote2) epaNote2.remove();
   }
 
+  // One-off: ?milestones=A|B|C replaces the whole billing installment list
+  // (pipe separated); the total is then split evenly across the new list.
+  const customMs = p.get('milestones');
+  if (customMs) {
+    const list = customMs.split('|').map(s => s.trim()).filter(Boolean);
+    if (list.length) { installMilestones = list; installAmt = grandTotal / list.length; }
+  }
+
   const milestoneSuffix = p.get('milestoneSuffix') || '';
   if (milestoneSuffix) {
     const suffixIdx = parseInt(p.get('milestoneSuffixIndex') || '1', 10) - 1;
@@ -944,7 +952,7 @@ function fmtDate(d) {
   document.getElementById('scheduleTable').innerHTML = schedRows;
 
   // Section 6 — Government Fees
-  const govLines = buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp });
+  const govLines = buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated: p.get('nominated') === '1' });
   document.getElementById('govTable').innerHTML = govLines;
 
   // Page title
@@ -969,7 +977,7 @@ const TITLES = {
   window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.waivedIndex=waivedIndex; window.TITLES=TITLES; window.clientStatus=clientStatus; window.professionalBase=professionalBase; window.spouseFee=spouseFee; window.childrenFee=childrenFee; window.totalChildren=totalChildren; window.ocFee=ocFee; window.fees=fees;
 })();
 
-function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
+function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated }) {
   let rows = [];
   let total = 0;
 
@@ -978,7 +986,21 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp }) {
     return `<tr><td${indent?' style="padding-left:20px"':''}>${label}</td><td class="amt">${'$' + amt.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</td></tr>`;
   }
 
-  if (svc === 'sinp_pr') {
+  if (svc === 'sinp_pr' && nominated) {
+    // Already nominated: no SINP application fee, and only ONE work permit
+    // extension fee plus the PR fees for the whole family.
+    rows.push(`<tr><td colspan="2" style="font-style:italic;font-size:9pt;padding:4px 8px;">For Work Permit Extension (one applicant):</td></tr>`);
+    rows.push(line('Work Permit Extension Application Fee', IRCC.work_permit));
+    const wpSubtotalN = total;
+    rows.push(`<tr><td style="font-style:italic;font-size:9pt;padding:6px 8px 2px;">For Permanent Residence Application (whole family):</td><td></td></tr>`);
+    total = 0;
+    rows.push(line('Principal Applicant PR Fee + RPRF', IRCC.pr_pa + IRCC.rprf));
+    if (hasSpouse) rows.push(line('Spouse PR Fee + RPRF', IRCC.pr_spouse + IRCC.rprf));
+    if (cyoung + colder > 0) rows.push(line(`PR Child Fee \u00d7 ${cyoung + colder}`, IRCC.pr_child * (cyoung + colder), true));
+    const isBioFamilyN = hasSpouse || (cyoung + colder) > 0;
+    rows.push(line(isBioFamilyN ? 'Family Biometrics' : 'Biometrics Fee', isBioFamilyN ? IRCC.bio_fam : IRCC.bio_single));
+    const prTotalN = total; total = wpSubtotalN + prTotalN;
+  } else if (svc === 'sinp_pr') {
     rows.push(`<tr><td colspan="2" style="font-style:italic;font-size:9pt;padding:4px 8px;">For SINP Nomination and Permanent Residence Application:</td></tr>`);
     rows.push(line('SINP Application Fee', IRCC.sinp_app));
     rows.push(line('Principal Applicant Work Permit', IRCC.work_permit));
