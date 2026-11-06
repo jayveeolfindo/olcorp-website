@@ -777,7 +777,9 @@ function fmtDate(d) {
 
   const effSvc  = svc; // 'work_permit' used for both WP and PGWP
   const repKey  = (svc === 'work_permit' && isPgwp) ? 'pgwp' : svc;
-  const fees    = REP[repKey] || REP[svc] || { base: 0, spouse: 0, child: 0 };
+  // ?childFee=400 (optional) overrides the per-child professional fee for a negotiated contract.
+  const customChildFee = parseFloat(p.get('childFee') || '');
+  const fees    = Object.assign({}, REP[repKey] || REP[svc] || { base: 0, spouse: 0, child: 0 }, customChildFee > 0 ? { child: customChildFee } : {});
 
   const hasSpouse   = family === 'spouse' || family === 'family';
   const totalChildren = cyoung + colder;
