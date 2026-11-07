@@ -1057,7 +1057,7 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominate
     const bioLabelFS = (cyoung + colder > 0) ? 'Biometrics – Sponsored Spouse + Children (family rate)' : 'Biometrics – Sponsored Spouse';
     rows.push(line(bioLabelFS, bioFeeFS));
   } else if (svc === 'visitor_visa') {
-    rows.push(line('Visitor Visa Application Fee', IRCC.visitor_visa));
+    rows.push(line('Visitor Visa Application Fee', IRCC.visitor_visa)); if (p.get('bio') === '1') { const bioFamVV = hasSpouse || (cyoung + colder) > 0; rows.push(line(bioFamVV ? 'Family Biometrics' : 'Biometrics Fee', bioFamVV ? IRCC.bio_fam : IRCC.bio_single)); }
   } else if (svc === 'super_visa') {
     rows.push(line('Super Visa Application Fee', IRCC.super_visa_fee));
   } else if (svc === 'eta') {
