@@ -1798,7 +1798,28 @@ function updateSocialProof(svc) {
   g('socialProofText').innerHTML = `<strong>${data.n}</strong> ${data.label}`;
 }
 
-  function openContractModal() {
+  var RCIC_MODE = new URLSearchParams(window.location.search).get('rcic') === '1';
+// Default Client's Instructions per service type, used when the RCIC leaves the field blank.
+var DEFAULT_INSTR = {
+  "sinp_pr": "The Client instructs the RCIC to prepare and submit the SINP and permanent residence applications for the Client and the dependents named in this Agreement.",
+  "family_sponsorship": "The Client instructs the RCIC to prepare and submit the family sponsorship and permanent residence applications for the sponsor, the sponsored family members and the dependents named in this Agreement.",
+  "work_permit": "The Client instructs the RCIC to prepare and submit the work permit application for the Client and the dependents named in this Agreement.",
+  "francophone_wp": "The Client instructs the RCIC to prepare and submit the Francophone Mobility work permit application for the Client and the dependents named in this Agreement.",
+  "study_permit": "The Client instructs the RCIC to prepare and submit the study permit application for the Client and the dependents named in this Agreement.",
+  "stay_extension": "The Client instructs the RCIC to prepare and submit the application to extend the Client's authorized stay in Canada for the Client and the dependents named in this Agreement.",
+  "visitor_visa": "The Client instructs the RCIC to prepare and submit the visitor visa application for the Client and the dependents named in this Agreement.",
+  "super_visa": "The Client instructs the RCIC to prepare and submit the Super Visa application for the Client.",
+  "eta": "The Client instructs the RCIC to prepare and submit the Electronic Travel Authorization (eTA) application for the Client.",
+  "status_restoration": "The Client instructs the RCIC to prepare and submit the application to restore the Client's temporary resident status for the Client and the dependents named in this Agreement.",
+  "citizenship": "The Client instructs the RCIC to prepare and submit the Canadian citizenship application for the Client and the dependents named in this Agreement.",
+  "school_enrollment": "The Client instructs the RCIC to prepare and submit the school enrollment services described in this Agreement for the Client and the dependents named in this Agreement.",
+  "sinp_employer": "The Client instructs the RCIC to prepare and submit the SINP Employer application on behalf of the employer named in this Agreement.",
+  "sinp_employer_epa": "The Client instructs the RCIC to prepare and submit the SINP Employer Position Assessment (EPA) application on behalf of the employer named in this Agreement.",
+  "_generic": "The Client instructs the RCIC to prepare and submit the application described in this Agreement for the Client and the dependents named in this Agreement."
+};
+function defaultInstr(svc) { return DEFAULT_INSTR[svc] || DEFAULT_INSTR._generic; }
+function openContractModal() {
+  var _rc = document.getElementById('scRcic'); if (_rc) _rc.style.display = RCIC_MODE ? '' : 'none';
   var _rw = document.getElementById('scRestWrap'); if (_rw) _rw.style.display = (state.service === 'status_restoration') ? '' : 'none';
     if (!state.service) { alert('Please select a service first.'); return; }
     if (state.service === 'consultation') { alert('Service contracts are not generated for consultations.'); return; }
@@ -1816,23 +1837,23 @@ function updateSocialProof(svc) {
     const postal = document.getElementById('scPostal').value.trim();
     const country = document.getElementById('scCountry').value.trim();
     const advice = document.getElementById('scAdvice').value.trim();
-    const instr = document.getElementById('scInstr').value.trim();
+    const instr = document.getElementById('scInstr').value.trim() || defaultInstr(state.service);
   const restType = (document.getElementById('scRestType') || {}).value || '';
     const tfDays = document.getElementById('scTfDays').value.trim() || '10';
     const tf = document.getElementById('scTf').value.trim();
     const disb = document.getElementById('scDisb').value.trim() || '0';
-    const adults = document.getElementById('scAdults').value.trim() || '0';
-    const adultNames = document.getElementById('scAdultNames').value.trim();
+    
+    const adultNames = (document.getElementById('scAdultNames').value || '').split(/\n|\|/).map(function (x) { return x.trim(); }).filter(Boolean).join('|');
     const phone = document.getElementById('scPhone').value.trim();
     const em = document.getElementById('scEm').value.trim();
     if (!fn || !ln) { alert('Please enter at least the client name.'); return null; }
     if (!city || !prov || !postal) { alert('Please enter the client city, province and postal code.'); return null; }
-    if (!advice) { alert('Please enter the Preliminary Advice Given.'); return null; }
-    if (!instr) { alert("Please enter the Client's Instructions."); return null; }
+    
+    
   if (state.service === 'status_restoration' && !restType) { alert('Please select the restoration type (worker with employer-specific permit, worker with open permit, student or visitor).'); return null; }
     return new URLSearchParams({
       svc: state.service,
-      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults, adultNames, restType,
+      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults: String(adultNames ? adultNames.split('|').length : 0), adultNames, restType,
       family: state.family,
       childrenYoung: state.childrenYoung || 0,
       childrenOlder: state.childrenOlder || 0,
@@ -1917,13 +1938,14 @@ setTimeout(loadFromURL, 100);
       <div class="sc-field"><label>Country</label><input id="scCountry" value="Canada"></div>
       <div class="sc-field"><label>Phone Number</label><input id="scPhone" placeholder="+1 (xxx) xxx-xxxx"></div>
       <div class="sc-field"><label>Email Address</label><input id="scEm" placeholder="client@email.com"></div>
-      <div class="sc-field"><label>Preliminary Advice Given (required)</label><textarea id="scAdvice" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="Based on the consultation of [date], the Client appears to meet the requirements of [program/stream]."></textarea></div>
-      <div class="sc-field"><label>Client's Instructions (required)</label><textarea id="scInstr" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="The Client instructs the RCIC to prepare and submit [application(s)] for the Client and the dependents named in this Agreement."></textarea></div>
+      <div class="sc-field"><label>Names of dependents aged 18 or over (one per line, optional)</label><textarea id="scAdultNames" rows="2" style="width:100%;font:inherit;padding:8px;" placeholder="Leave blank if none"></textarea></div>
+    <div id="scRcic" style="display:none">
+    <div class="sc-field"><label>Preliminary Advice Given (optional)</label><textarea id="scAdvice" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="Based on the consultation of [date], the Client appears to meet the requirements of [program/stream]."></textarea></div>
+      <div class="sc-field"><label>Client's Instructions (optional, a default is used for the selected service)</label><textarea id="scInstr" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="The Client instructs the RCIC to prepare and submit [application(s)] for the Client and the dependents named in this Agreement."></textarea></div>
       <div class="sc-field"><label>Business days to submit after documents and payment (default 10)</label><input id="scTfDays" type="number" value="10" min="1"></div>
       <div class="sc-field"><label>Time frame per milestone (optional, separate with |)</label><input id="scTf" placeholder="Leave blank to use the default for every milestone"></div>
       <div class="sc-field"><label>Estimated disbursements in CAD (default 0)</label><input id="scDisb" type="number" value="0" min="0" step="0.01"></div>
-      <div class="sc-field"><label>Dependent children aged 18 or over (number)</label><input id="scAdults" type="number" value="0" min="0"></div>
-      <div class="sc-field"><label>Names of those dependents (optional, separate with |)</label><input id="scAdultNames" placeholder="Name 1|Name 2"></div>
+      </div>
       <div class="sc-field" id="scRestWrap" style="display:none"><label>Restoration type (required)</label><select id="scRestType"><option value="">Select the type of restoration</option><option value="worker_employer">Worker, employer-specific work permit</option><option value="worker_open">Worker, open work permit</option><option value="student">Student</option><option value="visitor">Visitor</option></select></div>
     <div class="sc-actions">
         <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
