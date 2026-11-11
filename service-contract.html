@@ -1063,6 +1063,7 @@ function fmtDate(d) {
   if (!city) _missing.push('City');
   if (!prov) _missing.push('Province');
   if (!postal) _missing.push('Postal code');
+  if (svc === 'status_restoration' && ['worker_employer', 'worker_open', 'student', 'visitor'].indexOf(p.get('restType') || '') < 0) _missing.push('Restoration type');
   if (_missing.length) {
     window._scBlocked = true;
     var _banner = document.createElement('div');
@@ -1082,8 +1083,9 @@ function fmtDate(d) {
   if (typeof buildConsent === 'function') buildConsent(_persons);
 
   // Section 6 — Government Fees
-  const govLines = buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated: p.get('nominated') === '1' });
+  const govLines = buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated: p.get('nominated') === '1', restType: p.get('restType') || '' });
   document.getElementById('govTable').innerHTML = swapSvc(govLines);
+  (function () { var _gt = document.getElementById('govTable'); var _gn = document.getElementById('govSourceNote'); if (!_gn) { _gn = document.createElement('p'); _gn.id = 'govSourceNote'; _gn.style.cssText = 'font-size:9pt;font-style:italic;margin:6px 0 0;'; _gt.parentNode.insertBefore(_gn, _gt.nextSibling); } _gn.textContent = 'Government fees verified against the IRCC fee list and the SINP website in November 2026. Fees are set by the government and may change.'; })();
 
   // Page title
 const TITLES = {
@@ -1108,7 +1110,7 @@ const TITLES = {
   window.fn=fn; window.ln=ln; window.em=em; window.phone=phone; window.addr=addr; window.svc=svc; window.gst=gst; window.profTotal=profTotal; window.grandTotal=grandTotal; window.discountAmt=discountAmt; window.creditAmt=creditAmt; window.installMilestones=installMilestones; window.installAmt=installAmt; window.waivedIndex=waivedIndex; window.TITLES=TITLES; window.clientStatus=clientStatus; window.professionalBase=professionalBase; window.spouseFee=spouseFee; window.childrenFee=childrenFee; window.totalChildren=totalChildren; window.ocFee=ocFee; window.fees=fees; window.scStreet=street; window.scCity=city; window.scProv=prov; window.scPostal=postal; window.scCountry=country; window.scAdvice=advice; window.scInstr=instr; window.scTimeFrames=tfRows; window.scDisb=disb;
 })();
 
-function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated }) {
+function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominated, restType }) {
   let rows = [];
   let total = 0;
 
@@ -1134,6 +1136,7 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominate
   } else if (svc === 'sinp_pr') {
     rows.push(`<tr><td colspan="2" style="font-style:italic;font-size:9pt;padding:4px 8px;">For SINP Nomination and Permanent Residence Application:</td></tr>`);
     rows.push(line('SINP Application Fee', IRCC.sinp_app));
+    rows.push('<tr><td colspan="2" style="font-style:italic;font-size:9pt;padding:2px 8px 2px 20px;">SINP Second Review Fee, only if a second review is requested: $250.00 (not included in the total above)</td></tr>');
     rows.push(line('Principal Applicant Work Permit', IRCC.work_permit));
     if (hasSpouse) rows.push(line('Spousal Open Work Permit (with $100 holder fee)', IRCC.work_permit + IRCC.open_wp_holder));
     if (cyoung > 0) rows.push(line(`Visitor Record × ${cyoung} (children age ≤5)`, IRCC.visitor_record * cyoung, true));
@@ -1187,6 +1190,9 @@ function buildGovFees(svc, { hasSpouse, cyoung, colder, wpType, isPgwp, nominate
     if (cyoung + colder > 0) rows.push(line(`Minor Citizenship × ${cyoung + colder}`, IRCC.citizenship_minor * (cyoung + colder), true));
   } else if (svc === 'status_restoration') {
     rows.push(line('Status Restoration Application Fee', IRCC.status_restore));
+    if (restType === 'worker_employer' || restType === 'worker_open') rows.push(line('New Work Permit', IRCC.work_permit));
+    if (restType === 'worker_open') rows.push(line('Open Work Permit Holder Fee', IRCC.open_wp_holder));
+    if (restType === 'student') rows.push(line('New Study Permit', IRCC.study_permit));
   } else if (svc === 'sinp_employer') {
     // The EPA engages only the employer — the employee's own work permit
     // application (and its fee) is a separate matter handled under their
