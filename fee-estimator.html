@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script>window.RCIC_MODE_FLAG = new URLSearchParams(window.location.search).get('rcic') === '1';</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SINP and Immigration Fee Estimator (Canada) | OLCORP</title>
@@ -1798,7 +1799,7 @@ function updateSocialProof(svc) {
   g('socialProofText').innerHTML = `<strong>${data.n}</strong> ${data.label}`;
 }
 
-  var RCIC_MODE = new URLSearchParams(window.location.search).get('rcic') === '1';
+  var RCIC_MODE = !!window.RCIC_MODE_FLAG;
 // Default Client's Instructions per service type, used when the RCIC leaves the field blank.
 var DEFAULT_INSTR = {
   "sinp_pr": "The Client instructs the RCIC to prepare and submit the SINP and permanent residence applications for the Client and the dependents named in this Agreement.",
