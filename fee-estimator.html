@@ -1820,6 +1820,7 @@ var DEFAULT_INSTR = {
 };
 function defaultInstr(svc) { return DEFAULT_INSTR[svc] || DEFAULT_INSTR._generic; }
 function openContractModal() {
+  var _aw = document.getElementById('scAdultWrap'); if (_aw) _aw.style.display = (state.childrenAdult > 0) ? '' : 'none';
   var _rc = document.getElementById('scRcic'); if (_rc) _rc.style.display = RCIC_MODE ? '' : 'none';
   var _rw = document.getElementById('scRestWrap'); if (_rw) _rw.style.display = (state.service === 'status_restoration') ? '' : 'none';
     if (!state.service) { alert('Please select a service first.'); return; }
@@ -1854,7 +1855,7 @@ function openContractModal() {
   if (state.service === 'status_restoration' && !restType) { alert('Please select the restoration type (worker with employer-specific permit, worker with open permit, student or visitor).'); return null; }
     return new URLSearchParams({
       svc: state.service,
-      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults: String(adultNames ? adultNames.split('|').length : 0), adultNames, restType,
+      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults: String(state.childrenAdult || 0), adultNames: (state.childrenAdult > 0 ? adultNames : ''), restType,
       family: state.family,
       childrenYoung: state.childrenYoung || 0,
       childrenOlder: state.childrenOlder || 0,
@@ -1939,7 +1940,7 @@ setTimeout(loadFromURL, 100);
       <div class="sc-field"><label>Country</label><input id="scCountry" value="Canada"></div>
       <div class="sc-field"><label>Phone Number</label><input id="scPhone" placeholder="+1 (xxx) xxx-xxxx"></div>
       <div class="sc-field"><label>Email Address</label><input id="scEm" placeholder="client@email.com"></div>
-      <div class="sc-field"><label>Names of dependents aged 18 or over (one per line, optional)</label><textarea id="scAdultNames" rows="2" style="width:100%;font:inherit;padding:8px;" placeholder="Leave blank if none"></textarea></div>
+      <div class="sc-field" id="scAdultWrap" style="display:none"><label>Names of the adult children (18 to 21), one per line, optional</label><textarea id="scAdultNames" rows="2" style="width:100%;font:inherit;padding:8px;" placeholder="Leave blank if none"></textarea></div>
     <div id="scRcic" style="display:none">
     <div class="sc-field"><label>Preliminary Advice Given (optional)</label><textarea id="scAdvice" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="Based on the consultation of [date], the Client appears to meet the requirements of [program/stream]."></textarea></div>
       <div class="sc-field"><label>Client's Instructions (optional, a default is used for the selected service)</label><textarea id="scInstr" rows="3" style="width:100%;font:inherit;padding:8px;" placeholder="The Client instructs the RCIC to prepare and submit [application(s)] for the Client and the dependents named in this Agreement."></textarea></div>
