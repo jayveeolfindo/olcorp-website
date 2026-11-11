@@ -1799,6 +1799,7 @@ function updateSocialProof(svc) {
 }
 
   function openContractModal() {
+  var _rw = document.getElementById('scRestWrap'); if (_rw) _rw.style.display = (state.service === 'status_restoration') ? '' : 'none';
     if (!state.service) { alert('Please select a service first.'); return; }
     if (state.service === 'consultation') { alert('Service contracts are not generated for consultations.'); return; }
     document.getElementById('scModal').classList.add('open');
@@ -1816,6 +1817,7 @@ function updateSocialProof(svc) {
     const country = document.getElementById('scCountry').value.trim();
     const advice = document.getElementById('scAdvice').value.trim();
     const instr = document.getElementById('scInstr').value.trim();
+  const restType = (document.getElementById('scRestType') || {}).value || '';
     const tfDays = document.getElementById('scTfDays').value.trim() || '10';
     const tf = document.getElementById('scTf').value.trim();
     const disb = document.getElementById('scDisb').value.trim() || '0';
@@ -1827,9 +1829,10 @@ function updateSocialProof(svc) {
     if (!city || !prov || !postal) { alert('Please enter the client city, province and postal code.'); return null; }
     if (!advice) { alert('Please enter the Preliminary Advice Given.'); return null; }
     if (!instr) { alert("Please enter the Client's Instructions."); return null; }
+  if (state.service === 'status_restoration' && !restType) { alert('Please select the restoration type (worker with employer-specific permit, worker with open permit, student or visitor).'); return null; }
     return new URLSearchParams({
       svc: state.service,
-      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults, adultNames,
+      fn, ln, street, city, prov, postal, country, phone, em, advice, instr, tfDays, tf, disb, adults, adultNames, restType,
       family: state.family,
       childrenYoung: state.childrenYoung || 0,
       childrenOlder: state.childrenOlder || 0,
@@ -1921,7 +1924,8 @@ setTimeout(loadFromURL, 100);
       <div class="sc-field"><label>Estimated disbursements in CAD (default 0)</label><input id="scDisb" type="number" value="0" min="0" step="0.01"></div>
       <div class="sc-field"><label>Dependent children aged 18 or over (number)</label><input id="scAdults" type="number" value="0" min="0"></div>
       <div class="sc-field"><label>Names of those dependents (optional, separate with |)</label><input id="scAdultNames" placeholder="Name 1|Name 2"></div>
-      <div class="sc-actions">
+      <div class="sc-field" id="scRestWrap" style="display:none"><label>Restoration type (required)</label><select id="scRestType"><option value="">Select the type of restoration</option><option value="worker_employer">Worker, employer-specific work permit</option><option value="worker_open">Worker, open work permit</option><option value="student">Student</option><option value="visitor">Visitor</option></select></div>
+    <div class="sc-actions">
         <button class="sc-cancel" onclick="closeContractModal()">Cancel</button>
         <button id="copyLinkBtn" class="sc-copy" onclick="copyContractLink()">Copy Link</button>
         <button class="sc-generate" onclick="openContract()">Generate Contract</button>
