@@ -1068,7 +1068,8 @@ function fmtDate(d) {
     var _banner = document.createElement('div');
     _banner.id = 'scBlock';
     _banner.style.cssText = 'border:2px solid #c0392b;background:#fdecea;color:#7b1e14;padding:14px 18px;margin:0 0 18px;font-family:Arial,sans-serif;font-size:11pt;text-align:left;';
-    _banner.innerHTML = '<strong>This Service Agreement cannot be generated.</strong> The following required information is missing: ' + _missing.join(', ') + '. Please ask your consultant (consulting@olcorp.ca) for an updated link.';
+    _banner.innerHTML = 'This agreement link has been updated. Please contact Olcorp at <a href="mailto:consulting@olcorp.ca">consulting@olcorp.ca</a> and we&#39;ll send you a new link.';
+    console.warn('Missing required agreement information: ' + _missing.join(', '));
     var _pg = document.querySelector('.page');
     if (_pg) _pg.insertBefore(_banner, _pg.firstChild);
     ['.signature-section', '#sigPrompt'].forEach(function(sel) { var el = document.querySelector(sel); if (el) el.style.display = 'none'; });
@@ -1277,7 +1278,7 @@ function clearSig() {
 
 
 function generatePDF() {
-  if (window._scBlocked) { alert('This agreement cannot be generated: required information is missing.'); return; }
+  if (window._scBlocked) { alert("This agreement link has been updated. Please contact Olcorp at consulting@olcorp.ca and we'll send you a new link."); return; }
   window.print();
   window.addEventListener('afterprint', function() {
     var b = document.getElementById('sendBtn');
@@ -1286,7 +1287,7 @@ function generatePDF() {
 }
 
 function doSend() {
-  if (window._scBlocked) { alert('This agreement cannot be sent: required information is missing.'); return; }
+  if (window._scBlocked) { alert("This agreement link has been updated. Please contact Olcorp at consulting@olcorp.ca and we'll send you a new link."); return; }
   var instArr = [];
   if (typeof installMilestones !== 'undefined' && installMilestones && installMilestones.length > 1) {
     var iAmt = typeof installAmt !== 'undefined' ? installAmt : 0;
@@ -1578,7 +1579,7 @@ function _updateSign() {
   if (st) st.textContent = ok
     ? ((window.innerWidth < 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) ? '\u2713 Ready \u2014 tap Share to send' : '\u2713 Document ready \u2014 click Generate PDF')
     : 'Signature: ' + (_sigDrawn ? '\u2713 done' : 'pending — draw above');
-  if (st && window._scBlocked) st.textContent = 'Cannot generate: required information is missing';
+  if (st && window._scBlocked) st.textContent = "This agreement link has been updated. Please contact Olcorp at consulting@olcorp.ca and we'll send you a new link.";
   var sp = document.getElementById('sigPrompt'); if (sp && !window._contractSent) sp.style.display = ok ? 'block' : 'none';
 }
 _updateSign();
