@@ -829,7 +829,7 @@ function fmtDate(d) {
   const country = (p.get('country') || '').trim();
   const addrLine = [street, city, [prov, postal].filter(Boolean).join(' '), country].filter(Boolean).join(', ');
   const addr = addrLine || (p.get('addr') || '');
-  const advice = (p.get('advice') || '').trim();
+  const advice = (p.get('advice') || '').trim() || 'No preliminary advice was given before this Agreement. Advice will be provided in the course of the Services.';
   const instr = (p.get('instr') || '').trim();
   const tfParam = (p.get('tf') || '').trim();
   const tfDays = parseInt(p.get('tfDays') || '10', 10) || 10;
@@ -1058,7 +1058,7 @@ function fmtDate(d) {
 
   // Required-information check: refuse to generate when anything is missing.
   var _missing = [];
-  if (!advice) _missing.push('Preliminary Advice Given');
+  
   if (!instr) _missing.push('Client&#39;s Instructions');
   if (!city) _missing.push('City');
   if (!prov) _missing.push('Province');
