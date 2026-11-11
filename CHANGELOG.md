@@ -1,5 +1,16 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-11 (Service Agreement: CICC 24(3) compliance)
+- [Compliance] service-contract.html: added Preliminary Advice Given, Client's Instructions and Estimated Time Frames (per milestone) to Schedule A; new Conflict of Interest section (now Section 5); third-party assistance, estimated disbursements, complaints and CICC regulatory wording added to Sections 18, 8 and 21; Code of Professional Conduct statement and link in Section 2
+- [Compliance] Official communication channels now include consulting@olcorp.ca, the encrypted Facebook profile and the Facebook Page (Section 13)
+- [Fix] Removed duplicated paragraphs in Payment Terms, Termination and Schedule A; the additional EPA note now shows only for sinp_employer and sinp_employer_epa
+- [Fix] Services to Be Provided moved into Schedule A and numbered 1 to 4; "Retainer Agreement" renamed "Service Agreement"
+- [Change] Sections renumbered after the new Conflict of Interest section (Marketing Consent is now Section 25, Acknowledgement and Signatures is Section 26) and cross-references updated
+- [Change] Marketing Consent now uses radio buttons (none pre-selected), covers dependent children under 18, and adds a separate consent and signature for a spouse or partner and for each adult dependent; choices and dates are sent with the signed contract
+- [Change] Client address is now five link parameters (street, city, prov, postal, country); advice, instr, tf, tfDays, disb, adults and adultNames are new. Links missing city, province, postal code, advice or instructions show a friendly message and cannot be signed
+- [Change] fee-estimator.html: contract generator form has the new inputs and validation
+- [Note] Time frame defaults (10 business days) and wording are pending confirmation by Jayvee
+
 ## 2026-09-28 (Phase 2, page 2: About page + portrait link + portrait brightness fix)
 - [Content] jayvee-olfindo.html: new About page at /jayvee-olfindo. Sections: hero (portrait, name, credentials, stats), bio, credentials table with CICC and SK licence verification links, SINP track record grid, languages, offices, CTA
 - [E-E-A-T] ProfilePage schema with Person @id matching the organization graph; credentials include CICC R711813, SK licence 000996, CAPIC, Foreign Worker Recruiter, Notary Public
