@@ -1,5 +1,8 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-11 (Client Information Form)
+- [Fix] intake.html: removed auto-advance to the next step; the form now moves on only when the client presses Continue, because clients were being pushed forward before they finished a page
+
 ## 2026-11-11 (Service Agreement: CICC 24(3) compliance)
 - [Compliance] service-contract.html: added Preliminary Advice Given, Client's Instructions and Estimated Time Frames (per milestone) to Schedule A; new Conflict of Interest section (now Section 5); third-party assistance, estimated disbursements, complaints and CICC regulatory wording added to Sections 18, 8 and 21; Code of Professional Conduct statement and link in Section 2
 - [Compliance] Official communication channels now include consulting@olcorp.ca, the encrypted Facebook profile and the Facebook Page (Section 13)

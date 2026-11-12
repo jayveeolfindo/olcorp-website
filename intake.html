@@ -2129,6 +2129,9 @@ function showStepValidationMsg(msg){
 }
 let autoAdvanceTimer = null;
 function scheduleAutoAdvance(delayMs){
+  // Auto-advance disabled: clients were being pushed to the next step before finishing.
+  // Navigation now happens only when the client presses Continue.
+  return;
   delayMs = delayMs || 900;
   clearTimeout(autoAdvanceTimer);
   const scheduledStep = stepIndex;
