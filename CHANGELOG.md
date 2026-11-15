@@ -1,5 +1,8 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-15 (Client Information Form)
+- [Fix] intake.html: when Continue is blocked by validation, the fields that need attention are now outlined in red, labelled in red, scrolled into view and focused (previously only a message at the bottom appeared). The highlight clears as the client fixes each field.
+
 ## 2026-11-11 (Client Information Form)
 - [Fix] intake.html: removed auto-advance to the next step; the form now moves on only when the client presses Continue, because clients were being pushed forward before they finished a page
 

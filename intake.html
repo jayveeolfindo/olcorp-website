@@ -69,6 +69,10 @@
     font-family:var(--body); background:#fbfcfd; color:var(--navy-deep); transition:border-color .15s;
   }
   input:focus, select:focus, textarea:focus{outline:none; border-color:var(--gold);}
+  .is-invalid{border-color:#b3432b !important; background:#fdf1ee !important; box-shadow:0 0 0 3px rgba(179,67,43,.15);}
+  div.is-invalid, button.is-invalid{border:1.5px solid #b3432b !important; border-radius:10px; padding:8px;}
+  label.field.has-invalid > span{color:#b3432b;}
+
   input[type=text]::placeholder{text-transform:uppercase;}
   #edu_elementary::placeholder{text-transform:none;}
   textarea{resize:vertical; min-height:70px;}
@@ -2119,6 +2123,119 @@ function validateStep(key){
   }
 }
 
+
+// ---------- Highlight the fields that fail validation ----------
+function clearInvalid(){
+  document.querySelectorAll('.is-invalid').forEach(el=>el.classList.remove('is-invalid'));
+  document.querySelectorAll('.has-invalid').forEach(el=>el.classList.remove('has-invalid'));
+}
+function markInvalid(el){
+  if(!el) return;
+  el.classList.add('is-invalid');
+  const f = el.closest && el.closest('label.field'); if(f) f.classList.add('has-invalid');
+}
+function highlightInvalid(key){
+  clearInvalid();
+  const card = document.getElementById('stepCard'); if(!card) return;
+  const q = s=>card.querySelector(s), qa = s=>[...card.querySelectorAll(s)];
+  const emptyId = id=>{ const el=q('#'+id); if(el && !isFilled(el.value)) markInvalid(el); };
+  const rowEl = (idx,k)=>q(`[data-idx="${idx}"][data-k="${k}"]`);
+  const rowEmpty = (list,idx,k)=>{ if(!isFilled(list[idx][k])) markInvalid(rowEl(idx,k)); };
+  const addrFields = (scope, addr)=>{
+    if(!scope) return;
+    const f = suf=>scope.querySelector(`[id$="_${suf}"]`);
+    if(!isFilled(addr.streetName) && !isFilled(addr.poBox)) markInvalid(f('streetName'));
+    if(!isFilled(addr.city)) markInvalid(f('city'));
+    if(!isFilled(addr.country)) markInvalid(f('country'));
+    if(!isFilled(addr.postalCode) && !addr.noPostal) markInvalid(f('postalCode'));
+  };
+  switch(key){
+    case 'appType': { const w=q('.pill-row, .choice-row, select'); if(!isFilled(data.applicationType)) markInvalid(w); break; }
+    case 'identity': ['i_ln','i_gn','i_dob'].forEach(emptyId); break;
+    case 'contact':
+      if(!addressHasContent(data.contact.mailing)){
+        const m=data.contact.mailing;
+        if(!isFilled(m.streetName) && !isFilled(m.city)){ markInvalid(q('#c_mail_streetName')); markInvalid(q('#c_mail_city')); }
+        if(!isFilled(m.country)) markInvalid(q('#c_mail_country'));
+      }
+      ['c_phone','c_email'].forEach(emptyId);
+      break;
+    case 'marital': markInvalid(q('#maritalChoices')); break;
+    case 'children':
+      if(!data.childrenNone && data.children.length===0) markInvalid(q('#addRow'));
+      data.children.forEach((r,i)=>{ rowEmpty(data.children,i,'name'); rowEmpty(data.children,i,'dob'); });
+      break;
+    case 'parents': {
+      ['p_motherName','p_fatherName','p_motherPobCity','p_fatherPobCity'].forEach(emptyId);
+      if(!data.siblingsNone && data.siblings.length===0){ markInvalid(q('#addSib')); }
+      data.siblings.forEach((r,i)=>{ rowEmpty(data.siblings,i,'name'); rowEmpty(data.siblings,i,'dob'); });
+      if(data.parents.motherDeceased){
+        if(!isFilled(data.parents.motherDeceasedDate)) markInvalid(q('#motherDeceasedWrap input'));
+        if(!isFilled(data.parents.motherAddress && data.parents.motherAddress.city)) markInvalid(q('#p_motherAddress_city'));
+      }
+      if(data.parents.fatherDeceased){
+        if(!isFilled(data.parents.fatherDeceasedDate)) markInvalid(q('#fatherDeceasedWrap input'));
+        if(!isFilled(data.parents.fatherAddress && data.parents.fatherAddress.city)) markInvalid(q('#p_fatherAddress_city'));
+      }
+      const blocks = qa('#sibWrap .repeat-block');
+      data.siblings.forEach((r,i)=>{
+        if(r.deceased){
+          if(!isFilled(r.deceasedDate)) markInvalid(rowEl(i,'deceasedDate'));
+          if(!isFilled(r.address && r.address.city) && blocks[i]) markInvalid(blocks[i].querySelector('[id$="_city"]'));
+        }
+      });
+      break;
+    }
+    case 'entry':
+      if(!data.entry.notYetTravelled){
+        emptyId('e_origDate');
+        if(!isFilled(data.entry.originalPort)) markInvalid(q('#e_origPortChoice'));
+      }
+      break;
+    case 'education':
+      if(data.education.length===0) markInvalid(q('#addRow'));
+      data.education.forEach((r,i)=>{ rowEmpty(data.education,i,'from'); rowEmpty(data.education,i,'institution'); });
+      if(!['tourist-visa','work-permit','study-permit'].includes(data.applicationType) && !isFilled(data.eduYears.elementary)) markInvalid(q('#edu_elementary'));
+      break;
+    case 'address': {
+      if(data.addressHistory.length===0) markInvalid(q('#addRow'));
+      data.addressHistory.forEach((r,i)=>{
+        rowEmpty(data.addressHistory,i,'from');
+        const scope = q(`[data-addr-idx="${i}"]`);
+        addrFields(scope, r.address||{});
+      });
+      break;
+    }
+    case 'employment': {
+      if(data.employment.length===0) markInvalid(q('#addRow'));
+      data.employment.forEach((r,i)=>{
+        rowEmpty(data.employment,i,'from');
+        if(!r.unemployed) rowEmpty(data.employment,i,'employer');
+        if(!isFilled(r.statusInCountry)) markInvalid(qa('.status-choice')[i]);
+      });
+      // coverage gaps: point at the Add entry button
+      if(!document.querySelector('.is-invalid')) markInvalid(q('#addRow'));
+      break;
+    }
+    case 'travel':
+      if(!data.travelHistoryNone && data.travelHistory.length===0){ markInvalid(q('#addTravel')); const nt=q('#noTravel'); if(nt) markInvalid(nt.closest('label')||nt); }
+      if(!data.travelHistoryNone) data.travelHistory.forEach((r,i)=>{ ['destination','from','duration'].forEach(k=>rowEmpty(data.travelHistory,i,k)); });
+      break;
+    case 'background': {
+      const rows = qa('#bgQs > div');
+      ['militaryPoliceGovt','criminal','medical','refusalsRemovals'].forEach((k,i)=>{ if(!isFilled(data.background[k]) && rows[i]) markInvalid(rows[i]); });
+      break;
+    }
+  }
+  const first = document.querySelector('.is-invalid');
+  if(first){
+    first.scrollIntoView({behavior:'smooth', block:'center'});
+    if(first.focus && /^(INPUT|SELECT|TEXTAREA)$/.test(first.tagName)) setTimeout(()=>first.focus({preventScroll:true}), 350);
+  }
+}
+document.addEventListener('input', e=>{ if(e.target.classList && e.target.classList.contains('is-invalid')){ e.target.classList.remove('is-invalid'); const f=e.target.closest('label.field'); if(f) f.classList.remove('has-invalid'); } });
+document.addEventListener('change', e=>{ if(e.target.classList && e.target.classList.contains('is-invalid')){ e.target.classList.remove('is-invalid'); const f=e.target.closest('label.field'); if(f) f.classList.remove('has-invalid'); } });
+
 // ---------- Navigation ----------
 let gapAcknowledged = false;
 function showStepValidationMsg(msg){
@@ -2148,6 +2265,7 @@ function renderStep(){
   buildRail();
   gapAcknowledged = false;
   showStepValidationMsg('');
+  clearInvalid();
   const card = document.getElementById('stepCard');
   steps[stepIndex].render(card);
   const lbl = card.querySelector('.step-label');
@@ -2172,8 +2290,10 @@ document.getElementById('nextBtn').addEventListener('click', ()=>{
   const validationMsg = validateStep(key);
   if(validationMsg){
     showStepValidationMsg(validationMsg);
+    highlightInvalid(key);
     return;
   }
+  clearInvalid();
   showStepValidationMsg('');
   if((key==='address' || key==='employment') && !gapAcknowledged){
     const req = historyRequirements(data.applicationType);
