@@ -1,5 +1,8 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-15 (Client Information Form, entry step)
+- [Change] intake.html: added a checkbox on the Entry to Canada step, "My most recent entry is the same as my original entry (I have not left Canada since)". When ticked, the latest entry date and port are hidden and copied from the original entry, and stay in sync if the original changes. Saved links where both entries already match open with the box ticked
+
 ## 2026-11-15 (Client Information Form)
 - [Fix] intake.html: when Continue is blocked by validation, the fields that need attention are now outlined in red, labelled in red, scrolled into view and focused (previously only a message at the bottom appeared). The highlight clears as the client fixes each field.
 

@@ -258,7 +258,7 @@ const data = {
     residential:{poBox:'',aptUnit:'',streetNo:'',streetName:'',city:'',country:'Canada',province:'',postalCode:''},
     sameAsMailing:true,phone:'',email:''
   },
-  entry:{originalDate:'',originalPort:'',latestDate:'',latestPort:'',notYetTravelled:false},
+  entry:{originalDate:'',originalPort:'',latestDate:'',latestPort:'',notYetTravelled:false,sameAsOriginal:false},
   marital:{status:'',marriageDate:'',marriagePlace:'',prevMarriages:''},
   spouse:{lastName:'',givenNames:'',dob:'',pobCity:'',pobCountry:''},
   children:[],
@@ -548,6 +548,7 @@ function showToast(msg, isError, withCheck){
 let resumeId = null;
 
 async function saveProgressGetLink(){
+  syncLatestEntry();
   const btn = document.getElementById('saveProgressBtn2');
   const originalLabel = btn.textContent;
   btn.disabled = true; btn.textContent = 'Saving...';
@@ -789,6 +790,13 @@ function renderIdentity(card){
   card.querySelector('#i_dob').addEventListener('input', ()=>{ scheduleAutoAdvance(); });
 }
 
+// When the applicant has not left Canada since their first entry, the latest entry mirrors the original.
+function syncLatestEntry(){
+  if(data.entry && data.entry.sameAsOriginal && !data.entry.notYetTravelled){
+    data.entry.latestDate = data.entry.originalDate;
+    data.entry.latestPort = data.entry.originalPort;
+  }
+}
 function renderEntry(card){
   card.innerHTML = `
     <div class="step-label">Step 2 of 12</div>
@@ -800,17 +808,42 @@ function renderEntry(card){
     <div class="grid2" id="entryFieldsWrap">
       ${fieldText('Original Entry Date in Canada', data.entry, 'originalDate', {id:'e_origDate', type:'date'})}
       <label class="field"><span>Port of Entry (Original Entry)</span><div id="e_origPortChoice"></div></label>
+    </div>
+    <label class="field" id="sameEntryRow" style="display:flex;align-items:center;gap:8px;margin:2px 0 14px;">
+      <input type="checkbox" id="sameEntry" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.entry.sameAsOriginal?'checked':''}>
+      <span style="margin:0;">My most recent entry is the same as my original entry (I have not left Canada since).</span>
+    </label>
+    <div class="grid2" id="latestEntryWrap">
       ${fieldText('Latest Entry Date in Canada', data.entry, 'latestDate', {id:'e_latestDate', type:'date'})}
       <label class="field"><span>Port of Entry (Latest Entry)</span><div id="e_latestPortChoice"></div></label>
     </div>
   `;
+  if(data.entry.sameAsOriginal === undefined){
+    data.entry.sameAsOriginal = !!(data.entry.originalDate && data.entry.latestDate===data.entry.originalDate && data.entry.latestPort===data.entry.originalPort);
+    card.querySelector('#sameEntry').checked = data.entry.sameAsOriginal;
+  }
+  syncLatestEntry();
   const entryWrap = card.querySelector('#entryFieldsWrap');
-  entryWrap.style.display = data.entry.notYetTravelled ? 'none' : '';
+  const latestWrap = card.querySelector('#latestEntryWrap');
+  const sameRow = card.querySelector('#sameEntryRow');
+  function applyEntryVisibility(){
+    entryWrap.style.display = data.entry.notYetTravelled ? 'none' : '';
+    sameRow.style.display = data.entry.notYetTravelled ? 'none' : 'flex';
+    latestWrap.style.display = (data.entry.notYetTravelled || data.entry.sameAsOriginal) ? 'none' : '';
+  }
+  applyEntryVisibility();
+  card.querySelector('#sameEntry').addEventListener('change', e=>{
+    data.entry.sameAsOriginal = e.target.checked;
+    if(e.target.checked){ syncLatestEntry(); }
+    renderStep();
+    refreshSidebar();
+  });
   card.querySelector('#notYetTravelled').addEventListener('change', e=>{
     data.entry.notYetTravelled = e.target.checked;
     if(e.target.checked){
       data.entry.originalDate=''; data.entry.originalPort='';
       data.entry.latestDate=''; data.entry.latestPort='';
+      data.entry.sameAsOriginal=false;
     }
     renderStep();
     scheduleAutoAdvance();
@@ -1749,6 +1782,7 @@ function renderReview(card){
     return `${(data.identity.lastName||'Lastname')} - ${(data.identity.givenNames||'Firstname')} - Client Information.pdf`;
   }
   function buildIntakePdfDoc(){
+  syncLatestEntry();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({unit:'pt', format:'letter'});
     const marginX = 44, pageW = doc.internal.pageSize.getWidth(), pageH = doc.internal.pageSize.getHeight();
@@ -2006,7 +2040,8 @@ function renderReview(card){
 
 // ---------- Sidebar (removed — Live Record Preview no longer shown) ----------
 function refreshSidebar(){
-  // no-op: retained so existing call sites throughout the form don't need changes
+  // Sidebar removed; this still keeps the latest entry in step with the original when the applicant has not left Canada.
+  syncLatestEntry();
 }
 
 // ---------- Step validation ----------
@@ -2287,6 +2322,7 @@ document.getElementById('backBtn').addEventListener('click', ()=>{
 });
 document.getElementById('nextBtn').addEventListener('click', ()=>{
   const key = steps[stepIndex].key;
+  syncLatestEntry();
   const validationMsg = validateStep(key);
   if(validationMsg){
     showStepValidationMsg(validationMsg);
