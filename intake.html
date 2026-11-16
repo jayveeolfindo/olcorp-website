@@ -301,7 +301,7 @@ const steps = [
   {key:'education', label:'07 · Education', title:'Education History', sub:'Institutions attended since secondary school. Only list schools where you graduated — if you did not complete or graduate from a program, you do not need to include it.', render: renderEducation},
   {key:'address', label:'08 · Address History', title:'Address History (10 years)', sub:'Required for IMM 5669e Schedule A. List every address since your 18th birthday or the past 10 years, whichever is shorter.', render: renderAddressHistory},
   {key:'employment', label:'09 · Employment', title:'Employment / Activity History', sub:'Every period since age 18 — include gaps, unemployment, or full-time parenting as an activity.', render: renderEmployment},
-  {key:'travel', label:'10 · Travel History', title:'Travel History (10 years)', sub:'Required for IMM 5562. All trips outside your country of residence in the same 10-year / since-18 window.', render: renderTravelHistory},
+  {key:'travel', label:'10 · Travel History', title:'Travel History (10 years)', sub:'Required for IMM 5562. Only trips to countries other than Canada and your country of citizenship, in the same 10-year / since-18 window.', render: renderTravelHistory},
   {key:'background', label:'11 · Background', title:'Background Declarations', sub:'Sensitive questions required on IMM 5669e. Answer honestly — these are reviewed by your RCIC before submission, not sent anywhere automatically.', render: renderBackground},
   {key:'review', label:'12 · Review', title:'Review & Generate Record', sub:'Confirm everything below, then generate your Client Information.', render: renderReview},
 ];
@@ -1384,9 +1384,10 @@ function renderTravelHistory(card){
   card.innerHTML = `
     <div class="step-title">Travel History (10 years)</div>
     ${!req.travelRequired ? `<div class="coverage-box"><p class="cov-range">Optional for this application type -- Travel History is only required for PR applications. Feel free to skip this section or fill it in if relevant.</p></div>` : ''}
+    <div class="coverage-box" style="margin-bottom:14px;"><p class="cov-range"><strong>What to list here:</strong> only trips to countries <strong>other than Canada and your country of citizenship</strong> (for example, a holiday, work trip or study trip to a third country). Do <strong>not</strong> list trips between Canada and your home country; your entry dates to Canada are already recorded in the Entry step.</p></div>
     <label class="field" style="display:flex;align-items:center;gap:8px;">
       <input type="checkbox" id="noTravel" style="width:20px;height:20px;flex-shrink:0;cursor:pointer;" ${data.travelHistoryNone?'checked':''}>
-      <span style="margin:0;">I did not travel outside my country of residence during this period</span>
+      <span style="margin:0;">I have not travelled to any country other than Canada and my country of citizenship during this period</span>
     </label>
     <div id="travelWrap"></div>
     <button class="add-btn" id="addTravel">+ Add trip</button>
@@ -1401,7 +1402,7 @@ function renderTravelHistory(card){
       const block = document.createElement('div'); block.className='repeat-block';
       const purposeOpts = ['Leisure','Work','Other'];
       block.innerHTML = `<button class="rm" data-idx="${idx}">Remove</button><div class="grid2">
-        <label class="field"><span>City, Country Visited</span><input type="text" data-k="destination" data-idx="${idx}" value="${(row.destination||'').replace(/"/g,'&quot;')}"></label>
+        <label class="field"><span>City, Country Visited <small>not Canada or your home country</small></span><input type="text" data-k="destination" data-idx="${idx}" value="${(row.destination||'').replace(/"/g,'&quot;')}"></label>
         <label class="field"><span>Purpose of Trip</span>
           <div class="pill-row">
             ${purposeOpts.map(p=>`<div class="pill${row.purpose===p?' sel':''}" data-purpose-idx="${idx}" data-purpose-val="${p}">${p}</div>`).join('')}
@@ -2141,7 +2142,7 @@ function validateStep(key){
     case 'travel': {
       const req = historyRequirements(data.applicationType);
       if(req.travelRequired && !data.travelHistoryNone && data.travelHistory.length===0)
-        return 'Please add at least one trip, or check "I did not travel outside my country of residence" before continuing.';
+        return 'Please add at least one trip, or check "I have not travelled to any country other than Canada and my country of citizenship" before continuing.';
       if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.destination) || !isFilled(r.from)))
         return 'Please fill in the City/Country Visited and Departure Date for each trip before continuing.';
       if(!data.travelHistoryNone && data.travelHistory.some(r=>!isFilled(r.duration)))

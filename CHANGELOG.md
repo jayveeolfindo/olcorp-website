@@ -1,5 +1,8 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-15 (Client Information Form, travel step)
+- [Change] intake.html: Travel History step now says to list only trips to countries other than Canada and the applicant's country of citizenship. Added an explanatory note, reworded the "no travel" checkbox, the validation message, the step subtitle and the trip field hint
+
 ## 2026-11-15 (Client Information Form, entry step)
 - [Change] intake.html: added a checkbox on the Entry to Canada step, "My most recent entry is the same as my original entry (I have not left Canada since)". When ticked, the latest entry date and port are hidden and copied from the original entry, and stay in sync if the original changes. Saved links where both entries already match open with the box ticked
 
