@@ -1,5 +1,8 @@
 # olcorp.ca SEO Changelog
 
+## 2026-11-24 (Client Information Form, parents step)
+- [Change] intake.html: choosing how to provide the parents' email addresses ("Use my email for all" or "I will enter each email individually") is now required before Continue on the Parents & Siblings step. The choice is outlined in red if skipped. Not required when both parents are marked deceased.
+
 ## 2026-11-15 (Client Information Form, travel step)
 - [Change] intake.html: Travel History step now says to list only trips to countries other than Canada and the applicant's country of citizenship. Added an explanatory note, reworded the "no travel" checkbox, the validation message, the step subtitle and the trip field hint
 

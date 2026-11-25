@@ -2087,6 +2087,8 @@ function validateStep(key){
         return 'Please fill in each child\'s Full Name and Date of Birth before continuing.';
       return null;
     case 'parents':
+      if(!(data.parents.motherDeceased && data.parents.fatherDeceased) && !data.parents.emailMode)
+        return 'Please choose how to provide your parents\' email addresses ("Use my email for all" or "I will enter each email individually") before continuing.';
       if(!isFilled(data.parents.motherName) || !isFilled(data.parents.fatherName) || !isFilled(data.parents.motherPobCity) || !isFilled(data.parents.fatherPobCity))
         return 'Please provide both your mother\'s and father\'s full names and places of birth (city) before continuing.';
       if(!data.siblingsNone && data.siblings.length===0)
@@ -2202,6 +2204,7 @@ function highlightInvalid(key){
       data.children.forEach((r,i)=>{ rowEmpty(data.children,i,'name'); rowEmpty(data.children,i,'dob'); });
       break;
     case 'parents': {
+      if(!(data.parents.motherDeceased && data.parents.fatherDeceased) && !data.parents.emailMode) markInvalid(q('#parentEmailPrompt .pill-row'));
       ['p_motherName','p_fatherName','p_motherPobCity','p_fatherPobCity'].forEach(emptyId);
       if(!data.siblingsNone && data.siblings.length===0){ markInvalid(q('#addSib')); }
       data.siblings.forEach((r,i)=>{ rowEmpty(data.siblings,i,'name'); rowEmpty(data.siblings,i,'dob'); });
